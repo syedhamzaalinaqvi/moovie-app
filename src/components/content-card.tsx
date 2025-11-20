@@ -13,13 +13,13 @@ export function ContentCard({ content }: ContentCardProps) {
     <Link href={`/watch/${content.id}`} className="block group">
       <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all duration-300">
         <CardContent className="p-0">
-          <div className="aspect-[2/3] relative">
+          <div className="relative w-full" style={{ paddingBottom: '150%' /* 2:3 aspect ratio */ }}>
             <Image
               src={content.posterPath}
               alt={content.title}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
               data-ai-hint="movie poster"
             />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
