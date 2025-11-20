@@ -29,18 +29,18 @@ export function HeroSection({ content }: HeroSectionProps) {
           {content.description}
         </p>
         <div className="mt-6 flex items-center gap-4">
-          <Link href={`/watch/${content.id}`} passHref legacyBehavior>
-            <Button size="lg">
+          <Button asChild size="lg">
+            <Link href={`/watch/${content.id}`}>
               <PlayCircle className="mr-2" />
               Play
-            </Button>
-          </Link>
-          <Link href={`/browse/${content.id}`} passHref legacyBehavior>
-            <Button size="lg" variant="secondary">
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="secondary">
+            <Link href={`/browse/${content.id}`}>
               <Info className="mr-2" />
               More Info
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     </div>

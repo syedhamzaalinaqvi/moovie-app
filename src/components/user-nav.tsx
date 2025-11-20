@@ -34,12 +34,12 @@ export function UserNav() {
   if (!user) {
     return (
         <div className="p-2">
-            <Link href="/login" passHref legacyBehavior>
-                <Button className="w-full justify-start gap-2">
+            <Button asChild className="w-full justify-start gap-2">
+              <Link href="/login">
                 <LogIn className="h-4 w-4" />
                 <span>Sign In</span>
-                </Button>
-            </Link>
+              </Link>
+            </Button>
         </div>
     );
   }
@@ -70,12 +70,12 @@ export function UserNav() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <Link href="/profile" passHref legacyBehavior>
-              <DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/profile">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
-              </DropdownMenuItem>
-            </Link>
+              </Link>
+            </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>
