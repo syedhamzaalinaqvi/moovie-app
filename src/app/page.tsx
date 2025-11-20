@@ -1,3 +1,4 @@
+
 'use client';
 
 import { getBrowseContent } from "@/lib/tmdb";
@@ -7,6 +8,7 @@ import { useEffect, useState } from "react";
 import type { Content } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "next/navigation";
+import addedContentData from '@/lib/added-content.json';
 
 
 export default function BrowsePage() {
@@ -23,9 +25,8 @@ export default function BrowsePage() {
       try {
         const fetchedContent = await getBrowseContent({ type: type || undefined });
         
-        // In a real app, this would be from a database.
-        // We use localStorage as a substitute.
-        const addedContent: Content[] = JSON.parse(localStorage.getItem('added_content') || '[]');
+        // Read from the imported JSON file
+        const addedContent: Content[] = addedContentData;
         
         // Filter added content based on type if a type is selected
         const filteredAddedContent = type ? addedContent.filter(item => item.type === type) : addedContent;
@@ -45,11 +46,6 @@ export default function BrowsePage() {
     };
 
     fetchContent();
-    
-    // Listen for storage changes to update content when something is added from admin
-    const handleStorageChange = () => fetchContent();
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
 
   }, [type]);
 

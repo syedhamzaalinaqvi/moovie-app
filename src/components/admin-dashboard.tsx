@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import { getBrowseContent, getTrending, getContentById } from '@/lib/tmdb';
 import type { Content } from '@/lib/definitions';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Film, Tv, TrendingUp, PlusCircle, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Film, Tv, TrendingUp, PlusCircle, Loader2, Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentCard } from './content-card';
 import { Separator } from './ui/separator';
@@ -13,6 +14,8 @@ import { Input } from './ui/input';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
+import addedContentData from '@/lib/added-content.json';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 function StatCard({ title, value, icon: Icon, isLoading }: { title: string; value: number; icon: React.ElementType; isLoading: boolean }) {
   return (
@@ -36,37 +39,71 @@ function AddContentForm() {
     const [tmdbId, setTmdbId] = useState('');
     const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
     const [isLoading, setIsLoading] = useState(false);
+    const [previewContent, setPreviewContent] = useState<Content | null>(null);
+    const [previewError, setPreviewError] = useState<string | null>(null);
     const { toast } = useToast();
-  
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
+
+    const handlePreview = async () => {
       if (!tmdbId) {
         toast({ variant: 'destructive', title: 'Error', description: 'Please enter a TMDB ID.' });
         return;
       }
       setIsLoading(true);
+      setPreviewContent(null);
+      setPreviewError(null);
       try {
-        const newContent = await getContentById(tmdbId);
-        if (!newContent) {
-          throw new Error('Content not found.');
+        const content = await getContentById(tmdbId);
+        if (!content) {
+          throw new Error('Content not found with the provided ID.');
         }
-
-        // In a real app, you'd save this to a database.
-        // We'll use localStorage as a substitute for this environment.
-        const existingContent = JSON.parse(localStorage.getItem('added_content') || '[]');
-        const updatedContent = [...existingContent, newContent];
-        localStorage.setItem('added_content', JSON.stringify(updatedContent));
-
-        toast({ title: 'Success', description: `${newContent.title} has been added.` });
-        setTmdbId('');
-        // This is a simple way to trigger a re-render on the page if the dashboard were to show added content.
-        window.dispatchEvent(new Event('storage'));
+        // This is a bit of a hack, since getContentById can return movie or TV, but the form has a selector.
+        // We'll trust the user's selection for the final add, but the preview will show what was found.
+        setPreviewContent(content);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Could not fetch content details.';
-        toast({ variant: 'destructive', title: 'Failed to add content', description: message });
+        setPreviewError(message);
       } finally {
         setIsLoading(false);
       }
+    };
+  
+    const handleAddContent = async () => {
+        if (!previewContent) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Please preview content before adding.' });
+            return;
+        }
+        setIsLoading(true);
+        try {
+            const finalContentToAdd = { ...previewContent, type: contentType };
+            
+            // This is a placeholder for a proper API call.
+            // We are creating a downloadable blob which is not ideal, but demonstrates the concept
+            // of saving to a file without a real backend.
+            const existingContent: Content[] = addedContentData;
+            const updatedContent = [...existingContent, finalContentToAdd];
+            
+            const blob = new Blob([JSON.stringify(updatedContent, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'added-content.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            toast({ 
+                title: 'File Ready for Download', 
+                description: "A new 'added-content.json' file has been generated. Please move it to your 'src/lib' folder to update the content."
+            });
+
+            setTmdbId('');
+            setPreviewContent(null);
+
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An error occurred.';
+            toast({ variant: 'destructive', title: 'Failed to add content', description: message });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -77,42 +114,67 @@ function AddContentForm() {
               Add New Content
             </CardTitle>
             <CardDescription>
-                Add a new movie or TV show to the catalog using its TMDB ID.
+                Add a new movie or TV show using its TMDB ID.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="tmdbId">TMDB ID</Label>
-                <Input
-                  id="tmdbId"
-                  value={tmdbId}
-                  onChange={(e) => setTmdbId(e.target.value)}
-                  placeholder="e.g., 550 for Fight Club"
-                  disabled={isLoading}
-                />
+                <div className="flex gap-2">
+                    <Input
+                      id="tmdbId"
+                      value={tmdbId}
+                      onChange={(e) => setTmdbId(e.target.value)}
+                      placeholder="e.g., 550 for Fight Club"
+                      disabled={isLoading}
+                    />
+                    <Button onClick={handlePreview} disabled={isLoading || !tmdbId} variant="outline">
+                        {isLoading && tmdbId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4"/>}
+                        Preview
+                    </Button>
+                </div>
               </div>
-              <RadioGroup
-                defaultValue="movie"
-                onValueChange={(value: 'movie' | 'tv') => setContentType(value)}
-                className="flex gap-4"
-                disabled={isLoading}
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="movie" id="r-movie" />
-                  <Label htmlFor="r-movie">Movie</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="tv" id="r-tv" />
-                  <Label htmlFor="r-tv">TV Show</Label>
-                </div>
-              </RadioGroup>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Add Content
-              </Button>
-            </form>
+              
+              {previewError && (
+                  <Alert variant="destructive">
+                      <AlertTitle>Preview Failed</AlertTitle>
+                      <AlertDescription>{previewError}</AlertDescription>
+                  </Alert>
+              )}
+
+              {previewContent && (
+                  <div className='space-y-4'>
+                    <Separator/>
+                    <h3 className="text-lg font-medium">Content Preview</h3>
+                    <div className="mx-auto w-1/2">
+                        <ContentCard content={previewContent} />
+                    </div>
+                     <RadioGroup
+                        value={contentType}
+                        onValueChange={(value: 'movie' | 'tv') => setContentType(value)}
+                        className="flex gap-4 pt-4"
+                        disabled={isLoading}
+                    >
+                        <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="movie" id="r-movie" />
+                        <Label htmlFor="r-movie">Movie</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="tv" id="r-tv" />
+                        <Label htmlFor="r-tv">TV Show</Label>
+                        </div>
+                    </RadioGroup>
+                  </div>
+              )}
           </CardContent>
+          {previewContent && (
+            <CardFooter>
+                 <Button onClick={handleAddContent} disabled={isLoading} className="w-full">
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Add Content to Library
+                </Button>
+            </CardFooter>
+          )}
         </Card>
       );
 }
@@ -130,8 +192,17 @@ export default function AdminDashboard() {
       try {
         const movies = await getBrowseContent({ type: 'movie' });
         const tvShows = await getBrowseContent({ type: 'tv' });
-        setMovieCount(movies.length);
-        setTvShowCount(tvShows.length);
+        const addedMovies = addedContentData.filter(c => c.type === 'movie');
+        const addedTvShows = addedContentData.filter(c => c.type === 'tv');
+
+        const allMovies = [...movies, ...addedMovies];
+        const allTvShows = [...tvShows, ...addedTvShows];
+
+        const uniqueMovieIds = new Set(allMovies.map(m => m.id));
+        const uniqueTvShowIds = new Set(allTvShows.map(t => t.id));
+
+        setMovieCount(uniqueMovieIds.size);
+        setTvShowCount(uniqueTvShowIds.size);
       } catch (error) {
         console.error("Failed to fetch stats:", error);
       } finally {
