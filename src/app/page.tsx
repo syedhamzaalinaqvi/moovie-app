@@ -1,8 +1,6 @@
-import { getBrowseContent, getTrending } from "@/lib/tmdb";
+import { getBrowseContent } from "@/lib/tmdb";
 import { ContentCard } from "@/components/content-card";
 import { Search } from "lucide-react";
-import { ContentCarousel } from "@/components/content-carousel";
-import { Separator } from "@/components/ui/separator";
 
 type BrowsePageProps = {
   searchParams: {
@@ -12,10 +10,7 @@ type BrowsePageProps = {
 };
 
 export default async function BrowsePage({ searchParams }: BrowsePageProps) {
-  const [trending, content] = await Promise.all([
-    getTrending(),
-    getBrowseContent({ type: searchParams.type, genre: undefined }),
-  ]);
+  const content = await getBrowseContent({ type: searchParams.type, genre: undefined });
   
   const query = searchParams.q;
   const filteredContent = query 
@@ -30,17 +25,8 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
     ? 'TV Shows' 
     : 'Browse All';
     
-  const showTrending = !query && !searchParams.type;
-
   return (
     <div className="p-4 md:p-6 space-y-8">
-      {showTrending && trending.length > 0 && (
-        <>
-          <ContentCarousel title="Trending" content={trending} />
-          <Separator />
-        </>
-      )}
-
       <div>
         <h1 className="text-3xl font-bold mb-6">{title}</h1>
         {filteredContent.length > 0 ? (
