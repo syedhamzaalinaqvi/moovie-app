@@ -12,7 +12,7 @@ export function AppHeader() {
     const formData = new FormData(e.currentTarget);
     const query = formData.get('search') as string;
     if (query) {
-      router.push(`/browse?q=${query}`);
+      router.push(`/?q=${query}`);
     }
   };
 

@@ -36,7 +36,7 @@ export function HeroSection({ content }: HeroSectionProps) {
             </Link>
           </Button>
           <Button asChild size="lg" variant="secondary">
-            <Link href={`/browse/${content.id}`}>
+            <Link href={`/watch/${content.id}`}>
               <Info className="mr-2" />
               More Info
             </Link>
