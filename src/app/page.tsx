@@ -1,4 +1,3 @@
-
 'use client';
 
 import { getBrowseContent } from "@/lib/tmdb";
@@ -25,11 +24,11 @@ export default function BrowsePage() {
       try {
         const fetchedContent = await getBrowseContent({ type: type || undefined });
         
-        // Read from the imported JSON file
-        const addedContent: Content[] = addedContentData;
+        // The JSON file might be imported as a module, so we access the default export if it exists.
+        const addedContentList: Content[] = (addedContentData as any).default || addedContentData;
         
         // Filter added content based on type if a type is selected
-        const filteredAddedContent = type ? addedContent.filter(item => item.type === type) : addedContent;
+        const filteredAddedContent = type ? addedContentList.filter(item => item.type === type) : addedContentList;
 
         // Combine and remove duplicates, giving preference to added content
         const combined = [...filteredAddedContent, ...fetchedContent];
