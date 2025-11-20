@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -30,10 +31,10 @@ export function SidebarNav() {
             isActive={pathname === item.href}
             tooltip={item.label}
           >
-            <>
+            <div>
               <item.icon />
               <span>{item.label}</span>
-            </>
+            </div>
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}
