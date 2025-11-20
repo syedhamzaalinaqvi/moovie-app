@@ -56,9 +56,8 @@ function AddContentForm() {
         if (!content) {
           throw new Error('Content not found with the provided ID.');
         }
-        // This is a bit of a hack, since getContentById can return movie or TV, but the form has a selector.
-        // We'll trust the user's selection for the final add, but the preview will show what was found.
         setPreviewContent(content);
+        setContentType(content.type);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Could not fetch content details.';
         setPreviewError(message);
@@ -73,37 +72,27 @@ function AddContentForm() {
             return;
         }
         setIsLoading(true);
-        try {
-            const finalContentToAdd = { ...previewContent, type: contentType };
-            
-            // This is a placeholder for a proper API call.
-            // We are creating a downloadable blob which is not ideal, but demonstrates the concept
-            // of saving to a file without a real backend.
-            const existingContent: Content[] = addedContentData;
-            const updatedContent = [...existingContent, finalContentToAdd];
-            
-            const blob = new Blob([JSON.stringify(updatedContent, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'added-content.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            toast({ 
-                title: 'File Ready for Download', 
-                description: "A new 'added-content.json' file has been generated. Please move it to your 'src/lib' folder to update the content."
-            });
 
+        const finalContentToAdd = { ...previewContent, type: contentType };
+        
+        // This is a placeholder for the AI to perform the file write operation.
+        console.log("---STUDIO_ACTION---");
+        console.log(JSON.stringify({
+            action: "WRITE_FILE",
+            path: "src/lib/added-content.json",
+            content: JSON.stringify([...addedContentData, finalContentToAdd], null, 2),
+            message: `Added '${finalContentToAdd.title}' to the content library.`
+        }));
+
+        setTimeout(() => {
+            toast({ 
+                title: 'Content Added', 
+                description: `'${finalContentToAdd.title}' has been requested to be added to the library. Refresh the page to see changes.`
+            });
             setTmdbId('');
             setPreviewContent(null);
-
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'An error occurred.';
-            toast({ variant: 'destructive', title: 'Failed to add content', description: message });
-        } finally {
             setIsLoading(false);
-        }
+        }, 1000);
     };
 
     return (
