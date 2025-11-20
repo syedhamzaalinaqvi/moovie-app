@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -26,15 +25,14 @@ export function SidebarNav() {
         <SidebarMenuItem key={item.label}>
           <SidebarMenuButton
             asChild
-            as={Link}
             href={item.href}
             isActive={pathname === item.href}
             tooltip={item.label}
           >
-            <div>
+            <Link href={item.href}>
               <item.icon />
               <span>{item.label}</span>
-            </div>
+            </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}
