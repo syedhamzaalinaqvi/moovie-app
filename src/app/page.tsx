@@ -30,18 +30,21 @@ export default function BrowsePage() {
         const filteredAddedContent = type ? addedContent.filter(item => item.type === type) : addedContent;
 
         // Create a Map of all content, with manually added content taking precedence.
+        // The key is the content ID as a string to ensure uniqueness.
         const combinedContentMap = new Map<string, Content>();
         
         // First, add the fetched content from the API
         fetchedContent.forEach(item => {
-            combinedContentMap.set(item.id, item);
+            combinedContentMap.set(String(item.id), item);
         });
         
         // Then, add (and overwrite) with the manually added content
+        // This ensures your added content is prioritized if an ID conflict exists.
         filteredAddedContent.forEach(item => {
-            combinedContentMap.set(item.id, item);
+            combinedContentMap.set(String(item.id), item);
         });
 
+        // Convert the map back to an array. Your added content will be present.
         const uniqueContent = Array.from(combinedContentMap.values());
         
         setContent(uniqueContent);
