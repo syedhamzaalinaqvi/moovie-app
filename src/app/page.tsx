@@ -23,23 +23,26 @@ export default function BrowsePage() {
       try {
         const fetchedContent = await getBrowseContent({ type: type || undefined });
         
-        // Correctly type the imported JSON data
+        // Correctly type the imported JSON data which is an array of Content
         const addedContent: Content[] = addedContentData;
         
         // Filter manually added content based on the selected type ('movie' or 'tv')
         const filteredAddedContent = type ? addedContent.filter(item => item.type === type) : addedContent;
 
-        // Create a Map of the fetched content for quick lookups
-        const fetchedContentMap = new Map(fetchedContent.map(item => [item.id, item]));
-
-        // Combine lists, ensuring manually added content takes precedence
-        // and is not overwritten by the API fetch if IDs are the same.
-        const combinedContent = new Map(fetchedContentMap);
-        filteredAddedContent.forEach(item => {
-          combinedContent.set(item.id, item);
+        // Create a Map of all content, with manually added content taking precedence.
+        const combinedContentMap = new Map<string, Content>();
+        
+        // First, add the fetched content from the API
+        fetchedContent.forEach(item => {
+            combinedContentMap.set(item.id, item);
         });
         
-        const uniqueContent = Array.from(combinedContent.values());
+        // Then, add (and overwrite) with the manually added content
+        filteredAddedContent.forEach(item => {
+            combinedContentMap.set(item.id, item);
+        });
+
+        const uniqueContent = Array.from(combinedContentMap.values());
         
         setContent(uniqueContent);
 
