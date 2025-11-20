@@ -1,11 +1,10 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getBrowseContent, getTrending, getContentById } from '@/lib/tmdb';
+import { getBrowseContent, getContentById } from '@/lib/tmdb';
 import type { Content } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Film, Tv, TrendingUp, PlusCircle, Loader2, Search } from 'lucide-react';
+import { Film, Tv, History, PlusCircle, Loader2, Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentCard } from './content-card';
 import { Separator } from './ui/separator';
@@ -171,9 +170,8 @@ function AddContentForm() {
 export default function AdminDashboard() {
   const [movieCount, setMovieCount] = useState(0);
   const [tvShowCount, setTvShowCount] = useState(0);
-  const [trendingContent, setTrendingContent] = useState<Content[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
-  const [loadingTrending, setLoadingTrending] = useState(true);
+  const [recentlyAdded, setRecentlyAdded] = useState<Content[]>([]);
 
   useEffect(() => {
     async function fetchStats() {
@@ -192,6 +190,11 @@ export default function AdminDashboard() {
 
         setMovieCount(uniqueMovieIds.size);
         setTvShowCount(uniqueTvShowIds.size);
+        
+        // Reverse the array to show latest additions first
+        const addedContentTyped = addedContentData as Content[];
+        setRecentlyAdded(addedContentTyped.slice().reverse());
+
       } catch (error) {
         console.error("Failed to fetch stats:", error);
       } finally {
@@ -199,20 +202,7 @@ export default function AdminDashboard() {
       }
     }
 
-    async function fetchTrending() {
-      setLoadingTrending(true);
-      try {
-        const trending = await getTrending();
-        setTrendingContent(trending);
-      } catch (error) {
-        console.error("Failed to fetch trending content:", error);
-      } finally {
-        setLoadingTrending(false);
-      }
-    }
-
     fetchStats();
-    fetchTrending();
   }, []);
 
   return (
@@ -229,10 +219,10 @@ export default function AdminDashboard() {
 
       <div>
         <h2 className="text-2xl font-bold mb-4 flex items-center">
-          <TrendingUp className="mr-2 h-6 w-6" />
-          Recommended / Trending
+          <History className="mr-2 h-6 w-6" />
+          Recently Added Content
         </h2>
-        {loadingTrending ? (
+        {loadingStats ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {[...Array(6)].map((_, i) => (
               <div key={i}>
@@ -242,12 +232,14 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
-        ) : (
+        ) : recentlyAdded.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {trendingContent.map(item => (
+            {recentlyAdded.map(item => (
               <ContentCard key={item.id} content={item} />
             ))}
           </div>
+        ) : (
+            <p className="text-muted-foreground">No content has been added manually yet.</p>
         )}
       </div>
     </div>
