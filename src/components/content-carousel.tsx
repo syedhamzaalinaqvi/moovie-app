@@ -24,6 +24,7 @@ export function ContentCarousel({ title, content }: ContentCarouselProps) {
       <Carousel
         opts={{
           align: 'start',
+          slidesToScroll: 3,
         }}
         className="w-full"
       >
