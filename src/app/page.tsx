@@ -21,15 +21,16 @@ export default function BrowsePage() {
     const fetchContent = async () => {
       setIsLoading(true);
       try {
+        // 1. Fetch content from the TMDB API
         const fetchedContent = await getBrowseContent({ type: type || undefined });
         
-        // Correctly type the imported JSON data which is an array of Content
-        const addedContent: Content[] = addedContentData;
+        // 2. Correctly type the imported JSON data
+        const addedContent: Content[] = addedContentData as Content[];
         
-        // Filter manually added content based on the selected type ('movie' or 'tv')
+        // 3. Filter manually added content based on the selected type
         const filteredAddedContent = type ? addedContent.filter(item => item.type === type) : addedContent;
 
-        // Create a Map of all content, with manually added content taking precedence.
+        // 4. Combine the lists using a Map to handle duplicates, prioritizing manually added content.
         // The key is the content ID as a string to ensure uniqueness.
         const combinedContentMap = new Map<string, Content>();
         
@@ -44,10 +45,21 @@ export default function BrowsePage() {
             combinedContentMap.set(String(item.id), item);
         });
 
-        // Convert the map back to an array. Your added content will be present.
-        const uniqueContent = Array.from(combinedContentMap.values());
+        // 5. Convert the map back to an array. Your added content will be present.
+        const finalContent = Array.from(combinedContentMap.values());
         
-        setContent(uniqueContent);
+        // To make sure your latest additions appear first, we can sort them to the top.
+        // This puts items from addedContent at the front.
+        const addedContentIds = new Set(addedContent.map(item => String(item.id)));
+        finalContent.sort((a, b) => {
+            const aIsAdded = addedContentIds.has(String(a.id));
+            const bIsAdded = addedContentIds.has(String(b.id));
+            if (aIsAdded && !bIsAdded) return -1;
+            if (!aIsAdded && bIsAdded) return 1;
+            return 0;
+        });
+
+        setContent(finalContent);
 
       } catch (error) {
         console.error("Failed to fetch content", error);
