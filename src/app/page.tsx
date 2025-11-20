@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "next/navigation";
 import addedContentData from '@/lib/added-content.json';
 
-
 export default function BrowsePage() {
   const searchParams = useSearchParams();
   const q = searchParams.get('q');
@@ -24,8 +23,8 @@ export default function BrowsePage() {
       try {
         const fetchedContent = await getBrowseContent({ type: type || undefined });
         
-        // The JSON file might be imported as a module, so we access the default export if it exists.
-        const addedContentList: Content[] = (addedContentData as any).default || addedContentData;
+        // Correctly handle the imported JSON data
+        const addedContentList: Content[] = addedContentData;
         
         // Filter added content based on type if a type is selected
         const filteredAddedContent = type ? addedContentList.filter(item => item.type === type) : addedContentList;
