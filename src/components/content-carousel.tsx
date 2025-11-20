@@ -24,13 +24,12 @@ export function ContentCarousel({ title, content }: ContentCarouselProps) {
       <Carousel
         opts={{
           align: 'start',
-          loop: true,
         }}
         className="w-full"
       >
         <CarouselContent>
           {content.map((item) => (
-            <CarouselItem key={item.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">
+            <CarouselItem key={item.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/8">
               <ContentCard content={item} />
             </CarouselItem>
           ))}
