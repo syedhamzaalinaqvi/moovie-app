@@ -1,58 +1,165 @@
-import { mockContent } from './data';
 import type { Content } from './definitions';
 
-// Simulate network delay
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || "46d13701165988b5bb5fb4d123c0447e";
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
+const TMDB_BACKDROP_BASE_URL = "https://image.tmdb.org/t/p/w1280";
+
+type TmdbContent = {
+    id: number;
+    title?: string; // Movies have title
+    name?: string; // TV shows have name
+    overview: string;
+    poster_path: string;
+    backdrop_path: string;
+    genre_ids: number[];
+    release_date?: string; // Movies
+    first_air_date?: string; // TV
+    vote_average: number;
+    media_type?: 'movie' | 'tv';
+};
+
+type Genre = {
+    id: number;
+    name: string;
+};
+
+let genreMap: Map<number, string> | null = null;
+
+async function fetchGenres() {
+    if (genreMap) return genreMap;
+    try {
+        const movieResponse = await fetch(`${TMDB_BASE_URL}/genre/movie/list?api_key=${TMDB_API_KEY}`);
+        const tvResponse = await fetch(`${TMDB_BASE_URL}/genre/tv/list?api_key=${TMDB_API_KEY}`);
+        const movieData = await movieResponse.json();
+        const tvData = await tvResponse.json();
+
+        const allGenres: Genre[] = [...movieData.genres, ...tvData.genres];
+        
+        genreMap = new Map();
+        allGenres.forEach(genre => {
+            genreMap!.set(genre.id, genre.name);
+        });
+        return genreMap;
+    } catch (error) {
+        console.error('Failed to fetch genres:', error);
+        return new Map();
+    }
+}
+
+
+function tmdbContentToContent(item: TmdbContent, type: 'movie' | 'tv' | 'person', allGenres: Map<number, string>): Content | null {
+    if (type === 'person') return null;
+    const itemType = item.media_type || type;
+    if (itemType === 'person') return null;
+
+    return {
+        id: String(item.id),
+        title: item.title || item.name || 'No Title',
+        description: item.overview,
+        posterPath: item.poster_path ? `${TMDB_IMAGE_BASE_URL}${item.poster_path}` : 'https://picsum.photos/seed/poster-placeholder/500/750',
+        backdropPath: item.backdrop_path ? `${TMDB_BACKDROP_BASE_URL}${item.backdrop_path}` : 'https://picsum.photos/seed/backdrop-placeholder/1280/720',
+        genres: item.genre_ids ? item.genre_ids.map(id => allGenres.get(id) || 'Unknown').filter(g => g !== 'Unknown') : [],
+        releaseDate: item.release_date || item.first_air_date || 'N/A',
+        rating: item.vote_average,
+        type: itemType,
+    };
+}
+
+async function fetchAndTransformContent(url: string, type: 'movie' | 'tv' | 'person' = 'movie') {
+    const allGenres = await fetchGenres();
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const results = (data.results || [data]) as TmdbContent[];
+        
+        return results
+            .map(item => tmdbContentToContent(item, item.media_type || type, allGenres))
+            .filter((item): item is Content => item !== null);
+    } catch (error) {
+        console.error(`Failed to fetch from ${url}:`, error);
+        return [];
+    }
+}
+
+async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv') {
+    const allGenres = await fetchGenres();
+     try {
+        const response = await fetch(url);
+        const data = await response.json() as TmdbContent & { genres: Genre[], videos: { results: { type: string, key: string }[] } };
+        
+        const trailer = data.videos?.results.find(v => v.type === 'Trailer');
+
+        return {
+            id: String(data.id),
+            title: data.title || data.name || 'No Title',
+            description: data.overview,
+            posterPath: data.poster_path ? `${TMDB_IMAGE_BASE_URL}${data.poster_path}` : 'https://picsum.photos/seed/poster-placeholder/500/750',
+            backdropPath: data.backdrop_path ? `${TMDB_BACKDROP_BASE_URL}${data.backdrop_path}` : 'https://picsum.photos/seed/backdrop-placeholder/1280/720',
+            genres: data.genres ? data.genres.map(g => g.name) : [],
+            releaseDate: data.release_date || data.first_air_date || 'N/A',
+            rating: data.vote_average,
+            type: type,
+            trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
+        };
+    } catch (error) {
+        console.error(`Failed to fetch from ${url}:`, error);
+        return null;
+    }
+}
+
 
 export async function getFeatured(): Promise<Content | null> {
-  await delay(100);
-  return mockContent[0] || null;
+    const content = await getTrending();
+    return content[0] || null;
 }
 
 export async function getTrending(): Promise<Content[]> {
-  await delay(200);
-  return [...mockContent].sort((a, b) => b.rating - a.rating).slice(0, 6);
+  const url = `${TMDB_BASE_URL}/trending/all/week?api_key=${TMDB_API_KEY}`;
+  return (await fetchAndTransformContent(url, 'movie')).slice(0,12);
 }
 
 export async function getPopular(): Promise<Content[]> {
-  await delay(300);
-  return [...mockContent].sort((a, b) => a.releaseDate > b.releaseDate ? -1 : 1).slice(2, 8);
+  const url = `${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}`;
+  return (await fetchAndTransformContent(url, 'movie')).slice(0,12);
 }
 
 export async function getNewReleases(): Promise<Content[]> {
-  await delay(400);
-  const sorted = [...mockContent].sort((a, b) => new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime());
-  return sorted.slice(0, 6);
+  const url = `${TMDB_BASE_URL}/movie/now_playing?api_key=${TMDB_API_KEY}`;
+  return (await fetchAndTransformContent(url, 'movie')).slice(0,12);
 }
 
 export async function getContentById(id: string): Promise<Content | null> {
-  await delay(150);
-  const content = mockContent.find(item => item.id === id);
-  return content || null;
+    const isMovie = !isNaN(Number(id)); // simplistic check, might need refinement
+    const type = isMovie ? 'movie' : 'tv';
+    const contentId = isMovie ? id : id.split('-')[1];
+    const url = `${TMDB_BASE_URL}/${type}/${contentId}?api_key=${TMDB_API_KEY}&append_to_response=videos`;
+    try {
+        const response = await fetch(url);
+        if(!response.ok) { // First try movie
+            const tvUrl = `${TMDB_BASE_URL}/tv/${contentId}?api_key=${TMDB_API_KEY}&append_to_response=videos`;
+            return await fetchAndTransformSingleContent(tvUrl, 'tv');
+        }
+        return await fetchAndTransformSingleContent(url, 'movie');
+    } catch(e) {
+        const tvUrl = `${TMDB_BASE_URL}/tv/${contentId}?api_key=${TMDB_API_KEY}&append_to_response=videos`;
+        return await fetchAndTransformSingleContent(tvUrl, 'tv');
+    }
 }
 
 export async function getContentByIds(ids: string[]): Promise<Content[]> {
-  await delay(250);
-  return mockContent.filter(item => ids.includes(item.id));
+    const contentPromises = ids.map(id => getContentById(id));
+    const results = await Promise.all(contentPromises);
+    return results.filter((item): item is Content => item !== null);
 }
 
 export async function searchContent(query: string): Promise<Content[]> {
-  await delay(300);
-  if (!query) return [];
-  return mockContent.filter(item => 
-    item.title.toLowerCase().includes(query.toLowerCase()) ||
-    item.description.toLowerCase().includes(query.toLowerCase())
-  );
+  const url = `${TMDB_BASE_URL}/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`;
+  return await fetchAndTransformContent(url, 'movie');
 }
 
 export async function getBrowseContent({ genre, type }: { genre?: string; type?: 'movie' | 'tv' }): Promise<Content[]> {
-  await delay(350);
-  let results = [...mockContent];
-  if (type) {
-    results = results.filter(item => item.type === type);
-  }
-  if (genre) {
-    results = results.filter(item => item.genres.includes(genre));
-  }
-  return results;
+    const typePath = type === 'tv' ? 'tv' : 'movie';
+    const url = `${TMDB_BASE_URL}/discover/${typePath}?api_key=${TMDB_API_KEY}&with_genres=${genre || ''}`;
+    return await fetchAndTransformContent(url, type);
 }
