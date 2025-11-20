@@ -23,15 +23,23 @@ export default function BrowsePage() {
       try {
         const fetchedContent = await getBrowseContent({ type: type || undefined });
         
-        // Correctly handle the imported JSON data
-        const addedContentList: Content[] = addedContentData;
+        // Correctly type the imported JSON data
+        const addedContent: Content[] = addedContentData;
         
-        // Filter added content based on type if a type is selected
-        const filteredAddedContent = type ? addedContentList.filter(item => item.type === type) : addedContentList;
+        // Filter manually added content based on the selected type ('movie' or 'tv')
+        const filteredAddedContent = type ? addedContent.filter(item => item.type === type) : addedContent;
 
-        // Combine and remove duplicates, giving preference to added content
-        const combined = [...filteredAddedContent, ...fetchedContent];
-        const uniqueContent = Array.from(new Map(combined.map(item => [item.id, item])).values());
+        // Create a Map of the fetched content for quick lookups
+        const fetchedContentMap = new Map(fetchedContent.map(item => [item.id, item]));
+
+        // Combine lists, ensuring manually added content takes precedence
+        // and is not overwritten by the API fetch if IDs are the same.
+        const combinedContent = new Map(fetchedContentMap);
+        filteredAddedContent.forEach(item => {
+          combinedContent.set(item.id, item);
+        });
+        
+        const uniqueContent = Array.from(combinedContent.values());
         
         setContent(uniqueContent);
 
