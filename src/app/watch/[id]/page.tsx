@@ -8,7 +8,6 @@ import { Star, Play, Download } from 'lucide-react';
 import { CommentSection } from '@/components/comment-section';
 import type { Content } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
-import { CastSection } from '@/components/cast-section';
 
 type WatchPageProps = {
   params: {
@@ -81,20 +80,18 @@ export default async function WatchPage({ params }: WatchPageProps) {
                   )}
                 </div>
             </div>
-            <div className="w-full md:w-1/3 lg:w-1/4 xl:w-1/5 flex-shrink-0">
+            <div className="w-full md:w-auto md:flex-shrink-0">
                 <Image 
                     src={content.posterPath} 
                     alt={content.title} 
                     width={500}
                     height={750}
-                    className="rounded-lg shadow-lg w-full h-auto"
+                    className="rounded-lg shadow-lg w-full md:w-[300px] h-auto"
                     data-ai-hint="movie poster"
                 />
             </div>
         </div>
         
-        {content.cast && content.cast.length > 0 && <CastSection cast={content.cast} />}
-
         <CommentSection contentId={String(content.id)} />
       </div>
     </div>
