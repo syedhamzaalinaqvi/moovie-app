@@ -22,41 +22,37 @@ export default function BrowsePage() {
       setIsLoading(true);
       try {
         // 1. Fetch content from the TMDB API
-        const fetchedContent = await getBrowseContent({ type: type || undefined });
+        const apiContent = await getBrowseContent({ type: type || undefined });
         
-        // 2. Correctly type the imported JSON data
-        const addedContent: Content[] = addedContentData as Content[];
-        
-        // 3. Filter manually added content based on the selected type
-        const filteredAddedContent = type ? addedContent.filter(item => item.type === type) : addedContent;
+        // 2. Correctly type and filter the local JSON data
+        const localContent: Content[] = addedContentData as Content[];
+        const filteredLocalContent = type ? localContent.filter(item => item.type === type) : localContent;
 
-        // 4. Combine the lists using a Map to handle duplicates, prioritizing manually added content.
-        // The key is the content ID as a string to ensure uniqueness.
+        // 3. Combine the lists using a Map to handle duplicates, prioritizing local content.
         const combinedContentMap = new Map<string, Content>();
         
         // First, add the fetched content from the API
-        fetchedContent.forEach(item => {
+        apiContent.forEach(item => {
             combinedContentMap.set(String(item.id), item);
         });
         
-        // Then, add (and overwrite) with the manually added content
-        // This ensures your added content is prioritized if an ID conflict exists.
-        filteredAddedContent.forEach(item => {
+        // Then, add (and overwrite) with your manually added content
+        // This ensures your added content takes priority if an ID conflict exists.
+        filteredLocalContent.forEach(item => {
             combinedContentMap.set(String(item.id), item);
         });
 
-        // 5. Convert the map back to an array. Your added content will be present.
+        // 4. Convert the map back to an array
         const finalContent = Array.from(combinedContentMap.values());
         
-        // To make sure your latest additions appear first, we can sort them to the top.
-        // This puts items from addedContent at the front.
-        const addedContentIds = new Set(addedContent.map(item => String(item.id)));
+        // 5. Sort to bring your manually added content to the front
+        const localContentIds = new Set(localContent.map(item => String(item.id)));
         finalContent.sort((a, b) => {
-            const aIsAdded = addedContentIds.has(String(a.id));
-            const bIsAdded = addedContentIds.has(String(b.id));
-            if (aIsAdded && !bIsAdded) return -1;
-            if (!aIsAdded && bIsAdded) return 1;
-            return 0;
+            const aIsLocal = localContentIds.has(String(a.id));
+            const bIsLocal = localContentIds.has(String(b.id));
+            if (aIsLocal && !bIsLocal) return -1; // a comes first
+            if (!aIsLocal && bIsLocal) return 1;  // b comes first
+            return 0; // maintain original order otherwise
         });
 
         setContent(finalContent);
@@ -101,7 +97,7 @@ export default function BrowsePage() {
         ) : filteredContent.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
             {filteredContent.map((item) => (
-              <ContentCard key={item.id} content={item} />
+              <ContentCard key={`${item.id}-${item.title}`} content={item} />
             ))}
           </div>
         ) : (
