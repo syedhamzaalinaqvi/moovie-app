@@ -1,10 +1,11 @@
 
-import type { Content } from './definitions';
+import type { Content, CastMember } from './definitions';
 
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || "46d13701165988b5bb5fb4d123c0447e";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
 const TMDB_BACKDROP_BASE_URL = "https://image.tmdb.org/t/p/w1280";
+const TMDB_PROFILE_BASE_URL = "https://image.tmdb.org/t/p/w185";
 
 type TmdbContent = {
     id: number;
@@ -24,6 +25,13 @@ type Genre = {
     id: number;
     name: string;
 };
+
+type TmdbCredit = {
+    id: number;
+    name: string;
+    character: string;
+    profile_path: string;
+}
 
 let genreMap: Map<number, string> | null = null;
 
@@ -88,9 +96,15 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
      try {
         const response = await fetch(url);
         if (!response.ok) return null;
-        const data = await response.json() as TmdbContent & { genres: Genre[], videos: { results: { type: string, key: string }[] } };
+        const data = await response.json() as TmdbContent & { genres: Genre[], videos: { results: { type: string, key: string }[] }, credits: { cast: TmdbCredit[] } };
         
         const trailer = data.videos?.results.find(v => v.type === 'Trailer');
+        const cast: CastMember[] = data.credits?.cast.slice(0, 16).map(c => ({
+            id: c.id,
+            name: c.name,
+            character: c.character,
+            profilePath: c.profile_path ? `${TMDB_PROFILE_BASE_URL}${c.profile_path}` : `https://picsum.photos/seed/${c.id}/185/278`,
+        })) || [];
         
         return {
             id: String(data.id),
@@ -103,6 +117,7 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
             rating: data.vote_average,
             type: type,
             trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
+            cast: cast,
         };
     } catch (error) {
         console.error(`Failed to fetch from ${url}:`, error);
@@ -137,11 +152,11 @@ export async function getContentById(id: string): Promise<Content | null> {
     
     let apiContent: Content | null = null;
     
-    let movieContent = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos`, 'movie');
+    let movieContent = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos,credits`, 'movie');
     if (movieContent) {
         apiContent = movieContent;
     } else {
-        let tvContent = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/tv/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos`, 'tv');
+        let tvContent = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/tv/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos,credits`, 'tv');
         if (tvContent) {
             apiContent = tvContent;
         }
@@ -160,6 +175,7 @@ export async function getContentById(id: string): Promise<Content | null> {
             releaseDate: manualItem.releaseDate || apiContent?.releaseDate || 'N/A',
             rating: manualItem.rating || apiContent?.rating || 0,
             type: manualItem.type || apiContent?.type || 'movie',
+            cast: apiContent?.cast || [],
         };
     }
     
@@ -197,13 +213,14 @@ export async function getBrowseContent({ genre, type, region }: { genre?: string
 export async function getManuallyAddedContent(): Promise<Content[]> {
   try {
     const isServer = typeof window === 'undefined';
-    const baseUrl = isServer
-      ? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:9002')
-      : '';
+    let baseUrl = '';
+    if (isServer) {
+        baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:9002';
+    }
       
-    const url = `${baseUrl}/api/added-content?v=${new Date().getTime()}`;
+    const url = new URL(`/api/added-content?v=${new Date().getTime()}`, baseUrl);
 
-    const response = await fetch(url, {
+    const response = await fetch(url.toString(), {
         headers: {
             'Cache-Control': 'no-cache'
         },

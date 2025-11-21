@@ -8,6 +8,8 @@ import { Star, Play, Download } from 'lucide-react';
 import { CommentSection } from '@/components/comment-section';
 import type { Content } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
+import { CastSection } from '@/components/cast-section';
+import { Separator } from '@/components/ui/separator';
 
 type WatchPageProps = {
   params: {
@@ -30,11 +32,11 @@ export default async function WatchPage({ params }: WatchPageProps) {
 
   return (
     <div className="flex flex-col">
-      <div id="player" className="relative w-full aspect-video bg-black">
+      <div id="player" className="relative w-full bg-black">
         {content.trailerUrl ? (
           <VideoPlayer src={content.trailerUrl} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full aspect-video flex items-center justify-center">
             <p className="text-muted-foreground">Video not available.</p>
           </div>
         )}
@@ -91,7 +93,15 @@ export default async function WatchPage({ params }: WatchPageProps) {
                 />
             </div>
         </div>
+
+        {content.cast && content.cast.length > 0 && (
+          <>
+            <Separator />
+            <CastSection cast={content.cast} />
+          </>
+        )}
         
+        <Separator />
         <CommentSection contentId={String(content.id)} />
       </div>
     </div>

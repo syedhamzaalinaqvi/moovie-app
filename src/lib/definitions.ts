@@ -14,6 +14,7 @@ export type Content = {
   downloadLink?: string;
   isHindiDubbed?: boolean;
   customTags?: string[];
+  cast?: CastMember[];
 };
 
 export type AppUser = {
@@ -39,4 +40,11 @@ export type Comment = {
     text: string;
     timestamp: number;
     replies: Comment[];
+}
+
+export type CastMember = {
+    id: number;
+    name: string;
+    character: string;
+    profilePath: string;
 }

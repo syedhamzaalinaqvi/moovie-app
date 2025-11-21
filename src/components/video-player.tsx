@@ -7,11 +7,19 @@ interface VideoPlayerProps {
 export function VideoPlayer({ src }: VideoPlayerProps) {
     // Check if the src is an iframe embed code
     if (src.trim().startsWith('<iframe')) {
+        // To make the iframe responsive, we'll wrap it.
+        // The iframe's width and height will be set to 100% and the parent will control the aspect ratio.
+        const responsiveIframe = src
+            .replace(/width="[^"]*"/, 'width="100%"')
+            .replace(/height="[^"]*"/, 'height="100%"');
+
         return (
-            <div 
-                className="w-full h-full"
-                dangerouslySetInnerHTML={{ __html: src }} 
-            />
+            <div className="w-full aspect-video relative">
+                <div 
+                    className="absolute top-0 left-0 w-full h-full"
+                    dangerouslySetInnerHTML={{ __html: responsiveIframe }} 
+                />
+            </div>
         );
     }
 
