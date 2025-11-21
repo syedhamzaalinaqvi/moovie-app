@@ -1,5 +1,5 @@
 
-import type { Content } from './definitions';
+import type { Content, CastMember } from './definitions';
 
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || "46d13701165988b5bb5fb4d123c0447e";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
@@ -23,6 +23,17 @@ type TmdbContent = {
 type Genre = {
     id: number;
     name: string;
+};
+
+type TmdbCastMember = {
+    id: number;
+    name: string;
+    character: string;
+    profile_path: string | null;
+};
+
+type TmdbCredits = {
+    cast: TmdbCastMember[];
 };
 
 let genreMap: Map<number, string> | null = null;
@@ -88,9 +99,16 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
      try {
         const response = await fetch(url);
         if (!response.ok) return null;
-        const data = await response.json() as TmdbContent & { genres: Genre[], videos: { results: { type: string, key: string }[] } };
+        const data = await response.json() as TmdbContent & { genres: Genre[], videos: { results: { type: string, key: string }[] }, credits: TmdbCredits };
         
         const trailer = data.videos?.results.find(v => v.type === 'Trailer');
+        
+        const cast: CastMember[] = data.credits.cast.slice(0, 10).map(member => ({
+            id: member.id,
+            name: member.name,
+            character: member.character,
+            profilePath: member.profile_path ? `${TMDB_IMAGE_BASE_URL}${member.profile_path}` : 'https://picsum.photos/seed/avatar-placeholder/200/300'
+        }));
 
         return {
             id: String(data.id),
@@ -103,6 +121,7 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
             rating: data.vote_average,
             type: type,
             trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
+            cast: cast,
         };
     } catch (error) {
         console.error(`Failed to fetch from ${url}:`, error);
@@ -132,21 +151,39 @@ export async function getNewReleases(): Promise<Content[]> {
 }
 
 export async function getContentById(id: string): Promise<Content | null> {
-    // First, check manually added content
     const manuallyAdded = await getManuallyAddedContent();
     const manualItem = manuallyAdded.find(c => String(c.id) === id);
-    if (manualItem) {
-        return manualItem;
+    
+    let apiContent: Content | null = null;
+    
+    let movieContent = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos,credits`, 'movie');
+    if (movieContent) {
+        apiContent = movieContent;
+    } else {
+        let tvContent = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/tv/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos,credits`, 'tv');
+        if (tvContent) {
+            apiContent = tvContent;
+        }
     }
 
-    // If not found, fetch from TMDB
-    let content = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos`, 'movie');
-    
-    if (!content) {
-        content = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/tv/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos`, 'tv');
+    if (manualItem) {
+        return {
+            ...(apiContent || {} as Content), // Base TMDB data
+            ...manualItem, // Override with manual data
+            id: manualItem.id, // Ensure manual ID is kept
+            title: manualItem.title || apiContent?.title || 'No Title',
+            description: manualItem.description || apiContent?.description || '',
+            posterPath: manualItem.posterPath || apiContent?.posterPath || '',
+            backdropPath: manualItem.backdropPath || apiContent?.backdropPath || '',
+            genres: manualItem.genres?.length ? manualItem.genres : apiContent?.genres || [],
+            releaseDate: manualItem.releaseDate || apiContent?.releaseDate || 'N/A',
+            rating: manualItem.rating || apiContent?.rating || 0,
+            type: manualItem.type || apiContent?.type || 'movie',
+            cast: apiContent?.cast || [],
+        };
     }
     
-    return content;
+    return apiContent;
 }
 
 export async function getContentByIds(ids: string[]): Promise<Content[]> {
@@ -193,7 +230,13 @@ export async function getManuallyAddedContent(): Promise<Content[]> {
         cache: 'no-store'
     });
     if (!response.ok) {
-        console.error('Failed to fetch manually added content, status:', response.status, await response.text());
+        console.error('Failed to fetch manually added content, status:', response.status);
+        try {
+            const errorText = await response.text();
+            console.error('Error response body:', errorText);
+        } catch (e) {
+             console.error('Could not read error response body');
+        }
         return [];
     }
     return await response.json();

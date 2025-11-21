@@ -1,5 +1,12 @@
 import type { User as FirebaseUser } from 'firebase/auth';
 
+export type CastMember = {
+  id: number;
+  name: string;
+  character: string;
+  profilePath: string;
+};
+
 export type Content = {
   id: string;
   title: string;
@@ -14,6 +21,7 @@ export type Content = {
   downloadLink?: string;
   isHindiDubbed?: boolean;
   customTags?: string[];
+  cast?: CastMember[];
 };
 
 export type AppUser = {

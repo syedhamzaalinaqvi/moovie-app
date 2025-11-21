@@ -1,4 +1,4 @@
-import { getContentById, getManuallyAddedContent } from '@/lib/tmdb';
+import { getContentById } from '@/lib/tmdb';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -8,6 +8,7 @@ import { Star, Play, Download } from 'lucide-react';
 import { CommentSection } from '@/components/comment-section';
 import type { Content } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
+import { CastSection } from '@/components/cast-section';
 
 type WatchPageProps = {
   params: {
@@ -16,16 +17,7 @@ type WatchPageProps = {
 };
 
 export default async function WatchPage({ params }: WatchPageProps) {
-  let content: Content | null = null;
-  const manuallyAdded = await getManuallyAddedContent();
-  const manualItem = manuallyAdded.find(c => String(c.id) === params.id);
-  
-  if (manualItem) {
-    content = manualItem;
-  } else {
-    content = await getContentById(params.id);
-  }
-
+  const content = await getContentById(params.id);
 
   if (!content) {
     notFound();
@@ -57,7 +49,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
                     <span>{(content.releaseDate || 'N/A').split('-')[0]}</span>
                     <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span>{content.rating}</span>
+                        <span>{content.rating.toFixed(1)}</span>
                     </div>
                     <Badge variant="outline" className="capitalize">{content.type}</Badge>
                     {content.isHindiDubbed && <Badge variant="secondary">Hindi Dubbed</Badge>}
@@ -100,6 +92,8 @@ export default async function WatchPage({ params }: WatchPageProps) {
                 />
             </div>
         </div>
+        
+        {content.cast && content.cast.length > 0 && <CastSection cast={content.cast} />}
 
         <CommentSection contentId={String(content.id)} />
       </div>
