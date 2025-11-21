@@ -161,40 +161,39 @@ export async function searchContent(query: string): Promise<Content[]> {
 }
 
 export async function getBrowseContent({ genre, type, region }: { genre?: string; type?: 'movie' | 'tv'; region?: string }): Promise<Content[]> {
-    const resolvedType = type || (genre ? 'movie' : 'movie');
-    const typePath = resolvedType === 'tv' ? 'tv' : 'movie';
-    
-    let url = new URL(`${TMDB_BASE_URL}/discover/${typePath}`);
+    const resolvedType = type || 'movie';
+    let url = new URL(`${TMDB_BASE_URL}/discover/${resolvedType}`);
     url.searchParams.append('api_key', TMDB_API_KEY);
-
+    
     if (genre) {
         url.searchParams.append('with_genres', genre);
     }
     if (region) {
         url.searchParams.append('region', region);
     }
-
+    
     url.searchParams.append('sort_by', 'popularity.desc');
-
+    
     return await fetchAndTransformContent(url.toString(), resolvedType);
 }
 
 export async function getManuallyAddedContent(): Promise<Content[]> {
   try {
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'http://localhost:9002';
+    const isServer = typeof window === 'undefined';
+    const baseUrl = isServer
+      ? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:9002')
+      : '';
       
-    const url = new URL(`/api/added-content?v=${new Date().getTime()}`, baseUrl);
+    const url = `${baseUrl}/api/added-content?v=${new Date().getTime()}`;
 
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, {
         headers: {
             'Cache-Control': 'no-cache'
         },
         cache: 'no-store'
     });
     if (!response.ok) {
-        console.error('Failed to fetch manually added content, status:', response.status);
+        console.error('Failed to fetch manually added content, status:', response.status, await response.text());
         return [];
     }
     return await response.json();
