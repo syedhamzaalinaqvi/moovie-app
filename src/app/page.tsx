@@ -21,42 +21,26 @@ export default function BrowsePage() {
     const fetchContent = async () => {
       setIsLoading(true);
       try {
-        // 1. Fetch content from the TMDB API
         const apiContent = await getBrowseContent({ type: type || undefined });
-        
-        // 2. Correctly type and filter the local JSON data
         const localContent: Content[] = addedContentData as Content[];
-        const filteredLocalContent = type ? localContent.filter(item => item.type === type) : localContent;
-
-        // 3. Combine the lists, ensuring local content is prioritized and unique.
-        const combinedContentMap = new Map<string, Content>();
         
-        // Add local content first to prioritize it.
-        filteredLocalContent.forEach(item => {
+        const combinedContentMap = new Map<string, Content>();
+
+        // Prioritize local content
+        localContent.forEach(item => {
+          if (!type || item.type === type) {
             combinedContentMap.set(String(item.id), item);
+          }
         });
 
-        // Add API content, but do not overwrite existing local content.
+        // Add API content, avoiding duplicates
         apiContent.forEach(item => {
           if (!combinedContentMap.has(String(item.id))) {
             combinedContentMap.set(String(item.id), item);
           }
         });
-        
-        // 4. Convert the map back to an array
-        const finalContent = Array.from(combinedContentMap.values());
-        
-        // 5. Sort to bring your manually added content to the front
-        finalContent.sort((a, b) => {
-            const aIsLocal = filteredLocalContent.some(local => String(local.id) === String(a.id));
-            const bIsLocal = filteredLocalContent.some(local => String(local.id) === String(b.id));
-            if (aIsLocal && !bIsLocal) return -1;
-            if (!aIsLocal && bIsLocal) return 1;
-            // For items of the same source (both local or both API), maintain their original relative order or sort by date
-            // For local items, a reverse chronological sort might be nice, but for now, we'll keep it simple.
-            return 0;
-        });
 
+        const finalContent = Array.from(combinedContentMap.values());
         setContent(finalContent);
 
       } catch (error) {
@@ -68,8 +52,7 @@ export default function BrowsePage() {
     };
 
     fetchContent();
-
-  }, [type]);
+  }); // <-- The dependency array is removed to force re-fetch on every render
 
   const filteredContent = q
     ? content.filter(item => item.title.toLowerCase().includes(q.toLowerCase()))
