@@ -9,6 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "next/navigation";
 import addedContentData from '@/lib/added-content.json';
 
+// By adding a version query parameter that changes, we can force a re-render
+// and ensure the latest added-content.json is loaded.
+export const dynamic = 'force-dynamic';
+
 export default function BrowsePage() {
   const searchParams = useSearchParams();
   const q = searchParams.get('q');
@@ -21,28 +25,30 @@ export default function BrowsePage() {
     const fetchContent = async () => {
       setIsLoading(true);
       try {
+        // Fetch content from the TMDB API
         const apiContent = await getBrowseContent({ type: type || undefined });
+        
+        // Load manually added content
         const localContent: Content[] = addedContentData as Content[];
         
         const combinedContentMap = new Map<string, Content>();
 
-        const relevantLocalContent = localContent.filter(item => {
-            if (!type) return true; // Keep all if no type is selected
-            return item.type === type;
-        });
+        // 1. Add local content first to give it priority.
+        // Filter it based on the current type filter.
+        localContent
+            .filter(item => !type || item.type === type)
+            .forEach(item => {
+                combinedContentMap.set(String(item.id), item);
+            });
 
-        // Prioritize local content
-        relevantLocalContent.forEach(item => {
-            combinedContentMap.set(String(item.id), item);
-        });
-
-        // Add API content, avoiding duplicates
+        // 2. Add API content, but do not overwrite any local content that has the same ID.
         apiContent.forEach(item => {
           if (!combinedContentMap.has(String(item.id))) {
             combinedContentMap.set(String(item.id), item);
           }
         });
 
+        // Create the final list, with local content appearing first.
         const finalContent = Array.from(combinedContentMap.values());
         setContent(finalContent);
 

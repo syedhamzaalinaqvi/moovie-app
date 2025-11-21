@@ -15,6 +15,8 @@ import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 import addedContentData from '@/lib/added-content.json';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { updateContent } from '@/ai/flows/update-content';
+import { useRouter } from 'next/navigation';
 
 function StatCard({ title, value, icon: Icon, isLoading }: { title: string; value: number; icon: React.ElementType; isLoading: boolean }) {
   return (
@@ -35,6 +37,7 @@ function StatCard({ title, value, icon: Icon, isLoading }: { title: string; valu
 }
 
 function AddContentForm() {
+    const router = useRouter();
     const [tmdbId, setTmdbId] = useState('');
     const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
     const [isLoading, setIsLoading] = useState(false);
@@ -75,24 +78,23 @@ function AddContentForm() {
 
         const finalContentToAdd = { ...previewContent, type: contentType };
         
-        // This is a placeholder for the AI to perform the file write operation.
-        console.log("---STUDIO_ACTION---");
-        console.log(JSON.stringify({
-            action: "WRITE_FILE",
-            path: "src/lib/added-content.json",
-            content: JSON.stringify([...addedContentData, finalContentToAdd], null, 2),
-            message: `Added '${finalContentToAdd.title}' to the content library.`
-        }));
-
-        setTimeout(() => {
-            toast({ 
-                title: 'Content Added', 
-                description: `'${finalContentToAdd.title}' has been requested to be added to the library. Refresh the page to see changes.`
+        try {
+            await updateContent(finalContentToAdd);
+            toast({
+                title: 'Content Added',
+                description: `'${finalContentToAdd.title}' has been added to the library.`,
             });
             setTmdbId('');
             setPreviewContent(null);
+            // Navigate with a cache-busting query parameter
+            router.push(`/?v=${new Date().getTime()}`);
+            router.refresh();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Could not add content.';
+            toast({ variant: 'destructive', title: 'Update Failed', description: message });
+        } finally {
             setIsLoading(false);
-        }, 1000);
+        }
     };
 
     return (
