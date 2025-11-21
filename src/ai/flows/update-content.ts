@@ -3,7 +3,7 @@
  * @fileOverview This file defines a Genkit flow for updating the local content database.
  */
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
 import type { Content } from '@/lib/definitions';
@@ -36,8 +36,17 @@ const updateContentFlow = ai.defineFlow(
         }
       }
 
-      // Add the new content
-      existingContent.push(newContent);
+      // Check if content with the same ID already exists
+      const existingContentIndex = existingContent.findIndex(item => String(item.id) === String(newContent.id));
+
+      if (existingContentIndex !== -1) {
+        // Update existing content
+        existingContent[existingContentIndex] = newContent;
+      } else {
+        // Add new content to the beginning of the array
+        existingContent.unshift(newContent);
+      }
+
 
       // Write the updated content back to the file
       await fs.writeFile(filePath, JSON.stringify(existingContent, null, 2), 'utf-8');
