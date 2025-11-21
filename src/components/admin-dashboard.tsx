@@ -13,7 +13,6 @@ import { Input } from './ui/input';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
-import addedContentData from '@/lib/added-content.json';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { updateContent } from '@/ai/flows/update-content';
 import { useRouter } from 'next/navigation';
@@ -82,7 +81,7 @@ function AddContentForm() {
             await updateContent(finalContentToAdd);
             toast({
                 title: 'Content Added',
-                description: `'${finalContentToAdd.title}' has been added to the library.`,
+                description: `'${finalContentToAdd.title}' has been added to the library. Refresh to see changes.`,
             });
             setTmdbId('');
             setPreviewContent(null);
@@ -180,7 +179,9 @@ export default function AdminDashboard() {
     async function fetchStats() {
       setLoadingStats(true);
       try {
-        const localContent: Content[] = addedContentData as Content[];
+        const response = await fetch(`/api/added-content?v=${new Date().getTime()}`);
+        const localContent: Content[] = await response.json();
+
         const apiMovies = await getBrowseContent({ type: 'movie' });
         const apiTvShows = await getBrowseContent({ type: 'tv' });
 
