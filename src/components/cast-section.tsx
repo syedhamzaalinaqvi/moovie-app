@@ -11,10 +11,10 @@ export function CastSection({ cast }: CastSectionProps) {
     return (
         <section>
             <h2 className="text-2xl font-bold mb-4">Cast</h2>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-4 md:gap-6">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-3 sm:gap-4 md:gap-6">
                 {cast.map(member => (
                     <div key={member.id} className="flex flex-col items-center text-center">
-                        <Avatar className="h-24 w-24">
+                        <Avatar className="h-20 w-20 sm:h-24 sm:w-24">
                             <AvatarImage src={member.profilePath} alt={member.name} />
                             <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                         </Avatar>
