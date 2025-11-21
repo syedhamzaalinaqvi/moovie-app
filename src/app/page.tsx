@@ -26,8 +26,11 @@ export default function BrowsePage() {
     const fetchContent = async () => {
       setIsLoading(true);
       try {
-        // Fetch content from the TMDB API
-        const apiContent = await getBrowseContent({ type: type || undefined, genre: genre || undefined, region: region || undefined });
+        const apiContent = await getBrowseContent({ 
+          type: type || undefined, 
+          genre: genre || undefined, 
+          region: region || undefined 
+        });
         
         // Dynamically fetch manually added content to avoid HMR issues
         const response = await fetch(`/api/added-content?v=${new Date().getTime()}`);
@@ -35,19 +38,29 @@ export default function BrowsePage() {
         
         const combinedContentMap = new Map<string, Content>();
 
+        // Filter local content based on current filters.
+        // This is a simple implementation. For genres, it checks if the genre name is in the list.
+        // For a more robust solution, you'd map genre names to IDs.
         const relevantLocalContent = localContent.filter(item => {
             if (type && item.type !== type) return false;
-            // Note: genre/region filtering for local content is not implemented
-            // as local data does not have genre IDs or region codes.
-            // All local content of the correct type will be shown.
+            // Note: Region filtering for local content is not implemented as it's not in the data.
+            if (region && !genre) return true; // Show all local if filtering only by region
+            
+            // If filtering by genre, we need to match it.
+            // TMDB uses genre IDs, but our local data has names. This is a limitation.
+            // We won't filter local content by genre for now.
+            if (genre) return false; // Hide local content when filtering by genre to avoid mismatches
+
             return true;
         });
 
-        // 1. Add local content first to give it priority.
-        relevantLocalContent.forEach(item => {
-            combinedContentMap.set(String(item.id), item);
-        });
-
+        // 1. Add local content first to give it priority, only if not filtering by genre.
+        if (!genre) {
+            relevantLocalContent.forEach(item => {
+                combinedContentMap.set(String(item.id), item);
+            });
+        }
+        
         // 2. Add API content, but do not overwrite any local content that has the same ID.
         apiContent.forEach(item => {
           if (!combinedContentMap.has(String(item.id))) {
@@ -73,9 +86,10 @@ export default function BrowsePage() {
     ? content.filter(item => item.title.toLowerCase().includes(q.toLowerCase()))
     : content;
 
+  // You could fetch genre/country names from TMDB API to display them
   const getTitle = () => {
     if (q) return `Search results for "${q}"`;
-    if (genre) return `Genre`; // You can expand this to fetch genre name
+    if (genre) return `Genre`;
     if (region) return `Content from ${region}`;
     if (type === 'movie') return 'Movies';
     if (type === 'tv') return 'TV Shows';

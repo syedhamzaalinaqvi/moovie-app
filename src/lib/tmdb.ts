@@ -86,6 +86,7 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
     const allGenres = await fetchGenres();
      try {
         const response = await fetch(url);
+        if (!response.ok) return null;
         const data = await response.json() as TmdbContent & { genres: Genre[], videos: { results: { type: string, key: string }[] } };
         
         const trailer = data.videos?.results.find(v => v.type === 'Trailer');
@@ -132,19 +133,17 @@ export async function getNewReleases(): Promise<Content[]> {
 export async function getContentById(id: string): Promise<Content | null> {
     const isMovie = !isNaN(Number(id)); // simplistic check, might need refinement
     const type = isMovie ? 'movie' : 'tv';
-    const contentId = isMovie ? id : id.split('-')[1];
-    const url = `${TMDB_BASE_URL}/${type}/${contentId}?api_key=${TMDB_API_KEY}&append_to_response=videos`;
-    try {
-        const response = await fetch(url);
-        if(!response.ok) { // First try movie
-            const tvUrl = `${TMDB_BASE_URL}/tv/${contentId}?api_key=${TMDB_API_KEY}&append_to_response=videos`;
-            return await fetchAndTransformSingleContent(tvUrl, 'tv');
-        }
-        return await fetchAndTransformSingleContent(url, 'movie');
-    } catch(e) {
-        const tvUrl = `${TMDB_BASE_URL}/tv/${contentId}?api_key=${TMDB_API_KEY}&append_to_response=videos`;
-        return await fetchAndTransformSingleContent(tvUrl, 'tv');
+    const contentId = isMovie ? id : (id.split('-')[0] || id);
+    
+    // First, try fetching as a movie
+    let content = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/movie/${contentId}?api_key=${TMDB_API_KEY}&append_to_response=videos`, 'movie');
+    
+    // If that fails (returns null), try fetching as a TV show
+    if (!content) {
+        content = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/tv/${contentId}?api_key=${TMDB_API_KEY}&append_to_response=videos`, 'tv');
     }
+    
+    return content;
 }
 
 export async function getContentByIds(ids: string[]): Promise<Content[]> {
@@ -161,12 +160,23 @@ export async function searchContent(query: string): Promise<Content[]> {
 export async function getBrowseContent({ genre, type, region }: { genre?: string; type?: 'movie' | 'tv'; region?: string }): Promise<Content[]> {
     const resolvedType = type || 'movie';
     const typePath = resolvedType === 'tv' ? 'tv' : 'movie';
-    let url = `${TMDB_BASE_URL}/discover/${typePath}?api_key=${TMDB_API_KEY}`;
-    if(genre) {
-        url += `&with_genres=${genre}`;
+    
+    let url = new URL(`${TMDB_BASE_URL}/discover/${typePath}`);
+    url.searchParams.append('api_key', TMDB_API_KEY);
+
+    if (genre) {
+        url.searchParams.append('with_genres', genre);
     }
-    if(region) {
-        url += `&region=${region}`;
+    if (region) {
+        url.searchParams.append('region', region);
     }
-    return await fetchAndTransformContent(url, resolvedType);
+    if (type) {
+         // If a genre or region is selected, it's better to also specify the type
+         // to get more relevant results from the discover endpoint.
+    }
+
+    // Default sorting for discovery
+    url.searchParams.append('sort_by', 'popularity.desc');
+
+    return await fetchAndTransformContent(url.toString(), resolvedType);
 }
