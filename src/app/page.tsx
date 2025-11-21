@@ -1,6 +1,6 @@
 'use client';
 
-import { getBrowseContent } from "@/lib/tmdb";
+import { getBrowseContent, getManuallyAddedContent } from "@/lib/tmdb";
 import { ContentCard } from "@/components/content-card";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -26,40 +26,27 @@ export default function BrowsePage() {
     const fetchContent = async () => {
       setIsLoading(true);
       try {
-        const apiContent = await getBrowseContent({ 
-          type: type || undefined, 
-          genre: genre || undefined, 
-          region: region || undefined 
-        });
-        
-        // Dynamically fetch manually added content to avoid HMR issues
-        const response = await fetch(`/api/added-content?v=${new Date().getTime()}`);
-        const localContent: Content[] = await response.json();
+        const [apiContent, localContent] = await Promise.all([
+          getBrowseContent({ 
+            type: type || undefined, 
+            genre: genre || undefined, 
+            region: region || undefined 
+          }),
+          getManuallyAddedContent()
+        ]);
         
         const combinedContentMap = new Map<string, Content>();
 
-        // Filter local content based on current filters.
-        // This is a simple implementation. For genres, it checks if the genre name is in the list.
-        // For a more robust solution, you'd map genre names to IDs.
         const relevantLocalContent = localContent.filter(item => {
             if (type && item.type !== type) return false;
-            // Note: Region filtering for local content is not implemented as it's not in the data.
-            if (region && !genre) return true; // Show all local if filtering only by region
-            
-            // If filtering by genre, we need to match it.
-            // TMDB uses genre IDs, but our local data has names. This is a limitation.
-            // We won't filter local content by genre for now.
-            if (genre) return false; // Hide local content when filtering by genre to avoid mismatches
-
+            if (genre && !item.genres.includes(genre)) return false; // This is a limitation, TMDB genre is ID
             return true;
         });
-
-        // 1. Add local content first to give it priority, only if not filtering by genre.
-        if (!genre) {
-            relevantLocalContent.forEach(item => {
-                combinedContentMap.set(String(item.id), item);
-            });
-        }
+        
+        // 1. Add local content first to give it priority
+        relevantLocalContent.forEach(item => {
+            combinedContentMap.set(String(item.id), item);
+        });
         
         // 2. Add API content, but do not overwrite any local content that has the same ID.
         apiContent.forEach(item => {

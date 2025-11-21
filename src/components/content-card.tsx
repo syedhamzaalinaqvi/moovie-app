@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { Content } from '@/lib/definitions';
 import { Card, CardContent } from './ui/card';
 import { PlayCircle } from 'lucide-react';
+import { Badge } from './ui/badge';
 
 interface ContentCardProps {
   content: Content;
@@ -22,6 +23,9 @@ export function ContentCard({ content }: ContentCardProps) {
               sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 12.5vw"
               data-ai-hint="movie poster"
             />
+            {content.isHindiDubbed && (
+              <Badge variant="secondary" className="absolute top-2 left-2 z-10">Hindi Dubbed</Badge>
+            )}
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-lg">
                 <PlayCircle className="w-12 h-12 text-primary" />
             </div>

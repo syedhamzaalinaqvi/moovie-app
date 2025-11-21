@@ -10,12 +10,13 @@ import { ContentCard } from './content-card';
 import { Separator } from './ui/separator';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { updateContent } from '@/ai/flows/update-content';
 import { useRouter } from 'next/navigation';
+import { Checkbox } from './ui/checkbox';
+import { Textarea } from './ui/textarea';
 
 function StatCard({ title, value, icon: Icon, isLoading }: { title: string; value: number; icon: React.ElementType; isLoading: boolean }) {
   return (
@@ -38,10 +39,16 @@ function StatCard({ title, value, icon: Icon, isLoading }: { title: string; valu
 function AddContentForm() {
     const router = useRouter();
     const [tmdbId, setTmdbId] = useState('');
-    const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
     const [isLoading, setIsLoading] = useState(false);
     const [previewContent, setPreviewContent] = useState<Content | null>(null);
     const [previewError, setPreviewError] = useState<string | null>(null);
+    
+    // New state for custom fields
+    const [trailerUrl, setTrailerUrl] = useState('');
+    const [downloadLink, setDownloadLink] = useState('');
+    const [isHindiDubbed, setIsHindiDubbed] = useState(false);
+    const [customTags, setCustomTags] = useState('');
+
     const { toast } = useToast();
 
     const handlePreview = async () => {
@@ -58,7 +65,8 @@ function AddContentForm() {
           throw new Error('Content not found with the provided ID.');
         }
         setPreviewContent(content);
-        setContentType(content.type);
+        // Pre-fill fields
+        setTrailerUrl(content.trailerUrl || '');
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Could not fetch content details.';
         setPreviewError(message);
@@ -75,7 +83,13 @@ function AddContentForm() {
         }
         setIsLoading(true);
 
-        const finalContentToAdd = { ...previewContent, type: contentType };
+        const finalContentToAdd: Content = { 
+            ...previewContent,
+            trailerUrl: trailerUrl || undefined,
+            downloadLink: downloadLink || undefined,
+            isHindiDubbed: isHindiDubbed,
+            customTags: customTags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        };
         
         try {
             await updateContent(finalContentToAdd);
@@ -83,9 +97,14 @@ function AddContentForm() {
                 title: 'Content Added',
                 description: `'${finalContentToAdd.title}' has been added to the library. Refresh to see changes.`,
             });
+            // Reset form
             setTmdbId('');
             setPreviewContent(null);
-            // Navigate with a cache-busting query parameter
+            setTrailerUrl('');
+            setDownloadLink('');
+            setIsHindiDubbed(false);
+            setCustomTags('');
+
             router.push(`/?v=${new Date().getTime()}`);
             router.refresh();
         } catch (error) {
@@ -104,7 +123,7 @@ function AddContentForm() {
               Add New Content
             </CardTitle>
             <CardDescription>
-                Add a new movie or TV show using its TMDB ID.
+                Add or update content using its TMDB ID and custom fields.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -133,27 +152,54 @@ function AddContentForm() {
               )}
 
               {previewContent && (
-                  <div className='space-y-4'>
+                  <div className='space-y-4 pt-4'>
                     <Separator/>
-                    <h3 className="text-lg font-medium">Content Preview</h3>
+                    <h3 className="text-lg font-medium text-center">Content Details</h3>
                     <div className="mx-auto w-1/2">
                         <ContentCard content={previewContent} />
                     </div>
-                     <RadioGroup
-                        value={contentType}
-                        onValueChange={(value: 'movie' | 'tv') => setContentType(value)}
-                        className="flex gap-4 pt-4"
-                        disabled={isLoading}
-                    >
-                        <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="movie" id="r-movie" />
-                        <Label htmlFor="r-movie">Movie</Label>
+                     <div className="space-y-4 pt-4">
+                        <div>
+                            <Label htmlFor="trailerUrl">IFrame/Embed or Video URL</Label>
+                            <Textarea
+                                id="trailerUrl"
+                                placeholder="<iframe...> or https://..."
+                                value={trailerUrl}
+                                onChange={(e) => setTrailerUrl(e.target.value)}
+                                disabled={isLoading}
+                                rows={3}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="downloadLink">Download Link</Label>
+                            <Input
+                                id="downloadLink"
+                                placeholder="https://..."
+                                value={downloadLink}
+                                onChange={(e) => setDownloadLink(e.target.value)}
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="customTags">Custom Tags (comma-separated)</Label>
+                            <Input
+                                id="customTags"
+                                placeholder="e.g., must watch, new, 4k"
+                                value={customTags}
+                                onChange={(e) => setCustomTags(e.target.value)}
+                                disabled={isLoading}
+                            />
                         </div>
                         <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="tv" id="r-tv" />
-                        <Label htmlFor="r-tv">TV Show</Label>
+                            <Checkbox
+                                id="isHindiDubbed"
+                                checked={isHindiDubbed}
+                                onCheckedChange={(checked) => setIsHindiDubbed(!!checked)}
+                                disabled={isLoading}
+                            />
+                            <Label htmlFor="isHindiDubbed" className="font-medium">Hindi Dubbed</Label>
                         </div>
-                    </RadioGroup>
+                    </div>
                   </div>
               )}
           </CardContent>

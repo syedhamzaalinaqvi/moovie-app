@@ -131,16 +131,18 @@ export async function getNewReleases(): Promise<Content[]> {
 }
 
 export async function getContentById(id: string): Promise<Content | null> {
-    const isMovie = !isNaN(Number(id)); // simplistic check, might need refinement
-    const type = isMovie ? 'movie' : 'tv';
-    const contentId = isMovie ? id : (id.split('-')[0] || id);
+    // First, check manually added content
+    const manuallyAdded = await getManuallyAddedContent();
+    const manualItem = manuallyAdded.find(c => String(c.id) === id);
+    if (manualItem) {
+        return manualItem;
+    }
+
+    // If not found, fetch from TMDB
+    let content = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos`, 'movie');
     
-    // First, try fetching as a movie
-    let content = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/movie/${contentId}?api_key=${TMDB_API_KEY}&append_to_response=videos`, 'movie');
-    
-    // If that fails (returns null), try fetching as a TV show
     if (!content) {
-        content = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/tv/${contentId}?api_key=${TMDB_API_KEY}&append_to_response=videos`, 'tv');
+        content = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/tv/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos`, 'tv');
     }
     
     return content;
@@ -170,13 +172,29 @@ export async function getBrowseContent({ genre, type, region }: { genre?: string
     if (region) {
         url.searchParams.append('region', region);
     }
-    if (type) {
-         // If a genre or region is selected, it's better to also specify the type
-         // to get more relevant results from the discover endpoint.
-    }
 
-    // Default sorting for discovery
     url.searchParams.append('sort_by', 'popularity.desc');
 
     return await fetchAndTransformContent(url.toString(), resolvedType);
+}
+
+export async function getManuallyAddedContent(): Promise<Content[]> {
+  try {
+    // We use a dynamic fetch here to ensure we get the latest version,
+    // bypassing the Next.js static import cache.
+    // The base URL will be the current server's URL.
+    const response = await fetch(`/api/added-content?v=${new Date().getTime()}`, {
+        headers: {
+            'Cache-Control': 'no-cache'
+        }
+    });
+    if (!response.ok) {
+        console.error('Failed to fetch manually added content, status:', response.status);
+        return [];
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch manually added content:', error);
+    return [];
+  }
 }

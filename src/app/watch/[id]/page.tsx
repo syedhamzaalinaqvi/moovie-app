@@ -1,10 +1,13 @@
-import { getContentById } from '@/lib/tmdb';
+import { getContentById, getManuallyAddedContent } from '@/lib/tmdb';
 import Image from 'next/image';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { VideoPlayer } from '@/components/video-player';
 import { Badge } from '@/components/ui/badge';
-import { Star } from 'lucide-react';
+import { Star, Play, Download } from 'lucide-react';
 import { CommentSection } from '@/components/comment-section';
+import type { Content } from '@/lib/definitions';
+import { Button } from '@/components/ui/button';
 
 type WatchPageProps = {
   params: {
@@ -13,11 +16,26 @@ type WatchPageProps = {
 };
 
 export default async function WatchPage({ params }: WatchPageProps) {
-  const content = await getContentById(params.id);
+  let content: Content | null = null;
+  const manuallyAdded = await getManuallyAddedContent();
+  const manualItem = manuallyAdded.find(c => String(c.id) === params.id);
+  
+  if (manualItem) {
+    content = manualItem;
+  } else {
+    content = await getContentById(params.id);
+  }
+
 
   if (!content) {
     notFound();
   }
+  
+  // Combine tags
+  const allTags = [
+    ...(content.genres || []),
+    ...(content.customTags || [])
+  ];
 
   return (
     <div className="flex flex-col">
@@ -36,21 +54,40 @@ export default async function WatchPage({ params }: WatchPageProps) {
             <div className="w-full md:w-2/3 lg:w-3/4">
                 <h1 className="text-3xl md:text-4xl font-bold">{content.title}</h1>
                 <div className="flex items-center gap-4 mt-2 text-muted-foreground text-sm">
-                    <span>{content.releaseDate.split('-')[0]}</span>
+                    <span>{(content.releaseDate || 'N/A').split('-')[0]}</span>
                     <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                         <span>{content.rating}</span>
                     </div>
                     <Badge variant="outline" className="capitalize">{content.type}</Badge>
+                    {content.isHindiDubbed && <Badge variant="secondary">Hindi Dubbed</Badge>}
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                    {content.genres.map(genre => (
-                        <Badge key={genre} variant="secondary">{genre}</Badge>
+                 <div className="mt-4 flex flex-wrap gap-2">
+                    {allTags.map(tag => (
+                        <Badge key={tag} variant="secondary">{tag}</Badge>
                     ))}
                 </div>
                 <p className="mt-6 text-foreground/80 leading-relaxed">
                     {content.description}
                 </p>
+                <div className="mt-6 flex gap-4">
+                  {content.trailerUrl && (
+                    <Button asChild size="lg">
+                      <Link href="#player">
+                        <Play className="mr-2 h-5 w-5" />
+                        Play Now
+                      </Link>
+                    </Button>
+                  )}
+                   {content.downloadLink && (
+                    <Button asChild size="lg" variant="outline">
+                      <Link href={content.downloadLink} target="_blank" rel="noopener noreferrer">
+                        <Download className="mr-2 h-5 w-5" />
+                        Download
+                      </Link>
+                    </Button>
+                  )}
+                </div>
             </div>
             <div className="w-full md:w-1/3 lg:w-1/4">
                 <Image 
@@ -64,7 +101,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
             </div>
         </div>
 
-        <CommentSection contentId={content.id} />
+        <CommentSection contentId={String(content.id)} />
       </div>
     </div>
   );

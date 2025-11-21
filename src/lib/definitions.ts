@@ -11,6 +11,9 @@ export type Content = {
   rating: number;
   type: 'movie' | 'tv';
   trailerUrl?: string;
+  downloadLink?: string;
+  isHindiDubbed?: boolean;
+  customTags?: string[];
 };
 
 export type AppUser = {
