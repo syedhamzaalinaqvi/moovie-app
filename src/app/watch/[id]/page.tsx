@@ -31,7 +31,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
 
   return (
     <div className="flex flex-col">
-      <div className="relative w-full aspect-video bg-black">
+      <div id="player" className="relative w-full aspect-video bg-black">
         {content.trailerUrl ? (
           <VideoPlayer src={content.trailerUrl} />
         ) : (
@@ -42,8 +42,8 @@ export default async function WatchPage({ params }: WatchPageProps) {
       </div>
 
       <div className="p-4 md:p-6 lg:p-8 space-y-8">
-        <div className="flex flex-col md:flex-row gap-6">
-            <div className="w-full md:w-2/3 lg:w-3/4">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8">
+            <div className="w-full md:flex-1 min-w-0">
                 <h1 className="text-3xl md:text-4xl font-bold">{content.title}</h1>
                 <div className="flex items-center gap-4 mt-2 text-muted-foreground text-sm">
                     <span>{(content.releaseDate || 'N/A').split('-')[0]}</span>
@@ -81,13 +81,13 @@ export default async function WatchPage({ params }: WatchPageProps) {
                   )}
                 </div>
             </div>
-            <div className="w-full md:w-1/3 lg:w-1/4">
+            <div className="w-full md:w-1/3 lg:w-1/4 xl:w-1/5 flex-shrink-0">
                 <Image 
                     src={content.posterPath} 
                     alt={content.title} 
                     width={500}
                     height={750}
-                    className="rounded-lg shadow-lg w-full"
+                    className="rounded-lg shadow-lg w-full h-auto"
                     data-ai-hint="movie poster"
                 />
             </div>
