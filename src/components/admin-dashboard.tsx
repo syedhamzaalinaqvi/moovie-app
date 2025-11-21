@@ -60,6 +60,7 @@ function AddContentForm() {
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Could not fetch content details.';
         setPreviewError(message);
+        toast({ variant: 'destructive', title: 'Preview Failed', description: message });
       } finally {
         setIsLoading(false);
       }
@@ -123,7 +124,7 @@ function AddContentForm() {
                 </div>
               </div>
               
-              {previewError && (
+              {previewError && !previewContent && (
                   <Alert variant="destructive">
                       <AlertTitle>Preview Failed</AlertTitle>
                       <AlertDescription>{previewError}</AlertDescription>
@@ -177,23 +178,27 @@ export default function AdminDashboard() {
     async function fetchStats() {
       setLoadingStats(true);
       try {
-        const movies = await getBrowseContent({ type: 'movie' });
-        const tvShows = await getBrowseContent({ type: 'tv' });
-        const addedMovies = addedContentData.filter(c => c.type === 'movie');
-        const addedTvShows = addedContentData.filter(c => c.type === 'tv');
+        const localContent: Content[] = addedContentData as Content[];
+        const apiMovies = await getBrowseContent({ type: 'movie' });
+        const apiTvShows = await getBrowseContent({ type: 'tv' });
 
-        const allMovies = [...movies, ...addedMovies];
-        const allTvShows = [...tvShows, ...addedTvShows];
+        const movieMap = new Map<string, Content>();
+        localContent.filter(c => c.type === 'movie').forEach(c => movieMap.set(String(c.id), c));
+        apiMovies.forEach(c => {
+          if (!movieMap.has(String(c.id))) movieMap.set(String(c.id), c);
+        });
 
-        const uniqueMovieIds = new Set(allMovies.map(m => m.id));
-        const uniqueTvShowIds = new Set(allTvShows.map(t => t.id));
+        const tvMap = new Map<string, Content>();
+        localContent.filter(c => c.type === 'tv').forEach(c => tvMap.set(String(c.id), c));
+        apiTvShows.forEach(c => {
+          if (!tvMap.has(String(c.id))) tvMap.set(String(c.id), c);
+        });
 
-        setMovieCount(uniqueMovieIds.size);
-        setTvShowCount(uniqueTvShowIds.size);
+        setMovieCount(movieMap.size);
+        setTvShowCount(tvMap.size);
         
         // Reverse the array to show latest additions first
-        const addedContentTyped = addedContentData as Content[];
-        setRecentlyAdded(addedContentTyped.slice().reverse());
+        setRecentlyAdded(localContent.slice().reverse());
 
       } catch (error) {
         console.error("Failed to fetch stats:", error);

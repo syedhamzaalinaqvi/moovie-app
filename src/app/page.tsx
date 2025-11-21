@@ -28,31 +28,33 @@ export default function BrowsePage() {
         const localContent: Content[] = addedContentData as Content[];
         const filteredLocalContent = type ? localContent.filter(item => item.type === type) : localContent;
 
-        // 3. Combine the lists using a Map to handle duplicates, prioritizing local content.
+        // 3. Combine the lists, ensuring local content is prioritized and unique.
         const combinedContentMap = new Map<string, Content>();
         
-        // First, add the fetched content from the API
-        apiContent.forEach(item => {
-            combinedContentMap.set(String(item.id), item);
-        });
-        
-        // Then, add (and overwrite) with your manually added content
-        // This ensures your added content takes priority if an ID conflict exists.
+        // Add local content first to prioritize it.
         filteredLocalContent.forEach(item => {
             combinedContentMap.set(String(item.id), item);
         });
 
+        // Add API content, but do not overwrite existing local content.
+        apiContent.forEach(item => {
+          if (!combinedContentMap.has(String(item.id))) {
+            combinedContentMap.set(String(item.id), item);
+          }
+        });
+        
         // 4. Convert the map back to an array
         const finalContent = Array.from(combinedContentMap.values());
         
         // 5. Sort to bring your manually added content to the front
-        const localContentIds = new Set(localContent.map(item => String(item.id)));
         finalContent.sort((a, b) => {
-            const aIsLocal = localContentIds.has(String(a.id));
-            const bIsLocal = localContentIds.has(String(b.id));
-            if (aIsLocal && !bIsLocal) return -1; // a comes first
-            if (!aIsLocal && bIsLocal) return 1;  // b comes first
-            return 0; // maintain original order otherwise
+            const aIsLocal = filteredLocalContent.some(local => String(local.id) === String(a.id));
+            const bIsLocal = filteredLocalContent.some(local => String(local.id) === String(b.id));
+            if (aIsLocal && !bIsLocal) return -1;
+            if (!aIsLocal && bIsLocal) return 1;
+            // For items of the same source (both local or both API), maintain their original relative order or sort by date
+            // For local items, a reverse chronological sort might be nice, but for now, we'll keep it simple.
+            return 0;
         });
 
         setContent(finalContent);
