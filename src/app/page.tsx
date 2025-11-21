@@ -16,6 +16,8 @@ export default function BrowsePage() {
   const searchParams = useSearchParams();
   const q = searchParams.get('q');
   const type = searchParams.get('type') as 'movie' | 'tv' | null;
+  const genre = searchParams.get('genre');
+  const region = searchParams.get('region');
 
   const [content, setContent] = useState<Content[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +27,7 @@ export default function BrowsePage() {
       setIsLoading(true);
       try {
         // Fetch content from the TMDB API
-        const apiContent = await getBrowseContent({ type: type || undefined });
+        const apiContent = await getBrowseContent({ type: type || undefined, genre: genre || undefined, region: region || undefined });
         
         // Dynamically fetch manually added content to avoid HMR issues
         const response = await fetch(`/api/added-content?v=${new Date().getTime()}`);
@@ -33,13 +35,18 @@ export default function BrowsePage() {
         
         const combinedContentMap = new Map<string, Content>();
 
+        const relevantLocalContent = localContent.filter(item => {
+            if (type && item.type !== type) return false;
+            // Note: genre/region filtering for local content is not implemented
+            // as local data does not have genre IDs or region codes.
+            // All local content of the correct type will be shown.
+            return true;
+        });
+
         // 1. Add local content first to give it priority.
-        // Filter it based on the current type filter.
-        localContent
-            .filter(item => !type || item.type === type)
-            .forEach(item => {
-                combinedContentMap.set(String(item.id), item);
-            });
+        relevantLocalContent.forEach(item => {
+            combinedContentMap.set(String(item.id), item);
+        });
 
         // 2. Add API content, but do not overwrite any local content that has the same ID.
         apiContent.forEach(item => {
@@ -47,8 +54,7 @@ export default function BrowsePage() {
             combinedContentMap.set(String(item.id), item);
           }
         });
-
-        // Create the final list, with local content appearing first.
+        
         const finalContent = Array.from(combinedContentMap.values());
         setContent(finalContent);
 
@@ -61,24 +67,25 @@ export default function BrowsePage() {
     };
 
     fetchContent();
-  }, [q, type]);
+  }, [q, type, genre, region]);
 
   const filteredContent = q
     ? content.filter(item => item.title.toLowerCase().includes(q.toLowerCase()))
     : content;
 
-  const title = q
-    ? `Search results for "${q}"`
-    : type === 'movie'
-    ? 'Movies'
-    : type === 'tv'
-    ? 'TV Shows'
-    : 'Browse All';
+  const getTitle = () => {
+    if (q) return `Search results for "${q}"`;
+    if (genre) return `Genre`; // You can expand this to fetch genre name
+    if (region) return `Content from ${region}`;
+    if (type === 'movie') return 'Movies';
+    if (type === 'tv') return 'TV Shows';
+    return 'Browse All';
+  }
 
   return (
     <div className="p-4 md:p-6 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold mb-6">{title}</h1>
+        <h1 className="text-3xl font-bold mb-6">{getTitle()}</h1>
         {isLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
                 {[...Array(14)].map((_, i) => (
@@ -99,7 +106,7 @@ export default function BrowsePage() {
             <Search className="w-16 h-16 text-muted-foreground mb-4" />
             <h2 className="text-2xl font-semibold">No Results Found</h2>
             <p className="text-muted-foreground mt-2">
-              We couldn't find any content matching your search.
+              We couldn't find any content matching your filter.
             </p>
           </div>
         )}

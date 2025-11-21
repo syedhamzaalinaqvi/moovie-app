@@ -29,5 +29,33 @@
     "rating": 8.711,
     "type": "movie",
     "trailerUrl": "https://www.youtube.com/watch?v=PLl99DlL6b4"
+  },
+  {
+    "id": "37680",
+    "title": "Shadows in Paradise",
+    "description": "During a rescue operation in Iraq, Special Forces member Max Forrester is devastated when Sasha, his squad mate and fiancée goes missing. Two years later, Max now out of the military, receives a call from his ex-commander, Captain Dyer, informing him Sasha has been seen alive and moving freely about on a place called Paradise Island. He also informs Max the military is preparing to go in and extract her with possible charges of desertion or worse. Max sets off on his own to Paradise Island to find Sasha and learn the truth before Shadow Company gets to her first.",
+    "posterPath": "https://image.tmdb.org/t/p/w500/90rjc4ZpNAsfBofqlo2KC7DvhIc.jpg",
+    "backdropPath": "https://image.tmdb.org/t/p/w1280/9ZSYg9bPSFm5YDQ1dqNyU5B5C5B.jpg",
+    "genres": [
+      "Action"
+    ],
+    "releaseDate": "2010-02-09",
+    "rating": 5.023,
+    "type": "movie"
+  },
+  {
+    "id": "34307",
+    "title": "Shameless",
+    "description": "Chicagoan Frank Gallagher is the proud single dad of six smart, industrious, independent kids, who without him would be... perhaps better off. When Frank's not at the bar spending what little money they have, he's passed out on the floor. But the kids have found ways to grow up in spite of him. They may not be like any family you know, but they make no apologies for being exactly who they are.",
+    "posterPath": "https://image.tmdb.org/t/p/w500/ifo31fMWLmyOVpdak9K0kY4jldQ.jpg",
+    "backdropPath": "https://image.tmdb.org/t/p/w1280/5s9XHTB9SLPdg3mNU6BlSLnZ9Qq.jpg",
+    "genres": [
+      "Drama",
+      "Comedy"
+    ],
+    "releaseDate": "2011-01-09",
+    "rating": 8.164,
+    "type": "tv",
+    "trailerUrl": "https://www.youtube.com/watch?v=9tvkYS5cA58"
   }
 ]
