@@ -1,3 +1,4 @@
+
 import type { Content } from './definitions';
 
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || "46d13701165988b5bb5fb4d123c0447e";
@@ -160,7 +161,7 @@ export async function searchContent(query: string): Promise<Content[]> {
 }
 
 export async function getBrowseContent({ genre, type, region }: { genre?: string; type?: 'movie' | 'tv'; region?: string }): Promise<Content[]> {
-    const resolvedType = type || 'movie';
+    const resolvedType = type || (genre ? 'movie' : 'movie');
     const typePath = resolvedType === 'tv' ? 'tv' : 'movie';
     
     let url = new URL(`${TMDB_BASE_URL}/discover/${typePath}`);
@@ -180,13 +181,17 @@ export async function getBrowseContent({ genre, type, region }: { genre?: string
 
 export async function getManuallyAddedContent(): Promise<Content[]> {
   try {
-    // We use a dynamic fetch here to ensure we get the latest version,
-    // bypassing the Next.js static import cache.
-    // The base URL will be the current server's URL.
-    const response = await fetch(`/api/added-content?v=${new Date().getTime()}`, {
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:9002';
+      
+    const url = new URL(`/api/added-content?v=${new Date().getTime()}`, baseUrl);
+
+    const response = await fetch(url.toString(), {
         headers: {
             'Cache-Control': 'no-cache'
-        }
+        },
+        cache: 'no-store'
     });
     if (!response.ok) {
         console.error('Failed to fetch manually added content, status:', response.status);

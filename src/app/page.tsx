@@ -37,9 +37,11 @@ export default function BrowsePage() {
         
         const combinedContentMap = new Map<string, Content>();
 
+        // Filter local content based on current filters
         const relevantLocalContent = localContent.filter(item => {
             if (type && item.type !== type) return false;
-            if (genre && !item.genres.includes(genre)) return false; // This is a limitation, TMDB genre is ID
+            // Note: TMDB genre ID filtering on local content is tricky. 
+            // We'll rely on the main type filter for local content for now.
             return true;
         });
         
@@ -76,7 +78,10 @@ export default function BrowsePage() {
   // You could fetch genre/country names from TMDB API to display them
   const getTitle = () => {
     if (q) return `Search results for "${q}"`;
-    if (genre) return `Genre`;
+    if (genre) {
+      // In a real app, you'd fetch genre name from an ID
+      return `Genre`;
+    }
     if (region) return `Content from ${region}`;
     if (type === 'movie') return 'Movies';
     if (type === 'tv') return 'TV Shows';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getBrowseContent, getContentById } from '@/lib/tmdb';
+import { getBrowseContent, getContentById, getManuallyAddedContent } from '@/lib/tmdb';
 import type { Content } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Film, Tv, History, PlusCircle, Loader2, Search } from 'lucide-react';
@@ -225,8 +225,7 @@ export default function AdminDashboard() {
     async function fetchStats() {
       setLoadingStats(true);
       try {
-        const response = await fetch(`/api/added-content?v=${new Date().getTime()}`);
-        const localContent: Content[] = await response.json();
+        const localContent = await getManuallyAddedContent();
 
         const apiMovies = await getBrowseContent({ type: 'movie' });
         const apiTvShows = await getBrowseContent({ type: 'tv' });

@@ -57,5 +57,24 @@
     "rating": 8.164,
     "type": "tv",
     "trailerUrl": "https://www.youtube.com/watch?v=9tvkYS5cA58"
+  },
+  {
+    "id": "37680",
+    "title": "Shadows in Paradise",
+    "description": "During a rescue operation in Iraq, Special Forces member Max Forrester is devastated when Sasha, his squad mate and fiancée goes missing. Two years later, Max now out of the military, receives a call from his ex-commander, Captain Dyer, informing him Sasha has been seen alive and moving freely about on a place called Paradise Island. He also informs Max the military is preparing to go in and extract her with possible charges of desertion or worse. Max sets off on his own to Paradise Island to find Sasha and learn the truth before Shadow Company gets to her first.",
+    "posterPath": "https://image.tmdb.org/t/p/w500/90rjc4ZpNAsfBofqlo2KC7DvhIc.jpg",
+    "backdropPath": "https://image.tmdb.org/t/p/w1280/9ZSYg9bPSFm5YDQ1dqNyU5B5C5B.jpg",
+    "genres": [
+      "Action"
+    ],
+    "releaseDate": "2010-02-09",
+    "rating": 5.023,
+    "type": "movie",
+    "trailerUrl": "<iframe src=\"https://h-player-ashen.vercel.app/?embed=1&data=eyJwbGF5bGlzdCI6W3sic2VyaWVzTmFtZSI6InNzIiwic2Vhc29ucyI6W3sic2Vhc29uTnVtYmVyIjoxLCJlcGlzb2RlcyI6W3siZXBpc29kZU51bWJlciI6MSwiZXBpc29kZU5hbWUiOiJzczEiLCJ1cmwiOiJodHRwczovL25ldDUxLmNjL2hscy84MTYyNDAwOS5tM3U4P2luPWNlNzA1MWE3ODBkNDVmMjJlMmE5NjVjMTBhNmI3ZTBiOjpkYTY3YWJjMzRmMTg5Y2RhZmFjY2Q3YmNmNzkyNzcxNTo6MTc2MzY5NDY5Mzo6a3AiLCJkdXJhdGlvbiI6IjAwOjAwOjAwIiwicXVhbGl0eSI6IkF1dG8iLCJwcm9ncmVzcyI6MH0seyJlcGlzb2RlTnVtYmVyIjoyLCJlcGlzb2RlTmFtZSI6InNzMiIsInVybCI6Imh0dHBzOi8vbmV0NTEuY2MvaGxzLzgxNjI0MDA5Lm0zdTg%2FaW49Y2U3MDUxYTc4MGQ0NWYyMmUyYTk2NWMxMGE2YjdlMGI6OmRhNjdhYmMzNGYxODljZGFmYWNjZDdiY2Y3OTI3NzE1OjoxNzYzNjk0NjkzOjprcCIsImR1cmF0aW9uIjoiMDA6MDA6MDAiLCJxdWFsaXR5IjoiQXV0byIsInByb2dyZXNzIjowfSx7ImVwaXNvZGVOdW1iZXIiOjMsImVwaXNvZGVOYW1lIjoic3MzIiwidXJsIjoiaHR0cHM6Ly9uZXQ1MS5jYy9obHMvODE2MjQwMDkubTN1OD9pbj1jZTcwNTFhNzgwZDQ1ZjIyZTJhOTY1YzEwYTZiN2UwYjo6ZGE2N2FiYzM0ZjE4OWNkYWZhY2NkN2JjZjc5Mjc3MTU6OjE3NjM2OTQ2OTM6OmtwIiwiZHVyYXRpb24iOiIwMDowMDowMCIsInF1YWxpdHkiOiJBdXRvIiwicHJvZ3Jlc3MiOjB9LHsiZXBpc29kZU51bWJlciI6NCwiZXBpc29kZU5hbWUiOiJzczQiLCJ1cmwiOiJodHRwczovL25ldDUxLmNjL2hscy84MTYyNDAwOS5tM3U4P2luPWNlNzA1MWE3ODBkNDVmMjJlMmE5NjVjMTBhNmI3ZTBiOjpkYTY3YWJjMzRmMTg5Y2RhZmFjY2Q3YmNmNzkyNzcxNTo6MTc2MzY5NDY5Mzo6a3AiLCJkdXJhdGlvbiI6IjAwOjAwOjAwIiwicXVhbGl0eSI6IkF1dG8iLCJwcm9ncmVzcyI6MH0seyJlcGlzb2RlTnVtYmVyIjo1LCJlcGlzb2RlTmFtZSI6InNzNSIsInVybCI6Imh0dHBzOi8vbmV0NTEuY2MvaGxzLzgxNjI0MDA5Lm0zdTg%2FaW49Y2U3MDUxYTc4MGQ0NWYyMmUyYTk2NWMxMGE2YjdlMGI6OmRhNjdhYmMzNGYxODljZGFmYWNjZDdiY2Y3OTI3NzE1OjoxNzYzNjk0NjkzOjprcCIsImR1cmF0aW9uIjoiMDA6MDA6MDAiLCJxdWFsaXR5IjoiQXV0byIsInByb2dyZXNzIjowfV19XX1dLCJzYXZlIjpmYWxzZX0%3D\" width=\"800\" height=\"450\" frameborder=\"0\" allowfullscreen></iframe>\n\n<!-- If you prefer to postMessage the playlist, use the player iframe and then send { type: \"hplayer.load\", payload: {...} } -->",
+    "isHindiDubbed": true,
+    "customTags": [
+      "hindi dubbed",
+      "shadows in paradise hindi dubbed"
+    ]
   }
 ]
