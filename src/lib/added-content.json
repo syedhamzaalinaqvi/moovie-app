@@ -1,2 +1,18 @@
-
-[]
+[
+  {
+    "id": "758923",
+    "title": "Baaghi 4",
+    "description": "After waking up from a coma, a grieving man sets out to uncover the truth about his missing girlfriend.",
+    "posterPath": "https://image.tmdb.org/t/p/w500/u2YEFW5o2Y7RAw2K4hSA4TEXF3Q.jpg",
+    "backdropPath": "https://image.tmdb.org/t/p/w1280/y7Sft8RTYF5e8dBYZV4y0jbOHkh.jpg",
+    "genres": [
+      "Action",
+      "Romance",
+      "Thriller"
+    ],
+    "releaseDate": "2025-09-05",
+    "rating": 4.6,
+    "type": "movie",
+    "trailerUrl": "https://www.youtube.com/watch?v=58909OjAfeg"
+  }
+]

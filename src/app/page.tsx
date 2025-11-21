@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import type { Content } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "next/navigation";
-import addedContentData from '@/lib/added-content.json';
 
 // By adding a version query parameter that changes, we can force a re-render
 // and ensure the latest added-content.json is loaded.
@@ -28,8 +27,9 @@ export default function BrowsePage() {
         // Fetch content from the TMDB API
         const apiContent = await getBrowseContent({ type: type || undefined });
         
-        // Load manually added content
-        const localContent: Content[] = addedContentData as Content[];
+        // Dynamically fetch manually added content to avoid HMR issues
+        const response = await fetch(`/api/added-content?v=${new Date().getTime()}`);
+        const localContent: Content[] = await response.json();
         
         const combinedContentMap = new Map<string, Content>();
 
