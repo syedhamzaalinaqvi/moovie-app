@@ -2,7 +2,6 @@
 
 import type { CastMember } from "@/lib/definitions";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 
 interface CastSectionProps {
