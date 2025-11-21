@@ -41,10 +41,10 @@ export default async function WatchPage({ params }: WatchPageProps) {
       </div>
 
       <div className="p-4 md:p-6 lg:p-8 space-y-8">
-        <div className="flex flex-col md:flex-row gap-6 md:gap-8">
-            <div className="w-full md:flex-1 min-w-0">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            <div className="md:col-span-2">
                 <h1 className="text-3xl md:text-4xl font-bold">{content.title}</h1>
-                <div className="flex items-center gap-4 mt-2 text-muted-foreground text-sm">
+                <div className="flex items-center gap-4 mt-2 text-muted-foreground text-sm flex-wrap">
                     <span>{(content.releaseDate || 'N/A').split('-')[0]}</span>
                     <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
@@ -80,13 +80,13 @@ export default async function WatchPage({ params }: WatchPageProps) {
                   )}
                 </div>
             </div>
-            <div className="w-full md:w-auto md:flex-shrink-0">
+            <div className="w-full max-w-[200px] md:max-w-none mx-auto md:mx-0">
                 <Image 
                     src={content.posterPath} 
                     alt={content.title} 
                     width={500}
                     height={750}
-                    className="rounded-lg shadow-lg w-full md:w-[300px] h-auto"
+                    className="rounded-lg shadow-lg w-full h-auto"
                     data-ai-hint="movie poster"
                 />
             </div>
