@@ -26,11 +26,14 @@ export default function BrowsePage() {
         
         const combinedContentMap = new Map<string, Content>();
 
+        const relevantLocalContent = localContent.filter(item => {
+            if (!type) return true; // Keep all if no type is selected
+            return item.type === type;
+        });
+
         // Prioritize local content
-        localContent.forEach(item => {
-          if (!type || item.type === type) {
+        relevantLocalContent.forEach(item => {
             combinedContentMap.set(String(item.id), item);
-          }
         });
 
         // Add API content, avoiding duplicates
@@ -52,7 +55,7 @@ export default function BrowsePage() {
     };
 
     fetchContent();
-  }); // <-- The dependency array is removed to force re-fetch on every render
+  }, [q, type]);
 
   const filteredContent = q
     ? content.filter(item => item.title.toLowerCase().includes(q.toLowerCase()))
