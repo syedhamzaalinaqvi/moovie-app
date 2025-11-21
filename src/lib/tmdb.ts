@@ -159,7 +159,8 @@ export async function searchContent(query: string): Promise<Content[]> {
 }
 
 export async function getBrowseContent({ genre, type, region }: { genre?: string; type?: 'movie' | 'tv'; region?: string }): Promise<Content[]> {
-    const typePath = type === 'tv' ? 'tv' : 'movie';
+    const resolvedType = type || 'movie';
+    const typePath = resolvedType === 'tv' ? 'tv' : 'movie';
     let url = `${TMDB_BASE_URL}/discover/${typePath}?api_key=${TMDB_API_KEY}`;
     if(genre) {
         url += `&with_genres=${genre}`;
@@ -167,5 +168,5 @@ export async function getBrowseContent({ genre, type, region }: { genre?: string
     if(region) {
         url += `&region=${region}`;
     }
-    return await fetchAndTransformContent(url, type);
+    return await fetchAndTransformContent(url, resolvedType);
 }
