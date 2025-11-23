@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { getBrowseContent, getManuallyAddedContent } from '@/lib/tmdb';
 import type { Content } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Film, Tv, History, PlusCircle, Loader2, Search, Settings } from 'lucide-react';
+import { Film, Tv, History, PlusCircle, Loader2, Search, Settings, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentCard } from './content-card';
 import { Separator } from './ui/separator';
@@ -16,6 +16,19 @@ import { ContentFormDialog } from './content-form-dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { getLogoText, updateLogoText } from '@/app/admin/actions';
+import { deleteContent } from '@/ai/flows/delete-content';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Checkbox } from './ui/checkbox';
 
 
 function StatCard({ title, value, icon: Icon, isLoading }: { title: string; value: number; icon: React.ElementType; isLoading: boolean }) {
@@ -44,6 +57,8 @@ export default function AdminDashboard() {
   const [recentlyAdded, setRecentlyAdded] = useState<Content[]>([]);
   const [logoText, setLogoText] = useState('');
   const [isSavingLogo, setIsSavingLogo] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -115,6 +130,36 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleSelectionChange = (id: string, isSelected: boolean) => {
+    setSelectedIds(prev => isSelected ? [...prev, id] : prev.filter(selectedId => selectedId !== id));
+  }
+
+  const handleDelete = async (ids: string[]) => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteContent(ids);
+      if (result.success) {
+        toast({ title: "Success", description: `${ids.length} item(s) deleted. Refreshing...` });
+        setSelectedIds([]);
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        throw new Error("Failed to delete content.");
+      }
+    } catch (error) {
+       toast({ variant: 'destructive', title: "Error", description: error instanceof Error ? error.message : "Could not delete content."});
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
+  const toggleSelectAll = () => {
+    if (selectedIds.length === recentlyAdded.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(recentlyAdded.map(item => String(item.id)));
+    }
+  }
+
   return (
     <div className="p-4 md:p-8 space-y-8">
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
@@ -177,10 +222,37 @@ export default function AdminDashboard() {
       <Separator />
 
       <div>
-        <h2 className="text-2xl font-bold mb-4 flex items-center">
-          <History className="mr-2 h-6 w-6" />
-          Recently Added Content
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold flex items-center">
+              <History className="mr-2 h-6 w-6" />
+              Recently Added Content
+            </h2>
+            {selectedIds.length > 0 && (
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" disabled={isDeleting}>
+                            {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                            Delete ({selectedIds.length})
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete {selectedIds.length} item(s).
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(selectedIds)}>
+                                Continue
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
+        </div>
+
         {loadingStats ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {[...Array(6)].map((_, i) => (
@@ -192,11 +264,39 @@ export default function AdminDashboard() {
             ))}
           </div>
         ) : recentlyAdded.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {recentlyAdded.map((item, i) => (
-              <ContentCard key={`${item.id}-${i}`} content={item} showAdminControls onEditSuccess={onContentUpdated} />
-            ))}
-          </div>
+          <>
+            <div className="flex items-center mb-4 space-x-2">
+              <Checkbox
+                id="selectAll"
+                checked={selectedIds.length > 0 && selectedIds.length === recentlyAdded.length}
+                onCheckedChange={toggleSelectAll}
+                aria-label="Select all"
+              />
+              <Label htmlFor="selectAll" className='text-sm font-medium'>
+                {selectedIds.length > 0 ? `${selectedIds.length} of ${recentlyAdded.length} selected` : 'Select all'}
+              </Label>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {recentlyAdded.map((item, i) => (
+                <div key={`${item.id}-${i}`} className="relative group">
+                   <div className="absolute top-2 left-2 z-30">
+                     <Checkbox
+                       id={`select-${item.id}`}
+                       checked={selectedIds.includes(String(item.id))}
+                       onCheckedChange={(checked) => handleSelectionChange(String(item.id), !!checked)}
+                       className="bg-background/70 border-white/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary-foreground"
+                     />
+                   </div>
+                  <ContentCard
+                    content={item}
+                    showAdminControls
+                    onEditSuccess={onContentUpdated}
+                    onDeleteSuccess={() => handleDelete([String(item.id)])}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
             <p className="text-muted-foreground">No content has been added manually yet.</p>
         )}
@@ -204,4 +304,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

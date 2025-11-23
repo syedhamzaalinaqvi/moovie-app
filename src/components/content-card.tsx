@@ -4,22 +4,65 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Content } from '@/lib/definitions';
 import { Card, CardContent } from './ui/card';
-import { PlayCircle, Pencil, Star } from 'lucide-react';
+import { PlayCircle, Pencil, Star, Trash2 } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { ContentFormDialog } from './content-form-dialog';
 import { Button } from './ui/button';
 import { slugify } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface ContentCardProps {
   content: Content;
   view?: 'grid' | 'list';
   showAdminControls?: boolean;
   onEditSuccess?: () => void;
+  onDeleteSuccess?: () => void;
 }
 
-export function ContentCard({ content, view = 'grid', showAdminControls = false, onEditSuccess }: ContentCardProps) {
+export function ContentCard({ content, view = 'grid', showAdminControls = false, onEditSuccess, onDeleteSuccess }: ContentCardProps) {
   const watchUrl = `/watch/${content.id}-${slugify(content.title)}`;
+
+  const adminControls = showAdminControls && (
+    <div className="absolute top-2 right-2 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+       <ContentFormDialog contentToEdit={content} onSave={onEditSuccess}>
+          <Button variant="secondary" size="icon" className="h-8 w-8">
+            <Pencil className="h-4 w-4" />
+            <span className="sr-only">Edit Content</span>
+          </Button>
+        </ContentFormDialog>
+        <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="icon" className="h-8 w-8">
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Delete Content</span>
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This will permanently delete "{content.title}". This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={onDeleteSuccess}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    </div>
+  );
 
   if (view === 'list') {
     return (
@@ -64,18 +107,7 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
             </p>
           </div>
         </Card>
-        {showAdminControls && (
-          <ContentFormDialog contentToEdit={content} onSave={onEditSuccess}>
-            <Button
-              variant="secondary"
-              size="icon"
-              className="absolute top-2 right-2 z-20 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Pencil className="h-4 w-4" />
-              <span className="sr-only">Edit Content</span>
-            </Button>
-          </ContentFormDialog>
-        )}
+        {adminControls}
       </div>
     );
   }
@@ -106,18 +138,7 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
         </Card>
       </Link>
 
-      {showAdminControls && (
-        <ContentFormDialog contentToEdit={content} onSave={onEditSuccess}>
-          <Button
-            variant="secondary"
-            size="icon"
-            className="absolute top-2 right-2 z-20 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <Pencil className="h-4 w-4" />
-            <span className="sr-only">Edit Content</span>
-          </Button>
-        </ContentFormDialog>
-      )}
+      {adminControls}
 
       <div className="mt-2 space-y-1">
         <h3 className="font-semibold text-sm truncate">{content.title}</h3>
