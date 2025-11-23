@@ -14,12 +14,14 @@ import {
 import { useAuth } from '@/providers/auth-provider';
 import Link from 'next/link';
 import { signOut } from '@/lib/auth';
-import { LogIn, User, LogOut } from 'lucide-react';
+import { LogIn, User, LogOut, Moon, Sun } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 
 export function UserNav() {
   const { user } = useAuth();
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
 
   const handleSignOut = async () => {
     await signOut();
@@ -75,6 +77,10 @@ export function UserNav() {
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </Link>
+            </DropdownMenuItem>
+             <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+              {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+              <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
