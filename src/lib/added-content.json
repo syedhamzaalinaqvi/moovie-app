@@ -12,13 +12,71 @@
     "releaseDate": "1994-09-23",
     "rating": 8.711,
     "type": "movie",
-    "trailerUrl": "https://net51.cc/hls/81624009.m3u8?in=ce7051a780d45f22e2a965c10a6b7e0b::da67abc34f189cdafaccd7bcf7927715::1763694693::kp",
-    "downloadLink": "https://www.whatsuplink.online/country/us",
+    "youtubeTrailerUrl": "https://www.youtube.com/watch?v=PLl99DlL6b4",
+    "cast": [
+      {
+        "id": 504,
+        "name": "Tim Robbins",
+        "character": "Andy Dufresne",
+        "profilePath": "https://image.tmdb.org/t/p/w185/9DujxnBMVkizaeIyM0eXPMfXxR.jpg"
+      },
+      {
+        "id": 192,
+        "name": "Morgan Freeman",
+        "character": "Ellis Boyd 'Red' Redding",
+        "profilePath": "https://image.tmdb.org/t/p/w185/jPsLqiYGSofU4s6BjrxnefMfabb.jpg"
+      },
+      {
+        "id": 4029,
+        "name": "Bob Gunton",
+        "character": "Warden Norton",
+        "profilePath": "https://image.tmdb.org/t/p/w185/ulbVvuBToBN3aCGcV028hwO0MOP.jpg"
+      },
+      {
+        "id": 6573,
+        "name": "William Sadler",
+        "character": "Heywood",
+        "profilePath": "https://image.tmdb.org/t/p/w185/xC9sijoDnjS3oDZ5eszcGKHKAOp.jpg"
+      },
+      {
+        "id": 6574,
+        "name": "Clancy Brown",
+        "character": "Captain Byron T. Hadley",
+        "profilePath": "https://image.tmdb.org/t/p/w185/1JeBRNG7VS7r64V9lOvej9bZXW5.jpg"
+      },
+      {
+        "id": 6575,
+        "name": "Gil Bellows",
+        "character": "Tommy",
+        "profilePath": "https://image.tmdb.org/t/p/w185/eCOIv2nSGnWTHdn88NoMyNOKWyR.jpg"
+      },
+      {
+        "id": 6577,
+        "name": "James Whitmore",
+        "character": "Brooks Hatlen",
+        "profilePath": "https://image.tmdb.org/t/p/w185/nYMAbkfwFIgKK84vnLoQctI6vHg.jpg"
+      },
+      {
+        "id": 6576,
+        "name": "Mark Rolston",
+        "character": "Bogs Diamond",
+        "profilePath": "https://image.tmdb.org/t/p/w185/hcrNRIptYMRXgkJ9k76BlQu6DQp.jpg"
+      },
+      {
+        "id": 12645,
+        "name": "Jeffrey DeMunn",
+        "character": "1946 D.A.",
+        "profilePath": "https://image.tmdb.org/t/p/w185/70bkLdlkBB7x2NztuJAh4pjdyxy.jpg"
+      },
+      {
+        "id": 92119,
+        "name": "Larry Brandenburg",
+        "character": "Skeet",
+        "profilePath": "https://image.tmdb.org/t/p/w185/y13c1a4keaLnoTbi3dERwolQXWP.jpg"
+      }
+    ],
     "isHindiDubbed": true,
-    "customTags": [
-      "hindi dubbed",
-      "shadows in paradise hindi dubbed"
-    ]
+    "customTags": []
   },
   {
     "id": "37680",
@@ -61,26 +119,6 @@
     "rating": 5.023,
     "type": "movie",
     "trailerUrl": "<iframe src=\"https://h-player-ashen.vercel.app/?embed=1&data=eyJwbGF5bGlzdCI6W3sic2VyaWVzTmFtZSI6InNzIiwic2Vhc29ucyI6W3sic2Vhc29uTnVtYmVyIjoxLCJlcGlzb2RlcyI6W3siZXBpc29kZU51bWJlciI6MSwiZXBpc29kZU5hbWUiOiJzczEiLCJ1cmwiOiJodHRwczovL25ldDUxLmNjL2hscy84MTYyNDAwOS5tM3U4P2luPWNlNzA1MWE3ODBkNDVmMjJlMmE5NjVjMTBhNmI3ZTBiOjpkYTY3YWJjMzRmMTg5Y2RhZmFjY2Q3YmNmNzkyNzcxNTo6MTc2MzY5NDY5Mzo6a3AiLCJkdXJhdGlvbiI6IjAwOjAwOjAwIiwicXVhbGl0eSI6IkF1dG8iLCJwcm9ncmVzcyI6MH0seyJlcGlzb2RlTnVtYmVyIjoyLCJlcGlzb2RlTmFtZSI6InNzMiIsInVybCI6Imh0dHBzOi8vbmV0NTEuY2MvaGxzLzgxNjI0MDA5Lm0zdTg%2FaW49Y2U3MDUxYTc4MGQ0NWYyMmUyYTk2NWMxMGE2YjdlMGI6OmRhNjdhYmMzNGYxODljZGFmYWNjZDdiY2Y3OTI3NzE1OjoxNzYzNjk0NjkzOjprcCIsImR1cmF0aW9uIjoiMDA6MDA6MDAiLCJxdWFsaXR5IjoiQXV0byIsInByb2dyZXNzIjowfSx7ImVwaXNvZGVOdW1iZXIiOjMsImVwaXNvZGVOYW1lIjoic3MzIiwidXJsIjoiaHR0cHM6Ly9uZXQ1MS5jYy9obHMvODE2MjQwMDkubTN1OD9pbj1jZTcwNTFhNzgwZDQ1ZjIyZTJhOTY1YzEwYTZiN2UwYjo6ZGE2N2FiYzM0ZjE4OWNkYWZhY2NkN2JjZjc5Mjc3MTU6OjE3NjM2OTQ2OTM6OmtwIiwiZHVyYXRpb24iOiIwMDowMDowMCIsInF1YWxpdHkiOiJBdXRvIiwicHJvZ3Jlc3MiOjB9LHsiZXBpc29kZU51bWJlciI6NCwiZXBpc29kZU5hbWUiOiJzczQiLCJ1cmwiOiJodHRwczovL25ldDUxLmNjL2hscy84MTYyNDAwOS5tM3U4P2luPWNlNzA1MWE3ODBkNDVmMjJlMmE5NjVjMTBhNmI3ZTBiOjpkYTY3YWJjMzRmMTg5Y2RhZmFjY2Q3YmNmNzkyNzcxNTo6MTc2MzY5NDY5Mzo6a3AiLCJkdXJhdGlvbiI6IjAwOjAwOjAwIiwicXVhbGl0eSI6IkF1dG8iLCJwcm9ncmVzcyI6MH0seyJlcGlzb2RlTnVtYmVyIjo1LCJlcGlzb2RlTmFtZSI6InNzNSIsInVybCI6Imh0dHBzOi8vbmV0NTEuY2MvaGxzLzgxNjI0MDA5Lm0zdTg%2FaW49Y2U3MDUxYTc4MGQ0NWYyMmUyYTk2NWMxMGE2YjdlMGI6OmRhNjdhYmMzNGYxODljZGFmYWNjZDdiY2Y3OTI3NzE1OjoxNzYzNjk0NjkzOjprcCIsImR1cmF0aW9uIjoiMDA6MDA6MDAiLCJxdWFsaXR5IjoiQXV0byIsInByb2dyZXNzIjowfV19XX1dLCJzYXZlIjpmYWxzZX0%3D\" width=\"800\" height=\"450\" frameborder=\"0\" allowfullscreen></iframe>\n\n<!-- If you prefer to postMessage the playlist, use the player iframe and then send { type: \"hplayer.load\", payload: {...} } -->",
-    "isHindiDubbed": true,
-    "customTags": [
-      "hindi dubbed",
-      "shadows in paradise hindi dubbed"
-    ]
-  },
-  {
-    "id": "278",
-    "title": "The Shawshank Redemption",
-    "description": "Imprisoned in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden. During his long stretch in prison, Dufresne comes to be admired by the other inmates -- including an older prisoner named Red -- for his integrity and unquenchable sense of hope.",
-    "posterPath": "https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
-    "backdropPath": "https://image.tmdb.org/t/p/w1280/zfbjgQE1uSd9wiPTX4VzsLi0rGG.jpg",
-    "genres": [
-      "Drama",
-      "Crime"
-    ],
-    "releaseDate": "1994-09-23",
-    "rating": 8.711,
-    "type": "movie",
-    "trailerUrl": "https://www.youtube.com/watch?v=PLl99DlL6b4",
     "isHindiDubbed": true,
     "customTags": [
       "hindi dubbed",
