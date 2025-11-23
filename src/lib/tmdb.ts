@@ -1,4 +1,3 @@
-
 import type { Content, CastMember } from './definitions';
 
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || "46d13701165988b5bb5fb4d123c0447e";
@@ -34,9 +33,10 @@ type TmdbCredit = {
 }
 
 let genreMap: Map<number, string> | null = null;
+let genreList: Genre[] | null = null;
 
 async function fetchGenres() {
-    if (genreMap) return genreMap;
+    if (genreMap) return { genreMap, genreList };
     try {
         const movieResponse = await fetch(`${TMDB_BASE_URL}/genre/movie/list?api_key=${TMDB_API_KEY}`);
         const tvResponse = await fetch(`${TMDB_BASE_URL}/genre/tv/list?api_key=${TMDB_API_KEY}`);
@@ -44,15 +44,17 @@ async function fetchGenres() {
         const tvData = await tvResponse.json();
 
         const allGenres: Genre[] = [...movieData.genres, ...tvData.genres];
-        
+        const uniqueGenres = Array.from(new Map(allGenres.map(g => [g.id, g])).values());
+
+        genreList = uniqueGenres;
         genreMap = new Map();
-        allGenres.forEach(genre => {
+        uniqueGenres.forEach(genre => {
             genreMap!.set(genre.id, genre.name);
         });
-        return genreMap;
+        return { genreMap, genreList };
     } catch (error) {
         console.error('Failed to fetch genres:', error);
-        return new Map();
+        return { genreMap: new Map(), genreList: [] };
     }
 }
 
@@ -76,7 +78,7 @@ function tmdbContentToContent(item: TmdbContent, type: 'movie' | 'tv' | 'person'
 }
 
 async function fetchAndTransformContent(url: string, type: 'movie' | 'tv' | 'person' = 'movie') {
-    const allGenres = await fetchGenres();
+    const { genreMap: allGenres } = await fetchGenres();
     try {
         const response = await fetch(url);
         const data = await response.json();
@@ -92,14 +94,14 @@ async function fetchAndTransformContent(url: string, type: 'movie' | 'tv' | 'per
 }
 
 async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv') {
-    const allGenres = await fetchGenres();
+    const { genreMap: allGenres } = await fetchGenres();
      try {
         const response = await fetch(url);
         if (!response.ok) return null;
         const data = await response.json() as TmdbContent & { genres: Genre[], videos: { results: { type: string, key: string }[] }, credits: { cast: TmdbCredit[] } };
         
         const trailer = data.videos?.results.find(v => v.type === 'Trailer');
-        const cast: CastMember[] = data.credits?.cast.slice(0, 16).map(c => ({
+        const cast: CastMember[] = data.credits?.cast.slice(0, 10).map(c => ({
             id: c.id,
             name: c.name,
             character: c.character,
@@ -193,7 +195,7 @@ export async function searchContent(query: string): Promise<Content[]> {
   return await fetchAndTransformContent(url, 'movie');
 }
 
-export async function getBrowseContent({ genre, type, region }: { genre?: string; type?: 'movie' | 'tv'; region?: string }): Promise<Content[]> {
+export async function getBrowseContent({ genre, type, region, year }: { genre?: string; type?: 'movie' | 'tv'; region?: string; year?: string }): Promise<Content[]> {
     const resolvedType = type || 'movie';
     let url = new URL(`${TMDB_BASE_URL}/discover/${resolvedType}`);
     url.searchParams.append('api_key', TMDB_API_KEY);
@@ -203,6 +205,13 @@ export async function getBrowseContent({ genre, type, region }: { genre?: string
     }
     if (region) {
         url.searchParams.append('region', region);
+    }
+    if (year) {
+        if (resolvedType === 'movie') {
+            url.searchParams.append('primary_release_year', year);
+        } else {
+            url.searchParams.append('first_air_date_year', year);
+        }
     }
     
     url.searchParams.append('sort_by', 'popularity.desc');
@@ -214,7 +223,6 @@ export async function getManuallyAddedContent(): Promise<Content[]> {
   try {
     const isServer = typeof window === 'undefined';
     let fetchUrl: string;
-
     const path = `/api/added-content?v=${new Date().getTime()}`;
 
     if (isServer) {
@@ -246,4 +254,9 @@ export async function getManuallyAddedContent(): Promise<Content[]> {
     console.error('Failed to fetch manually added content:', error);
     return [];
   }
+}
+
+export async function getAllGenres(): Promise<Genre[]> {
+    const { genreList: genres } = await fetchGenres();
+    return genres || [];
 }

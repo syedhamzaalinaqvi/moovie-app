@@ -18,6 +18,8 @@ export default function BrowsePage() {
   const type = searchParams.get('type') as 'movie' | 'tv' | null;
   const genre = searchParams.get('genre');
   const region = searchParams.get('region');
+  const year = searchParams.get('year');
+  const hindiDubbed = searchParams.get('hindi_dubbed');
 
   const [content, setContent] = useState<Content[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +32,8 @@ export default function BrowsePage() {
           getBrowseContent({ 
             type: type || undefined, 
             genre: genre || undefined, 
-            region: region || undefined 
+            region: region || undefined,
+            year: year || undefined,
           }),
           getManuallyAddedContent()
         ]);
@@ -40,8 +43,9 @@ export default function BrowsePage() {
         // Filter local content based on current filters
         const relevantLocalContent = localContent.filter(item => {
             if (type && item.type !== type) return false;
-            // Note: TMDB genre ID filtering on local content is tricky. 
-            // We'll rely on the main type filter for local content for now.
+            if (genre && !item.genres?.some(g => g.toLowerCase() === genre.toLowerCase())) return false; // Crude genre string match
+            if (year && item.releaseDate?.startsWith(year) === false) return false;
+            if (hindiDubbed === 'true' && !item.isHindiDubbed) return false;
             return true;
         });
         
@@ -57,7 +61,13 @@ export default function BrowsePage() {
           }
         });
         
-        const finalContent = Array.from(combinedContentMap.values());
+        let finalContent = Array.from(combinedContentMap.values());
+
+        // If hindiDubbed is true, we must filter the final combined list
+        if (hindiDubbed === 'true') {
+          finalContent = finalContent.filter(item => item.isHindiDubbed);
+        }
+
         setContent(finalContent);
 
       } catch (error) {
@@ -69,7 +79,7 @@ export default function BrowsePage() {
     };
 
     fetchContent();
-  }, [q, type, genre, region]);
+  }, [q, type, genre, region, year, hindiDubbed]);
 
   const filteredContent = q
     ? content.filter(item => item.title.toLowerCase().includes(q.toLowerCase()))
@@ -112,7 +122,7 @@ export default function BrowsePage() {
             <Search className="w-16 h-16 text-muted-foreground mb-4" />
             <h2 className="text-2xl font-semibold">No Results Found</h2>
             <p className="text-muted-foreground mt-2">
-              We couldn't find any content matching your filter.
+              We couldn't find any content matching your filters.
             </p>
           </div>
         )}
