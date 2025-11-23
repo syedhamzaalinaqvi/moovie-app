@@ -16,7 +16,7 @@ export function AppHeader() {
     const formData = new FormData(e.currentTarget);
     const query = formData.get('search') as string;
 
-    const newParams = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams.toString());
     if (query) {
       newParams.set('q', query);
     } else {

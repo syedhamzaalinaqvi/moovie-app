@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Film } from "lucide-react";
+import Image from "next/image";
 
 export default function AuthLayout({
   children,
@@ -10,10 +10,7 @@ export default function AuthLayout({
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="absolute top-8 left-8">
         <Link href="/" className="flex items-center gap-2 text-foreground">
-          <div className="bg-primary p-2 rounded-lg">
-              <Film className="text-primary-foreground" />
-            </div>
-            <span className="font-bold text-lg">Moovie</span>
+           <Image src="https://i.ibb.co/3sW2tN4/moovie-logo.png" alt="Moovie Logo" width={110} height={32} />
         </Link>
       </div>
       {children}
