@@ -39,7 +39,7 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
               </div>
             </div>
           </Link>
-          <div className="flex-1 py-2 pr-2">
+          <div className="flex-1 py-2 pr-2 overflow-hidden">
              <Link href={watchUrl}>
                 <h3 className="font-semibold text-lg truncate group-hover:text-primary">{content.title}</h3>
             </Link>
