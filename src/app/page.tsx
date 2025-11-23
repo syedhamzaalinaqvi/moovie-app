@@ -1,12 +1,14 @@
 'use client';
 
-import { getBrowseContent, getManuallyAddedContent } from "@/lib/tmdb";
+import { getBrowseContent, getManuallyAddedContent, getTrending } from "@/lib/tmdb";
 import { ContentCard } from "@/components/content-card";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Content } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "next/navigation";
+import { HeroCarousel } from "@/components/hero-carousel";
+import RecommendedContent from "@/components/recommended-content";
 
 // By adding a version query parameter that changes, we can force a re-render
 // and ensure the latest added-content.json is loaded.
@@ -22,7 +24,30 @@ export default function BrowsePage() {
   const hindiDubbed = searchParams.get('hindi_dubbed');
 
   const [content, setContent] = useState<Content[]>([]);
+  const [heroContent, setHeroContent] = useState<Content[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isHeroLoading, setIsHeroLoading] = useState(true);
+
+  const isFilteredView = q || type || genre || region || year || hindiDubbed;
+
+  useEffect(() => {
+    const fetchHeroContent = async () => {
+      if (isFilteredView) {
+        setIsHeroLoading(false);
+        return;
+      };
+      setIsHeroLoading(true);
+      try {
+        const trending = await getTrending();
+        setHeroContent(trending.slice(0, 5)); // Take top 5 for hero
+      } catch (error) {
+        console.error("Failed to fetch hero content", error);
+      } finally {
+        setIsHeroLoading(false);
+      }
+    };
+    fetchHeroContent();
+  }, [isFilteredView]);
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -43,7 +68,12 @@ export default function BrowsePage() {
         // Filter local content based on current filters
         const relevantLocalContent = localContent.filter(item => {
             if (type && item.type !== type) return false;
-            if (genre && !item.genres?.some(g => g.toLowerCase() === genre.toLowerCase())) return false; // Crude genre string match
+            // TMDB genre IDs are strings now, so we adapt
+            if (genre && !item.genres?.some(g => {
+                // This is a crude but necessary check if local genres are names and filter is ID
+                // A better system would use genre IDs everywhere
+                return String(g) === genre || g.toLowerCase() === genre.toLowerCase()
+            })) return false;
             if (year && item.releaseDate?.startsWith(year) === false) return false;
             if (hindiDubbed === 'true' && !item.isHindiDubbed) return false;
             return true;
@@ -89,7 +119,6 @@ export default function BrowsePage() {
   const getTitle = () => {
     if (q) return `Search results for "${q}"`;
     if (genre) {
-      // In a real app, you'd fetch genre name from an ID
       return `Genre`;
     }
     if (region) return `Content from ${region}`;
@@ -99,34 +128,44 @@ export default function BrowsePage() {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-6">{getTitle()}</h1>
-        {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
-                {[...Array(14)].map((_, i) => (
-                    <div key={i}>
-                        <Skeleton className="aspect-[2/3] w-full rounded-lg" />
-                        <Skeleton className="h-4 w-3/4 mt-2" />
-                    </div>
-                ))}
-            </div>
-        ) : filteredContent.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
-            {filteredContent.map((item) => (
-              <ContentCard key={`${item.id}-${item.title}`} content={item} />
-            ))}
-          </div>
+    <>
+      {!isFilteredView && (
+        isHeroLoading ? (
+          <Skeleton className="h-[60vh] md:h-[80vh] w-full" />
         ) : (
-          <div className="flex flex-col items-center justify-center text-center h-64">
-            <Search className="w-16 h-16 text-muted-foreground mb-4" />
-            <h2 className="text-2xl font-semibold">No Results Found</h2>
-            <p className="text-muted-foreground mt-2">
-              We couldn't find any content matching your filters.
-            </p>
-          </div>
-        )}
+          <HeroCarousel content={heroContent} />
+        )
+      )}
+      <div className="p-4 md:p-6 space-y-8">
+        {!isFilteredView && <RecommendedContent />}
+        <div>
+          <h1 className="text-3xl font-bold mb-6">{getTitle()}</h1>
+          {isLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
+                  {[...Array(14)].map((_, i) => (
+                      <div key={i}>
+                          <Skeleton className="aspect-[2/3] w-full rounded-lg" />
+                          <Skeleton className="h-4 w-3/4 mt-2" />
+                      </div>
+                  ))}
+              </div>
+          ) : filteredContent.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
+              {filteredContent.map((item) => (
+                <ContentCard key={`${item.id}-${item.title}`} content={item} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center text-center h-64">
+              <Search className="w-16 h-16 text-muted-foreground mb-4" />
+              <h2 className="text-2xl font-semibold">No Results Found</h2>
+              <p className="text-muted-foreground mt-2">
+                We couldn't find any content matching your filters.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
