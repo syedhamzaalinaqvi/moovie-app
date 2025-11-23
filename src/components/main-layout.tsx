@@ -1,3 +1,4 @@
+
 import {
   Sidebar,
   SidebarContent,
@@ -5,11 +6,13 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarFooter,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { AppHeader } from '@/components/header';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { UserNav } from '@/components/user-nav';
 import { Film } from 'lucide-react';
+import { Separator } from './ui/separator';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -28,6 +31,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </SidebarContent>
         <SidebarFooter>
             <UserNav />
+            <Separator className="my-1" />
+            <div className="p-2 hidden md:flex justify-end">
+              <SidebarTrigger />
+            </div>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
