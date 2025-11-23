@@ -1,4 +1,5 @@
 
+
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Content } from '@/lib/definitions';
@@ -39,7 +40,7 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
               </div>
             </div>
           </Link>
-          <div className="flex-1 py-2 pr-2 overflow-hidden">
+          <div className="flex-1 py-2 pr-2 min-w-0">
              <Link href={watchUrl}>
                 <h3 className="font-semibold text-lg truncate group-hover:text-primary">{content.title}</h3>
             </Link>
