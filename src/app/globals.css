@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 222 83% 4%;
-    --foreground: 45 100% 98%;
-    --card: 222 73% 10%;
-    --card-foreground: 45 100% 98%;
-    --popover: 222 83% 4%;
-    --popover-foreground: 45 100% 98%;
-    --primary: 45 100% 50%;
-    --primary-foreground: 355 100% 4%;
-    --secondary: 355 70% 30%;
-    --secondary-foreground: 45 100% 98%;
-    --muted: 355 70% 30%;
-    --muted-foreground: 222 10% 60%;
-    --accent: 355 89% 55%;
-    --accent-foreground: 45 100% 98%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 72% 51%; /* Brighter Red for primary actions */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 63% 40%; /* Slightly deeper red for accents */
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 355 70% 25%;
-    --input: 355 70% 25%;
-    --ring: 45 100% 50%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 72% 51%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -32,25 +32,25 @@
   }
 
   .dark {
-    --background: 222 83% 4%;
-    --foreground: 45 100% 98%;
-    --card: 222 73% 10%;
-    --card-foreground: 45 100% 98%;
-    --popover: 222 83% 4%;
-    --popover-foreground: 45 100% 98%;
-    --primary: 45 100% 50%;
-    --primary-foreground: 355 100% 4%;
-    --secondary: 355 70% 30%;
-    --secondary-foreground: 45 100% 98%;
-    --muted: 355 70% 30%;
-    --muted-foreground: 222 10% 60%;
-    --accent: 355 89% 55%;
-    --accent-foreground: 45 100% 98%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 72% 51%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 63% 40%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 355 70% 25%;
-    --input: 355 70% 25%;
-    --ring: 45 100% 50%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 72% 51%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -73,7 +73,7 @@
     ),
     radial-gradient(
       ellipse at bottom,
-      hsl(var(--secondary) / 0.3) 0%,
+      hsl(var(--primary) / 0.15) 0%,
       hsl(var(--background)) 70%
     );
   }
