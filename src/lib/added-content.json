@@ -1,27 +1,5 @@
 [
   {
-    "id": "758923",
-    "title": "Baaghi 4",
-    "description": "After waking up from a coma, a grieving man sets out to uncover the truth about his missing girlfriend.",
-    "posterPath": "https://image.tmdb.org/t/p/w500/u2YEFW5o2Y7RAw2K4hSA4TEXF3Q.jpg",
-    "backdropPath": "https://image.tmdb.org/t/p/w1280/y7Sft8RTYF5e8dBYZV4y0jbOHkh.jpg",
-    "genres": [
-      "Action",
-      "Romance",
-      "Thriller"
-    ],
-    "releaseDate": "2025-09-05",
-    "rating": 4.6,
-    "type": "movie",
-    "trailerUrl": "<iframe src=\"https://bradm.ax/build/202410/09/10dddbda311d7cd7ad4cb3ee7ffaaa441bf5a620/index.html?mediaUrl=https%3A%2F%2Fbradmax.com%2Fstatic%2Fvideo%2Ftears_of_steel.mp4&title=Tears%20of%20steel&duration=734.097415&splashImgUrl=https%3A%2F%2Fbradmax.com%2Fstatic%2Fimages%2Fstartsplash.jpg\" width=\"600px\" height=\"400px\" frameBorder=\"0\" allow=\"autoplay; encrypted-media\" allowfullscreen></iframe>",
-    "downloadLink": "https://www.whatsuplink.online/country/us",
-    "isHindiDubbed": true,
-    "customTags": [
-      "hindi dubbed",
-      "shadows in paradise hindi dubbed"
-    ]
-  },
-  {
     "id": "278",
     "title": "The Shawshank Redemption",
     "description": "Imprisoned in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden. During his long stretch in prison, Dufresne comes to be admired by the other inmates -- including an older prisoner named Red -- for his integrity and unquenchable sense of hope.",
@@ -103,28 +81,6 @@
     "rating": 8.711,
     "type": "movie",
     "trailerUrl": "https://www.youtube.com/watch?v=PLl99DlL6b4",
-    "isHindiDubbed": true,
-    "customTags": [
-      "hindi dubbed",
-      "shadows in paradise hindi dubbed"
-    ]
-  },
-  {
-    "id": "758923",
-    "title": "Baaghi 4",
-    "description": "After waking up from a coma, a grieving man sets out to uncover the truth about his missing girlfriend.",
-    "posterPath": "https://image.tmdb.org/t/p/w500/u2YEFW5o2Y7RAw2K4hSA4TEXF3Q.jpg",
-    "backdropPath": "https://image.tmdb.org/t/p/w1280/y7Sft8RTYF5e8dBYZV4y0jbOHkh.jpg",
-    "genres": [
-      "Action",
-      "Romance",
-      "Thriller"
-    ],
-    "releaseDate": "2025-09-05",
-    "rating": 4.6,
-    "type": "movie",
-    "trailerUrl": "<iframe src=\"https://h-player-ashen.vercel.app/?embed=1&data=eyJwbGF5bGlzdCI6W3sic2VyaWVzTmFtZSI6InNzIiwic2Vhc29ucyI6W3sic2Vhc29uTnVtYmVyIjoxLCJlcGlzb2RlcyI6W3siZXBpc29kZU51bWJlciI6MSwiZXBpc29kZU5hbWUiOiJzczEiLCJ1cmwiOiJodHRwczovL25ldDUxLmNjL2hscy84MTYyNDAwOS5tM3U4P2luPWNlNzA1MWE3ODBkNDVmMjJlMmE5NjVjMTBhNmI3ZTBiOjpkYTY3YWJjMzRmMTg5Y2RhZmFjY2Q3YmNmNzkyNzcxNTo6MTc2MzY5NDY5Mzo6a3AiLCJkdXJhdGlvbiI6IjAwOjAwOjAwIiwicXVhbGl0eSI6IkF1dG8iLCJwcm9ncmVzcyI6MH0seyJlcGlzb2RlTnVtYmVyIjoyLCJlcGlzb2RlTmFtZSI6InNzMiIsInVybCI6Imh0dHBzOi8vbmV0NTEuY2MvaGxzLzgxNjI0MDA5Lm0zdTg%2FaW49Y2U3MDUxYTc4MGQ0NWYyMmUyYTk2NWMxMGE2YjdlMGI6OmRhNjdhYmMzNGYxODljZGFmYWNjZDdiY2Y3OTI3NzE1OjoxNzYzNjk0NjkzOjprcCIsImR1cmF0aW9uIjoiMDA6MDA6MDAiLCJxdWFsaXR5IjoiQXV0byIsInByb2dyZXNzIjowfSx7ImVwaXNvZGVOdW1iZXIiOjMsImVwaXNvZGVOYW1lIjoic3MzIiwidXJsIjoiaHR0cHM6Ly9uZXQ1MS5jYy9obHMvODE2MjQwMDkubTN1OD9pbj1jZTcwNTFhNzgwZDQ1ZjIyZTJhOTY1YzEwYTZiN2UwYjo6ZGE2N2FiYzM0ZjE4OWNkYWZhY2NkN2JjZjc5Mjc3MTU6OjE3NjM2OTQ2OTM6OmtwIiwiZHVyYXRpb24iOiIwMDowMDowMCIsInF1YWxpdHkiOiJBdXRvIiwicHJvZ3Jlc3MiOjB9LHsiZXBpc29kZU51bWJlciI6NCwiZXBpc29kZU5hbWUiOiJzczQiLCJ1cmwiOiJodHRwczovL25ldDUxLmNjL2hscy84MTYyNDAwOS5tM3U4P2luPWNlNzA1MWE3ODBkNDVmMjJlMmE5NjVjMTBhNmI3ZTBiOjpkYTY3YWJjMzRmMTg5Y2RhZmFjY2Q3YmNmNzkyNzcxNTo6MTc2MzY5NDY5Mzo6a3AiLCJkdXJhdGlvbiI6IjAwOjAwOjAwIiwicXVhbGl0eSI6IkF1dG8iLCJwcm9ncmVzcyI6MH0seyJlcGlzb2RlTnVtYmVyIjo1LCJlcGlzb2RlTmFtZSI6InNzNSIsInVybCI6Imh0dHBzOi8vbmV0NTEuY2MvaGxzLzgxNjI0MDA5Lm0zdTg%2FaW49Y2U3MDUxYTc4MGQ0NWYyMmUyYTk2NWMxMGE2YjdlMGI6OmRhNjdhYmMzNGYxODljZGFmYWNjZDdiY2Y3OTI3NzE1OjoxNzYzNjk0NjkzOjprcCIsImR1cmF0aW9uIjoiMDA6MDA6MDAiLCJxdWFsaXR5IjoiQXV0byIsInByb2dyZXNzIjowfV19XX1dLCJzYXZlIjpmYWxzZX0%3D\" width=\"800\" height=\"450\" frameborder=\"0\" allowfullscreen></iframe>\n\n<!-- If you prefer to postMessage the playlist, use the player iframe and then send { type: \"hplayer.load\", payload: {...} } -->",
-    "downloadLink": "https://www.whatsuplink.online/country/us",
     "isHindiDubbed": true,
     "customTags": [
       "hindi dubbed",

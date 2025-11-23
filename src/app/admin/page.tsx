@@ -62,7 +62,6 @@ export default function AdminLoginPage() {
               <Input
                 id="username"
                 type="text"
-                placeholder="hworldplayz"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
