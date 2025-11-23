@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -48,13 +49,16 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
   const isEditing = !!contentToEdit;
 
   useEffect(() => {
-    if (contentToEdit) {
+    // When the dialog is opened for editing, populate the form
+    if (isOpen && contentToEdit) {
       setTmdbId(contentToEdit.id);
       setPreviewContent(contentToEdit);
       setTrailerUrl(contentToEdit.trailerUrl || '');
       setDownloadLink(contentToEdit.downloadLink || '');
       setIsHindiDubbed(contentToEdit.isHindiDubbed || false);
       setCustomTags(contentToEdit.customTags?.join(', ') || '');
+    } else {
+        resetForm();
     }
   }, [contentToEdit, isOpen]);
 
@@ -85,7 +89,13 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
         throw new Error('Content not found with the provided ID.');
       }
       setPreviewContent(content);
-      setTrailerUrl(content.trailerUrl || '');
+      // Reset custom fields when previewing a new ID, but try to preserve existing ones if it's the same ID
+      if (contentToEdit?.id !== tmdbId) {
+        setTrailerUrl(content.trailerUrl || '');
+        setDownloadLink(content.downloadLink || '');
+        setIsHindiDubbed(content.isHindiDubbed || false);
+        setCustomTags(content.customTags?.join(', ') || '');
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not fetch content details.';
       setPreviewError(message);
@@ -104,6 +114,8 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
 
     const finalContentToAdd: Content = {
       ...previewContent,
+      // The ID from the input field is the source of truth
+      id: tmdbId, 
       trailerUrl: trailerUrl || undefined,
       downloadLink: downloadLink || undefined,
       isHindiDubbed: isHindiDubbed,
@@ -136,29 +148,27 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Content' : 'Add New Content'}</DialogTitle>
           <DialogDescription>
-            {isEditing ? 'Update the details for this item.' : 'Add content via its TMDB ID.'}
+            {isEditing ? 'Update the details for this item or change the ID to fetch a new one.' : 'Add content via its TMDB ID.'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-            {!isEditing && (
-              <div>
-                <Label htmlFor="tmdbId">TMDB ID</Label>
-                <div className="flex gap-2">
-                    <Input
-                      id="tmdbId"
-                      value={tmdbId}
-                      onChange={(e) => setTmdbId(e.target.value)}
-                      placeholder="e.g., 550 for Fight Club"
-                      disabled={isLoading}
-                    />
-                    <Button onClick={handlePreview} disabled={isLoading || !tmdbId} variant="outline">
-                        {isLoading && tmdbId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4"/>}
-                        Preview
-                    </Button>
-                </div>
+            <div>
+              <Label htmlFor="tmdbId">TMDB ID</Label>
+              <div className="flex gap-2">
+                  <Input
+                    id="tmdbId"
+                    value={tmdbId}
+                    onChange={(e) => setTmdbId(e.target.value)}
+                    placeholder="e.g., 550 for Fight Club"
+                    disabled={isLoading}
+                  />
+                  <Button onClick={handlePreview} disabled={isLoading || !tmdbId} variant="outline">
+                      {isLoading && tmdbId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4"/>}
+                      Preview
+                  </Button>
               </div>
-            )}
+            </div>
             
             {previewError && !previewContent && (
                 <Alert variant="destructive">
