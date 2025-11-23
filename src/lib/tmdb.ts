@@ -1,3 +1,4 @@
+
 import type { Content, CastMember } from './definitions';
 
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || "46d13701165988b5bb5fb4d123c0447e";
@@ -177,7 +178,7 @@ export async function getContentById(id: string): Promise<Content | null> {
             releaseDate: manualItem.releaseDate || apiContent?.releaseDate || 'N/A',
             rating: manualItem.rating || apiContent?.rating || 0,
             type: manualItem.type || apiContent?.type || 'movie',
-            cast: manualItem.cast?.length ? manualItem.cast : apiContent?.cast || [],
+            cast: apiContent?.cast || [],
         };
     }
     
@@ -204,7 +205,8 @@ export async function getBrowseContent({ genre, type, region, year }: { genre?: 
         url.searchParams.append('with_genres', genre);
     }
     if (region) {
-        url.searchParams.append('region', region);
+        // Use with_origin_country for filtering by country of production
+        url.searchParams.append('with_origin_country', region);
     }
     if (year) {
         if (resolvedType === 'movie') {
@@ -222,13 +224,15 @@ export async function getBrowseContent({ genre, type, region, year }: { genre?: 
 export async function getManuallyAddedContent(): Promise<Content[]> {
   try {
     const isServer = typeof window === 'undefined';
-    let fetchUrl: string;
     const path = `/api/added-content?v=${new Date().getTime()}`;
+    let fetchUrl: string;
 
     if (isServer) {
+        // When on the server, we need to construct an absolute URL.
         const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:9002';
         fetchUrl = new URL(path, baseUrl).toString();
     } else {
+        // When on the client, a relative URL is sufficient.
         fetchUrl = path;
     }
       

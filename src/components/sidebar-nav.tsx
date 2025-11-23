@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -5,7 +6,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Home, Clapperboard, Tv, Film, Globe } from 'lucide-react';
+import { Home, Clapperboard, Tv, Film } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from '@/components/ui/sidebar';
@@ -22,13 +23,6 @@ const categories = [
     { href: '/?genre=53', label: 'Thriller', genre: '53' },
     { href: '/?genre=27', label: 'Horror', genre: '27' },
 ];
-
-const countries = [
-    { href: '/?region=US', label: 'USA', region: 'US' },
-    { href: '/?region=PK', label: 'Pakistan', region: 'PK' },
-    { href: '/?region=IN', label: 'India', region: 'IN' },
-];
-
 
 export function SidebarNav() {
   const pathname = usePathname();
@@ -47,11 +41,6 @@ export function SidebarNav() {
   const isCategoryActive = (item: typeof categories[0]) => {
       return pathname === '/' && currentGenre === item.genre;
   }
-
-  const isCountryActive = (item: typeof countries[0]) => {
-      return pathname === '/' && currentRegion === item.region;
-  }
-
 
   return (
     <SidebarMenu>
@@ -83,27 +72,6 @@ export function SidebarNav() {
                       {categories.map((item) => (
                           <SidebarMenuSubItem key={item.label}>
                             <SidebarMenuSubButton asChild isActive={isCategoryActive(item)}>
-                                <Link href={item.href}>{item.label}</Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                      ))}
-                  </SidebarMenuSub>
-              </CollapsibleContent>
-          </Collapsible>
-      </SidebarMenuItem>
-       <SidebarMenuItem>
-          <Collapsible>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton className="w-full">
-                    <Globe/>
-                    <span>Countries</span>
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                  <SidebarMenuSub>
-                      {countries.map((item) => (
-                          <SidebarMenuSubItem key={item.label}>
-                            <SidebarMenuSubButton asChild isActive={isCountryActive(item)}>
                                 <Link href={item.href}>{item.label}</Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
