@@ -22,11 +22,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <SidebarHeader>
           <div className="flex items-center justify-center p-2 h-[64px]">
              <Link href="/">
-              <Image src="/moovie-logo.png" alt="Moovie Logo" width={110} height={32} className="group-data-[collapsible=icon]:hidden"/>
-              {/* For the collapsed view, we can use the same logo but constrained to a square */}
-              <div className="hidden group-data-[collapsible=icon]:block w-[32px] h-[32px] relative">
-                <Image src="/moovie-logo.png" alt="Moovie Icon" layout="fill" objectFit="contain"/>
-              </div>
+                <div className="flex items-center justify-center h-full">
+                    <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent group-data-[collapsible=icon]:hidden">
+                        Moovie
+                    </h1>
+                    <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent hidden group-data-[collapsible=icon]:block">
+                        M
+                    </h1>
+                </div>
             </Link>
           </div>
         </SidebarHeader>
