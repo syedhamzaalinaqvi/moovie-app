@@ -10,6 +10,7 @@ import type { Content } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { CastSection } from '@/components/cast-section';
 import { Separator } from '@/components/ui/separator';
+import { RelatedContent } from '@/components/related-content';
 
 type WatchPageProps = {
   params: {
@@ -18,7 +19,7 @@ type WatchPageProps = {
 };
 
 export default async function WatchPage({ params }: WatchPageProps) {
-  // Extract the ID from the slug (e.g., "12345-movie-title" -> "12345")
+  // Extract the ID from the slug (e.g., "123456-movie-title" -> "123456")
   const contentId = params.id.split('-')[0];
   const content = await getContentById(contentId);
 
@@ -105,6 +106,9 @@ export default async function WatchPage({ params }: WatchPageProps) {
         
         <Separator />
         <CommentSection contentId={String(content.id)} />
+        
+        <Separator />
+        <RelatedContent contentId={content.id} contentType={content.type} />
       </div>
     </div>
   );

@@ -264,3 +264,8 @@ export async function getAllGenres(): Promise<Genre[]> {
     const { genreList: genres } = await fetchGenres();
     return genres || [];
 }
+
+export async function getRelatedContent(id: string, type: 'movie' | 'tv'): Promise<Content[]> {
+    const url = `${TMDB_BASE_URL}/${type}/${id}/similar?api_key=${TMDB_API_KEY}`;
+    return (await fetchAndTransformContent(url, type)).slice(0, 14); // Get up to 14 related items
+}
