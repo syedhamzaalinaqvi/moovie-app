@@ -1,4 +1,5 @@
 
+
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Content } from '@/lib/definitions';
@@ -23,7 +24,7 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
   if (view === 'list') {
     return (
       <div className="group relative">
-        <Card className="overflow-hidden border-0 bg-transparent flex gap-4 p-0">
+        <Card className="overflow-hidden border-0 bg-transparent flex gap-4 p-0 min-w-0">
           <Link href={watchUrl} className="block flex-shrink-0">
             <div className="relative w-24 aspect-[2/3]">
               <Image
