@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Content } from '@/lib/definitions';
@@ -57,7 +58,7 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
                   <Badge variant="secondary">Hindi Dubbed</Badge>
                 )}
             </div>
-            <p className="text-sm text-muted-foreground mt-2 line-clamp-2" style={{ wordBreak: 'break-word' }}>
+            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
               {content.description}
             </p>
           </div>
