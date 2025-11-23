@@ -1,8 +1,9 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Content } from '@/lib/definitions';
 import { Card, CardContent } from './ui/card';
-import { PlayCircle, Pencil } from 'lucide-react';
+import { PlayCircle, Pencil, Star } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { ContentFormDialog } from './content-form-dialog';
 import { Button } from './ui/button';
@@ -55,9 +56,16 @@ export function ContentCard({ content, showAdminControls = false, onEditSuccess 
         </ContentFormDialog>
       )}
 
-      <div className="mt-2">
+      <div className="mt-2 space-y-1">
         <h3 className="font-semibold text-sm truncate">{content.title}</h3>
-        <p className="text-xs text-muted-foreground">{content.releaseDate.split('-')[0]}</p>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{content.releaseDate.split('-')[0]}</span>
+          <div className="flex items-center gap-1">
+            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+            <span>{content.rating.toFixed(1)}</span>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground truncate">{content.genres?.[0] || 'N/A'}</p>
       </div>
     </div>
   );
