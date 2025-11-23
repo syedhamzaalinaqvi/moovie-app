@@ -6,6 +6,7 @@ import { PlayCircle, Pencil } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { ContentFormDialog } from './content-form-dialog';
 import { Button } from './ui/button';
+import { slugify } from '@/lib/utils';
 
 interface ContentCardProps {
   content: Content;
@@ -14,9 +15,11 @@ interface ContentCardProps {
 }
 
 export function ContentCard({ content, showAdminControls = false, onEditSuccess }: ContentCardProps) {
+  const watchUrl = `/watch/${content.id}-${slugify(content.title)}`;
+
   return (
     <div className="group relative">
-       <Link href={`/watch/${content.id}`} className="block">
+       <Link href={watchUrl} className="block">
         <Card className="overflow-hidden border-0 bg-transparent">
           <CardContent className="p-0">
             <div className="relative aspect-[2/3] w-full">

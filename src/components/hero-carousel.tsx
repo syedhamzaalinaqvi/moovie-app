@@ -14,6 +14,7 @@ import {
 import { Button } from './ui/button';
 import { PlayCircle } from 'lucide-react';
 import Autoplay from 'embla-carousel-autoplay';
+import { slugify } from '@/lib/utils';
 
 interface HeroCarouselProps {
   content: Content[];
@@ -58,7 +59,7 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
                 </p>
                 <div className="mt-6 flex items-center gap-4">
                   <Button asChild size="lg">
-                    <Link href={`/watch/${item.id}`}>
+                    <Link href={`/watch/${item.id}-${slugify(item.title)}`}>
                       <PlayCircle className="mr-2" />
                       Play Now
                     </Link>

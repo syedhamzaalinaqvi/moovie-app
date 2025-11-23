@@ -18,7 +18,9 @@ type WatchPageProps = {
 };
 
 export default async function WatchPage({ params }: WatchPageProps) {
-  const content = await getContentById(params.id);
+  // Extract the ID from the slug (e.g., "12345-movie-title" -> "12345")
+  const contentId = params.id.split('-')[0];
+  const content = await getContentById(contentId);
 
   if (!content) {
     notFound();
@@ -32,7 +34,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
 
   return (
     <div className="flex flex-col">
-      <div id="player" className="relative w-full bg-black">
+      <div id="player" className="relative w-full bg-black aspect-video">
         {content.trailerUrl ? (
           <VideoPlayer src={content.trailerUrl} />
         ) : (
