@@ -34,10 +34,10 @@ export function UserNav() {
   if (!user) {
     return (
         <div className="p-2">
-            <Button asChild className="w-full justify-start gap-2">
+            <Button asChild className="w-full justify-start gap-2 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
               <Link href="/login">
                 <LogIn className="h-4 w-4" />
-                <span>Sign In</span>
+                <span className="group-data-[collapsible=icon]:hidden">Sign In</span>
               </Link>
             </Button>
         </div>
