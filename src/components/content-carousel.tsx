@@ -27,7 +27,7 @@ export function ContentCarousel({ title, content }: ContentCarouselProps) {
       <Carousel
         opts={{
           align: 'start',
-          loop: true,
+          loop: content.length > 7, // Only loop if there are enough items to scroll
         }}
         className="w-full"
       >
