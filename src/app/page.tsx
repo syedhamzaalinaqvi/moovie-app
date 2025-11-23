@@ -2,13 +2,15 @@
 
 import { getBrowseContent, getManuallyAddedContent, getTrending } from "@/lib/tmdb";
 import { ContentCard } from "@/components/content-card";
-import { Search } from "lucide-react";
+import { LayoutGrid, List, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Content } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "next/navigation";
 import { HeroCarousel } from "@/components/hero-carousel";
 import RecommendedContent from "@/components/recommended-content";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // By adding a version query parameter that changes, we can force a re-render
 // and ensure the latest added-content.json is loaded.
@@ -27,6 +29,7 @@ export default function BrowsePage() {
   const [heroContent, setHeroContent] = useState<Content[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isHeroLoading, setIsHeroLoading] = useState(true);
+  const [view, setView] = useState<'grid' | 'list'>('grid');
 
   const isFilteredView = q || type || genre || region || year || hindiDubbed;
 
@@ -126,6 +129,32 @@ export default function BrowsePage() {
     if (type === 'tv') return 'TV Shows';
     return 'Browse All';
   }
+  
+  const GridSkeleton = () => (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
+        {[...Array(14)].map((_, i) => (
+            <div key={i}>
+                <Skeleton className="aspect-[2/3] w-full rounded-lg" />
+                <Skeleton className="h-4 w-3/4 mt-2" />
+            </div>
+        ))}
+    </div>
+  );
+
+  const ListSkeleton = () => (
+    <div className="flex flex-col gap-4">
+        {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex gap-4">
+                <Skeleton className="w-24 h-36 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+            </div>
+        ))}
+    </div>
+  );
 
   return (
     <>
@@ -139,20 +168,26 @@ export default function BrowsePage() {
       <div className="p-4 md:p-6 space-y-8">
         {!isFilteredView && <RecommendedContent />}
         <div>
-          <h1 className="text-3xl font-bold mb-6">{getTitle()}</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">{getTitle()}</h1>
+            <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setView('grid')} className={cn(view === 'grid' && 'bg-accent text-accent-foreground')}>
+                    <LayoutGrid className="h-5 w-5" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setView('list')} className={cn(view === 'list' && 'bg-accent text-accent-foreground')}>
+                    <List className="h-5 w-5" />
+                </Button>
+            </div>
+          </div>
           {isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
-                  {[...Array(14)].map((_, i) => (
-                      <div key={i}>
-                          <Skeleton className="aspect-[2/3] w-full rounded-lg" />
-                          <Skeleton className="h-4 w-3/4 mt-2" />
-                      </div>
-                  ))}
-              </div>
+              view === 'grid' ? <GridSkeleton /> : <ListSkeleton />
           ) : filteredContent.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
+            <div className={cn({
+                "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6": view === 'grid',
+                "flex flex-col gap-4": view === 'list'
+            })}>
               {filteredContent.map((item) => (
-                <ContentCard key={`${item.id}-${item.title}`} content={item} />
+                <ContentCard key={`${item.id}-${item.title}`} content={item} view={view} />
               ))}
             </div>
           ) : (
