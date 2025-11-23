@@ -3,6 +3,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Search } from 'lucide-react';
 import { Input } from './ui/input';
 import { useRouter } from 'next/navigation';
+import { ThemeToggle } from './theme-toggle';
 
 export function AppHeader() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export function AppHeader() {
           </div>
         </form>
       </div>
+      <ThemeToggle />
     </header>
   );
 }
