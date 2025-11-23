@@ -175,7 +175,7 @@ export async function getContentById(id: string): Promise<Content | null> {
             releaseDate: manualItem.releaseDate || apiContent?.releaseDate || 'N/A',
             rating: manualItem.rating || apiContent?.rating || 0,
             type: manualItem.type || apiContent?.type || 'movie',
-            cast: apiContent?.cast || [],
+            cast: manualItem.cast?.length ? manualItem.cast : apiContent?.cast || [],
         };
     }
     
@@ -213,19 +213,24 @@ export async function getBrowseContent({ genre, type, region }: { genre?: string
 export async function getManuallyAddedContent(): Promise<Content[]> {
   try {
     const isServer = typeof window === 'undefined';
-    let baseUrl = '';
+    let fetchUrl: string;
+
+    const path = `/api/added-content?v=${new Date().getTime()}`;
+
     if (isServer) {
-        baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:9002';
+        const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:9002';
+        fetchUrl = new URL(path, baseUrl).toString();
+    } else {
+        fetchUrl = path;
     }
       
-    const url = new URL(`/api/added-content?v=${new Date().getTime()}`, baseUrl);
-
-    const response = await fetch(url.toString(), {
+    const response = await fetch(fetchUrl, {
         headers: {
             'Cache-Control': 'no-cache'
         },
         cache: 'no-store'
     });
+
     if (!response.ok) {
         console.error('Failed to fetch manually added content, status:', response.status);
         try {
