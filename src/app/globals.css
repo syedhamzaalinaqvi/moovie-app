@@ -65,5 +65,16 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(
+      ellipse at top,
+      hsl(var(--background) / 0) 0%,
+      hsl(var(--background)) 70%
+    ),
+    radial-gradient(
+      ellipse at bottom,
+      hsl(var(--secondary) / 0.3) 0%,
+      hsl(var(--background)) 70%
+    );
   }
 }
