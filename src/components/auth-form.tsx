@@ -54,7 +54,7 @@ export function AuthForm({ type }: AuthFormProps) {
       }
       toast({
         title: type === 'login' ? 'Login Successful' : 'Signup Successful',
-        description: "Welcome to H-TV!",
+        description: "Welcome to Moovie!",
       });
       router.push('/');
     } catch (error) {
@@ -78,7 +78,7 @@ export function AuthForm({ type }: AuthFormProps) {
         await signInWithGoogle();
         toast({
             title: 'Login Successful',
-            description: "Welcome to H-TV!",
+            description: "Welcome to Moovie!",
         });
         router.push('/');
     } catch (error) {

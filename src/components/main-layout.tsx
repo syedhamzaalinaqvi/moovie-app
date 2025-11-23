@@ -23,7 +23,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <div className="bg-primary p-2 rounded-lg">
               <Film className="text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg text-foreground">H-TV</span>
+            <span className="font-bold text-lg text-foreground">Moovie</span>
           </div>
         </SidebarHeader>
         <SidebarContent>

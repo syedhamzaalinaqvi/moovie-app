@@ -10,7 +10,7 @@ import { ScrollToTop } from '@/components/scroll-to-top';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'H-TV: Streaming Hub',
+  title: 'Moovie: Streaming Hub',
   description: 'A modern video streaming platform.',
 };
 

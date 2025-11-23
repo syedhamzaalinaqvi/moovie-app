@@ -13,7 +13,7 @@ export default function AuthLayout({
           <div className="bg-primary p-2 rounded-lg">
               <Film className="text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg">H-TV</span>
+            <span className="font-bold text-lg">Moovie</span>
         </Link>
       </div>
       {children}
