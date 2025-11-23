@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { VideoPlayer } from '@/components/video-player';
 import { Badge } from '@/components/ui/badge';
-import { Star, Play, Download } from 'lucide-react';
+import { Star, Play, Download, Youtube } from 'lucide-react';
 import { CommentSection } from '@/components/comment-section';
 import type { Content } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
@@ -32,11 +32,14 @@ export default async function WatchPage({ params }: WatchPageProps) {
     ...(content.customTags || [])
   ];
 
+  // The primary video source is the custom trailerUrl. If not present, fallback to youtube trailer.
+  const primaryVideoSrc = content.trailerUrl || content.youtubeTrailerUrl;
+
   return (
     <div className="flex flex-col">
       <div id="player" className="relative w-full bg-black aspect-video">
-        {content.trailerUrl ? (
-          <VideoPlayer src={content.trailerUrl} />
+        {primaryVideoSrc ? (
+          <VideoPlayer src={primaryVideoSrc} />
         ) : (
           <div className="w-full aspect-video flex items-center justify-center">
             <p className="text-muted-foreground">Video not available.</p>
@@ -71,6 +74,14 @@ export default async function WatchPage({ params }: WatchPageProps) {
                       <Link href="#player">
                         <Play className="mr-2 h-5 w-5" />
                         Play Now
+                      </Link>
+                    </Button>
+                  )}
+                  {!content.trailerUrl && content.youtubeTrailerUrl && (
+                    <Button asChild size="lg">
+                      <Link href="#player">
+                        <Youtube className="mr-2 h-5 w-5" />
+                        Watch Trailer
                       </Link>
                     </Button>
                   )}

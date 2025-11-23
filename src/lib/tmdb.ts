@@ -99,9 +99,9 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
      try {
         const response = await fetch(url);
         if (!response.ok) return null;
-        const data = await response.json() as TmdbContent & { genres: Genre[], videos: { results: { type: string, key: string }[] }, credits: { cast: TmdbCredit[] } };
+        const data = await response.json() as TmdbContent & { genres: Genre[], videos: { results: { type: string, key: string, site: string }[] }, credits: { cast: TmdbCredit[] } };
         
-        const trailer = data.videos?.results.find(v => v.type === 'Trailer');
+        const trailer = data.videos?.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
         const cast: CastMember[] = data.credits?.cast.slice(0, 10).map(c => ({
             id: c.id,
             name: c.name,
@@ -119,7 +119,7 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
             releaseDate: data.release_date || data.first_air_date || 'N/A',
             rating: data.vote_average,
             type: type,
-            trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
+            youtubeTrailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
             cast: cast,
         };
     } catch (error) {
@@ -178,6 +178,7 @@ export async function getContentById(id: string): Promise<Content | null> {
             releaseDate: manualItem.releaseDate || apiContent?.releaseDate || 'N/A',
             rating: manualItem.rating || apiContent?.rating || 0,
             type: manualItem.type || apiContent?.type || 'movie',
+            youtubeTrailerUrl: apiContent?.youtubeTrailerUrl, // Keep the TMDB trailer if manual doesn't provide one
             cast: apiContent?.cast || [],
         };
     }
