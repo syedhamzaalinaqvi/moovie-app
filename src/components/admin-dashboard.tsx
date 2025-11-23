@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getBrowseContent, getContentById, getManuallyAddedContent } from '@/lib/tmdb';
+import { getBrowseContent, getManuallyAddedContent } from '@/lib/tmdb';
 import type { Content } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Film, Tv, History, PlusCircle, Loader2, Search } from 'lucide-react';
+import { Film, Tv, History, PlusCircle, Loader2, Search, Settings } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentCard } from './content-card';
 import { Separator } from './ui/separator';
@@ -12,6 +13,9 @@ import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { ContentFormDialog } from './content-form-dialog';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { getLogoText, updateLogoText } from '@/app/admin/actions';
 
 
 function StatCard({ title, value, icon: Icon, isLoading }: { title: string; value: number; icon: React.ElementType; isLoading: boolean }) {
@@ -38,13 +42,20 @@ export default function AdminDashboard() {
   const [tvShowCount, setTvShowCount] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
   const [recentlyAdded, setRecentlyAdded] = useState<Content[]>([]);
+  const [logoText, setLogoText] = useState('');
+  const [isSavingLogo, setIsSavingLogo] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
   const fetchDashboardData = async () => {
       setLoadingStats(true);
       try {
-        const localContent = await getManuallyAddedContent();
+        const [localContent, currentLogoText] = await Promise.all([
+          getManuallyAddedContent(),
+          getLogoText()
+        ]);
+        
+        setLogoText(currentLogoText);
 
         const apiMovies = await getBrowseContent({ type: 'movie' });
         const apiTvShows = await getBrowseContent({ type: 'tv' });
@@ -81,8 +92,27 @@ export default function AdminDashboard() {
 
   const onContentUpdated = () => {
     fetchDashboardData();
-    router.push(`/?v=${new Date().getTime()}`);
-    router.refresh();
+    // Force a hard reload of the window to reflect changes everywhere
+    window.location.reload();
+  }
+
+  const handleLogoSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingLogo(true);
+    try {
+      const result = await updateLogoText(logoText);
+      if (result.success) {
+        toast({ title: 'Success', description: 'Logo text updated. Refreshing...' });
+        // We reload the page to make sure the new logo is fetched by the layouts.
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        throw new Error(result.error || 'An unknown error occurred.');
+      }
+    } catch (error) {
+       toast({ variant: 'destructive', title: "Error", description: error instanceof Error ? error.message : "Failed to save logo text."});
+    } finally {
+      setIsSavingLogo(false);
+    }
   }
 
   return (
@@ -114,6 +144,38 @@ export default function AdminDashboard() {
 
       <Separator />
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Settings className="mr-2 h-6 w-6" />
+            Site Settings
+          </CardTitle>
+          <CardDescription>
+            Change global settings for the website.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogoSave} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="logoText">Logo Text</Label>
+              <Input
+                id="logoText"
+                value={logoText}
+                onChange={(e) => setLogoText(e.target.value)}
+                disabled={isSavingLogo}
+              />
+            </div>
+            <Button type="submit" disabled={isSavingLogo}>
+              {isSavingLogo && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Settings
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+
+      <Separator />
+
       <div>
         <h2 className="text-2xl font-bold mb-4 flex items-center">
           <History className="mr-2 h-6 w-6" />
@@ -142,3 +204,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
