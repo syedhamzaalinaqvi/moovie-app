@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -24,7 +25,7 @@ import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
+  password: z.string().min(1, { message: 'Password cannot be empty.' }),
 });
 
 type AuthFormProps = {
@@ -46,54 +47,24 @@ export function AuthForm({ type }: AuthFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    try {
-      if (type === 'login') {
-        await signInWithEmail(values.email, values.password);
-      } else {
-        await signUpWithEmail(values.email, values.password);
-      }
-      toast({
-        title: type === 'login' ? 'Login Successful' : 'Signup Successful',
-        description: "Welcome to Moovie!",
-      });
-      router.push('/');
-    } catch (error) {
-        let message = "An unexpected error occurred.";
-        if (error instanceof Error) {
-            message = error.message;
-        }
+    setTimeout(() => {
         toast({
-            variant: 'destructive',
-            title: `Authentication Failed`,
-            description: message,
+            title: 'Feature Under Development',
+            description: 'The login/signup functionality is not yet available. Thank you for your patience!',
         });
-    } finally {
         setIsLoading(false);
-    }
+    }, 500);
   }
 
   async function handleGoogleSignIn() {
     setIsLoading(true);
-    try {
-        await signInWithGoogle();
+    setTimeout(() => {
         toast({
-            title: 'Login Successful',
-            description: "Welcome to Moovie!",
+            title: 'Feature Under Development',
+            description: 'The login/signup functionality is not yet available. Thank you for your patience!',
         });
-        router.push('/');
-    } catch (error) {
-        let message = "An unexpected error occurred.";
-        if (error instanceof Error) {
-            message = error.message;
-        }
-        toast({
-            variant: 'destructive',
-            title: `Google Sign-In Failed`,
-            description: message,
-        });
-    } finally {
         setIsLoading(false);
-    }
+    }, 500);
   }
 
   return (
