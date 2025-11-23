@@ -10,7 +10,6 @@ import type { Content } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { CastSection } from '@/components/cast-section';
 import { Separator } from '@/components/ui/separator';
-import { RelatedContent } from '@/components/related-content';
 
 type WatchPageProps = {
   params: {
@@ -107,8 +106,6 @@ export default async function WatchPage({ params }: WatchPageProps) {
         <Separator />
         <CommentSection contentId={String(content.id)} />
         
-        <Separator />
-        <RelatedContent contentId={content.id} contentType={content.type} />
       </div>
     </div>
   );
