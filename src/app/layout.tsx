@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/providers/auth-provider';
 import MainLayout from '@/components/main-layout';
 import { ThemeProvider } from '@/providers/theme-provider';
+import { ScrollToTop } from '@/components/scroll-to-top';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -30,6 +31,7 @@ export default function RootLayout({
           <AuthProvider>
             <MainLayout>{children}</MainLayout>
             <Toaster />
+            <ScrollToTop />
           </AuthProvider>
         </ThemeProvider>
       </body>
