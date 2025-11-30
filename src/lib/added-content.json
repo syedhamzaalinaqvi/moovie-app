@@ -89,7 +89,71 @@
     ],
     "releaseDate": "2010-02-09",
     "rating": 5.023,
-    "type": "movie"
+    "type": "movie",
+    "cast": [
+      {
+        "id": 18702,
+        "name": "Mark Dacascos",
+        "character": "Lt. Max Forrester",
+        "profilePath": "https://image.tmdb.org/t/p/w185/trOACuJz1KzhB51qe6asaxRuxrh.jpg"
+      },
+      {
+        "id": 23346,
+        "name": "Armand Assante",
+        "character": "Cpt. John 'Ghost' Santos",
+        "profilePath": "https://image.tmdb.org/t/p/w185/9HbbWAJacTHguO2InDVHKGnaasm.jpg"
+      },
+      {
+        "id": 3197,
+        "name": "Tom Sizemore",
+        "character": "Col. Bunker",
+        "profilePath": "https://image.tmdb.org/t/p/w185/cXikL7I0e2geGVvcM2RT8gQq3Nb.jpg"
+      },
+      {
+        "id": 2547,
+        "name": "Bruce Boxleitner",
+        "character": "Cpt. Dyer",
+        "profilePath": "https://image.tmdb.org/t/p/w185/1x99F4oJTFAFY2HR4PbQdxiGyMH.jpg"
+      },
+      {
+        "id": 115948,
+        "name": "Sofya Skya",
+        "character": "Lt. Sasha Villanoff",
+        "profilePath": "https://image.tmdb.org/t/p/w185/zl2tThz0mgQP7ytjTilzGToMyWE.jpg"
+      },
+      {
+        "id": 11160,
+        "name": "Danny Trejo",
+        "character": "Matador",
+        "profilePath": "https://image.tmdb.org/t/p/w185/7JrUkRGBscZ1Hy5JinaaXjjzSCF.jpg"
+      },
+      {
+        "id": 1159,
+        "name": "Steven Bauer",
+        "character": "Agent Stubbs",
+        "profilePath": "https://image.tmdb.org/t/p/w185/wWIgfXMRyGFKBWhV9yc8CObNqfh.jpg"
+      },
+      {
+        "id": 1067467,
+        "name": "Damone Williams",
+        "character": "Pvt. Willard",
+        "profilePath": "https://picsum.photos/seed/1067467/185/278"
+      },
+      {
+        "id": 212480,
+        "name": "Christine Scott Bennett",
+        "character": "Madonna",
+        "profilePath": "https://image.tmdb.org/t/p/w185/bPL3qL9znFCaPgkWnVPa0pJS2eJ.jpg"
+      },
+      {
+        "id": 1067506,
+        "name": "Johnathon Freeman",
+        "character": "Ice",
+        "profilePath": "https://picsum.photos/seed/1067506/185/278"
+      }
+    ],
+    "isHindiDubbed": true,
+    "customTags": []
   },
   {
     "id": "34307",
