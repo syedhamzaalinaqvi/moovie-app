@@ -127,10 +127,13 @@ export default async function WatchPage({ params }: WatchPageProps) {
                       Download
                     </Link>
                   </Button>
-              
-              <ShareButton 
-                title={content.title} 
-                url={`/watch/${contentId}-${slugify(content.title)}`} 
+                )
+              )
+              )}
+
+              <ShareButton
+                title={content.title}
+                url={`/watch/${contentId}-${slugify(content.title)}`}
               />
             </div>
           </div>
