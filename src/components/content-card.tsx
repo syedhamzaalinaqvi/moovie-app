@@ -139,7 +139,7 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
                 sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 12.5vw"
                 data-ai-hint="movie poster"
               />
-              <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+              <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
                 {content.quality?.map(q => (
                   <Badge key={q} variant="secondary" className="text-[10px] px-1 h-5">{q}</Badge>
                 ))}
@@ -148,6 +148,18 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
                 ))}
                 {!content.languages?.length && content.isHindiDubbed && (
                   <Badge variant="secondary" className="text-[10px] px-1 h-5">Hindi Dubbed</Badge>
+                )}
+              </div>
+              <div className="absolute bottom-2 right-2 z-10">
+                {content.type === 'tv' && content.numberOfSeasons && (
+                  <Badge variant="secondary" className="text-[10px] px-1 h-5 bg-black/60 hover:bg-black/70 text-white border-0 backdrop-blur-sm">
+                    {content.numberOfSeasons} {content.numberOfSeasons === 1 ? 'Season' : 'Seasons'}
+                  </Badge>
+                )}
+                {content.type === 'movie' && content.runtime && (
+                  <Badge variant="secondary" className="text-[10px] px-1 h-5 bg-black/60 hover:bg-black/70 text-white border-0 backdrop-blur-sm">
+                    {Math.floor(content.runtime / 60)}h {content.runtime % 60}m
+                  </Badge>
                 )}
               </div>
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-lg">
@@ -165,16 +177,6 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <span>{content.releaseDate.split('-')[0]}</span>
-            {content.type === 'tv' && content.numberOfSeasons && (
-              <span className="text-[10px] bg-accent px-1 rounded">
-                {content.numberOfSeasons} {content.numberOfSeasons === 1 ? 'Season' : 'Seasons'}
-              </span>
-            )}
-            {content.type === 'movie' && content.runtime && (
-              <span className="text-[10px] bg-accent px-1 rounded">
-                {Math.floor(content.runtime / 60)}h {content.runtime % 60}m
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-1">
             <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
