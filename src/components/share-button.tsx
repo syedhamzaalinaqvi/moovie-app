@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,9 +19,16 @@ type ShareButtonProps = {
 
 export function ShareButton({ title, url }: ShareButtonProps) {
     const { toast } = useToast();
+    const [shareUrl, setShareUrl] = useState('');
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setShareUrl(url.startsWith('http') ? url : `${window.location.origin}${url}`);
+        }
+    }, [url]);
 
     const handleCopyLink = () => {
-        navigator.clipboard.writeText(url);
+        navigator.clipboard.writeText(shareUrl);
         toast({
             title: "Link Copied",
             description: "The link has been copied to your clipboard.",
@@ -27,24 +36,24 @@ export function ShareButton({ title, url }: ShareButtonProps) {
     };
 
     const handleShare = (platform: 'facebook' | 'twitter' | 'whatsapp') => {
-        let shareUrl = '';
-        const encodedUrl = encodeURIComponent(url);
+        let externalUrl = '';
+        const encodedUrl = encodeURIComponent(shareUrl);
         const encodedTitle = encodeURIComponent(title);
 
         switch (platform) {
             case 'facebook':
-                shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+                externalUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
                 break;
             case 'twitter':
-                shareUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+                externalUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
                 break;
             case 'whatsapp':
-                shareUrl = `https://wa.me/?text=${encodedTitle} ${encodedUrl}`;
+                externalUrl = `https://wa.me/?text=${encodedTitle} ${encodedUrl}`;
                 break;
         }
 
-        if (shareUrl) {
-            window.open(shareUrl, '_blank', 'noopener,noreferrer');
+        if (externalUrl) {
+            window.open(externalUrl, '_blank', 'noopener,noreferrer');
         }
     };
 
