@@ -1,6 +1,6 @@
 'use client';
 
-import { getBrowseContent, getManuallyAddedContent, getTrending } from "@/lib/tmdb";
+import { getManuallyAddedContent, getTrending } from "@/lib/tmdb";
 import { ContentCard } from "@/components/content-card";
 import { LayoutGrid, List, Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -56,52 +56,29 @@ export default function BrowsePage() {
     const fetchContent = async () => {
       setIsLoading(true);
       try {
-        const [apiContent, localContent] = await Promise.all([
-          getBrowseContent({ 
-            type: type || undefined, 
-            genre: genre || undefined, 
-            region: region || undefined,
-            year: year || undefined,
-          }),
-          getManuallyAddedContent()
-        ]);
-        
-        const combinedContentMap = new Map<string, Content>();
+        // Only fetch manually added content from Firestore
+        const localContent = await getManuallyAddedContent();
 
         // Filter local content based on current filters
-        const relevantLocalContent = localContent.filter(item => {
-            if (type && item.type !== type) return false;
-            // TMDB genre IDs are strings now, so we adapt
-            if (genre && !item.genres?.some(g => {
-                // This is a crude but necessary check if local genres are names and filter is ID
-                // A better system would use genre IDs everywhere
-                return String(g) === genre || g.toLowerCase() === genre.toLowerCase()
-            })) return false;
-            if (year && item.releaseDate?.startsWith(year) === false) return false;
-            if (hindiDubbed === 'true' && !item.isHindiDubbed) return false;
-            return true;
-        });
-        
-        // 1. Add local content first to give it priority
-        relevantLocalContent.forEach(item => {
-            combinedContentMap.set(String(item.id), item);
-        });
-        
-        // 2. Add API content, but do not overwrite any local content that has the same ID.
-        apiContent.forEach(item => {
-          if (!combinedContentMap.has(String(item.id))) {
-            combinedContentMap.set(String(item.id), item);
-          }
-        });
-        
-        let finalContent = Array.from(combinedContentMap.values());
+        const filteredLocalContent = localContent.filter(item => {
+          if (type && item.type !== type) return false;
+          // TMDB genre IDs are strings now, so we adapt
+          if (genre && !item.genres?.some(g => {
+            // This is a crude but necessary check if local genres are names and filter is ID
+            // A better system would use genre IDs everywhere
+            return String(g) === genre || g.toLowerCase() === genre.toLowerCase()
+          })) return false;
 
-        // If hindiDubbed is true, we must filter the final combined list
-        if (hindiDubbed === 'true') {
-          finalContent = finalContent.filter(item => item.isHindiDubbed);
-        }
+          if (year && item.releaseDate?.startsWith(year) === false) return false;
+          if (hindiDubbed === 'true' && !item.isHindiDubbed) return false;
 
-        setContent(finalContent);
+          // Region filter is tricky for local content if we don't store region, ignoring for now or extending content type
+          // if (region && ...) 
+
+          return true;
+        });
+
+        setContent(filteredLocalContent);
 
       } catch (error) {
         console.error("Failed to fetch content", error);
@@ -129,30 +106,30 @@ export default function BrowsePage() {
     if (type === 'tv') return 'TV Shows';
     return 'Browse All';
   }
-  
+
   const GridSkeleton = () => (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
-        {[...Array(14)].map((_, i) => (
-            <div key={i}>
-                <Skeleton className="aspect-[2/3] w-full rounded-lg" />
-                <Skeleton className="h-4 w-3/4 mt-2" />
-            </div>
-        ))}
+      {[...Array(14)].map((_, i) => (
+        <div key={i}>
+          <Skeleton className="aspect-[2/3] w-full rounded-lg" />
+          <Skeleton className="h-4 w-3/4 mt-2" />
+        </div>
+      ))}
     </div>
   );
 
   const ListSkeleton = () => (
     <div className="flex flex-col gap-4">
-        {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex gap-4">
-                <Skeleton className="w-24 h-36 rounded-lg" />
-                <div className="flex-1 space-y-2">
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <Skeleton className="h-10 w-full" />
-                </div>
-            </div>
-        ))}
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="flex gap-4">
+          <Skeleton className="w-24 h-36 rounded-lg" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 
@@ -171,20 +148,20 @@ export default function BrowsePage() {
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">{getTitle()}</h1>
             <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={() => setView('grid')} className={cn(view === 'grid' && 'bg-accent text-accent-foreground')}>
-                    <LayoutGrid className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => setView('list')} className={cn(view === 'list' && 'bg-accent text-accent-foreground')}>
-                    <List className="h-5 w-5" />
-                </Button>
+              <Button variant="ghost" size="icon" onClick={() => setView('grid')} className={cn(view === 'grid' && 'bg-accent text-accent-foreground')}>
+                <LayoutGrid className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => setView('list')} className={cn(view === 'list' && 'bg-accent text-accent-foreground')}>
+                <List className="h-5 w-5" />
+              </Button>
             </div>
           </div>
           {isLoading ? (
-              view === 'grid' ? <GridSkeleton /> : <ListSkeleton />
+            view === 'grid' ? <GridSkeleton /> : <ListSkeleton />
           ) : filteredContent.length > 0 ? (
             <div className={cn({
-                "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6": view === 'grid',
-                "flex flex-col gap-4": view === 'list'
+              "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6": view === 'grid',
+              "flex flex-col gap-4": view === 'list'
             })}>
               {filteredContent.map((item) => (
                 <ContentCard key={`${item.id}-${item.title}`} content={item} view={view} />
