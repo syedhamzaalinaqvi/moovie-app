@@ -16,7 +16,7 @@ import { Film, Globe, Calendar, ChevronDown } from 'lucide-react';
 import { getAllGenres } from '@/lib/tmdb';
 
 type Genre = {
-  id: number;
+  id: number | string;
   name: string;
 };
 
@@ -59,11 +59,11 @@ function FilterDropdown({
         <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
           <DropdownMenuRadioItem value="">All</DropdownMenuRadioItem>
           {extraOptions && extraOptions.map(opt => (
-             <DropdownMenuRadioItem key={opt.value} value={opt.value}>
-                {opt.label}
-             </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </DropdownMenuRadioItem>
           ))}
-           {extraOptions && <DropdownMenuSeparator />}
+          {extraOptions && <DropdownMenuSeparator />}
           {options.map((option) => (
             <DropdownMenuRadioItem key={option.value} value={option.value}>
               {option.label}
@@ -96,31 +96,31 @@ export function HeaderFilters() {
   const currentLanguageValue = isHindiDubbed ? 'hindi_dubbed' : currentRegion;
 
   const handleFilterChange = useCallback((key: 'genre' | 'year' | 'region' | 'hindi_dubbed', value: string) => {
-      const newParams = new URLSearchParams(searchParams.toString());
-      
-      // Reset all filters when 'All' is selected
-      if (value === '') {
-        newParams.delete(key);
-         if (key === 'region') {
-            newParams.delete('hindi_dubbed');
+    const newParams = new URLSearchParams(searchParams.toString());
+
+    // Reset all filters when 'All' is selected
+    if (value === '') {
+      newParams.delete(key);
+      if (key === 'region') {
+        newParams.delete('hindi_dubbed');
+      }
+    } else {
+      // Special handling for language/region filter
+      if (key === 'region') {
+        if (value === 'hindi_dubbed') {
+          newParams.set('hindi_dubbed', 'true');
+          newParams.delete('region');
+        } else {
+          newParams.set('region', value);
+          newParams.delete('hindi_dubbed');
         }
       } else {
-        // Special handling for language/region filter
-        if (key === 'region') {
-            if (value === 'hindi_dubbed') {
-                newParams.set('hindi_dubbed', 'true');
-                newParams.delete('region');
-            } else {
-                newParams.set('region', value);
-                newParams.delete('hindi_dubbed');
-            }
-        } else {
-             newParams.set(key, value);
-        }
+        newParams.set(key, value);
       }
+    }
 
-      router.push(`/?${newParams.toString()}`);
-    },
+    router.push(`/?${newParams.toString()}`);
+  },
     [router, searchParams]
   );
 

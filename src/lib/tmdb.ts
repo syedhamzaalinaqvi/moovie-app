@@ -24,7 +24,7 @@ type TmdbContent = {
 };
 
 type Genre = {
-    id: number;
+    id: number | string;
     name: string;
 };
 
@@ -35,7 +35,7 @@ type TmdbCredit = {
     profile_path: string;
 }
 
-let genreMap: Map<number, string> | null = null;
+let genreMap: Map<number | string, string> | null = null;
 let genreList: Genre[] | null = null;
 
 async function fetchGenres() {
@@ -60,6 +60,15 @@ async function fetchGenres() {
         return { genreMap: new Map(), genreList: [] };
     }
 }
+
+// ... (existing code intermediate skipped for brevity if not changing, but here I am modifying types so I should be careful)
+// Actually I need to replace the TYPE definition at top too.
+
+// Let's replace the whole top section first?
+// Or just the chunks.
+
+// I'll replace the Genre type definition first.
+
 
 
 function tmdbContentToContent(item: TmdbContent, type: 'movie' | 'tv' | 'person', allGenres: Map<number, string>): Content | null {
@@ -240,6 +249,28 @@ export async function getManuallyAddedContent(): Promise<Content[]> {
 }
 
 export async function getAllGenres(): Promise<Genre[]> {
-    const { genreList: genres } = await fetchGenres();
-    return genres || [];
+    const { genreList: tmdbGenres } = await fetchGenres();
+    const manualContent = await getManuallyAddedContent();
+
+    // Extract unique genres from manual content
+    const manualGenresSet = new Set<string>();
+    manualContent.forEach(item => {
+        item.genres?.forEach(g => manualGenresSet.add(g));
+    });
+
+    const tmdbGenreNames = new Set(tmdbGenres?.map(g => g.name.toLowerCase()));
+
+    // Create Genre objects for custom genres that are NOT in TMDB list
+    const customGenres: Genre[] = [];
+    manualGenresSet.forEach(gName => {
+        if (!tmdbGenreNames.has(gName.toLowerCase())) {
+            // Check if it's not already in customGenres (set handles unique strings, but case sensitivity...)
+            // Just use the name as ID for custom genres
+            customGenres.push({ id: gName, name: gName });
+        }
+    });
+
+    // Combine and sort
+    const all = [...(tmdbGenres || []), ...customGenres];
+    return all.sort((a, b) => a.name.localeCompare(b.name));
 }

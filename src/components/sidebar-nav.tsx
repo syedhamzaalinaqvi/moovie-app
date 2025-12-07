@@ -19,9 +19,9 @@ const navItems = [
 ];
 
 const categories = [
-    { href: '/?genre=28', label: 'Action', genre: '28' },
-    { href: '/?genre=53', label: 'Thriller', genre: '53' },
-    { href: '/?genre=27', label: 'Horror', genre: '27' },
+  { href: '/?genre=28', label: 'Action', genre: '28' },
+  { href: '/?genre=53', label: 'Thriller', genre: '53' },
+  { href: '/?genre=27', label: 'Horror', genre: '27' },
 ];
 
 export function SidebarNav() {
@@ -33,13 +33,13 @@ export function SidebarNav() {
 
   const isActive = (item: typeof navItems[0]) => {
     if (item.href === '/') {
-        return pathname === '/' && !currentType && !currentGenre && !currentRegion;
+      return pathname === '/' && !currentType && !currentGenre && !currentRegion;
     }
     return pathname === '/' && currentType === item.type;
   }
 
   const isCategoryActive = (item: typeof categories[0]) => {
-      return pathname === '/' && currentGenre === item.genre;
+    return pathname === '/' && currentGenre === item.genre;
   }
 
   return (
@@ -59,27 +59,7 @@ export function SidebarNav() {
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}
-      <SidebarMenuItem>
-          <Collapsible>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton className="w-full">
-                    <Film/>
-                    <span>Categories</span>
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                  <SidebarMenuSub>
-                      {categories.map((item) => (
-                          <SidebarMenuSubItem key={item.label}>
-                            <SidebarMenuSubButton asChild isActive={isCategoryActive(item)}>
-                                <Link href={item.href}>{item.label}</Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                      ))}
-                  </SidebarMenuSub>
-              </CollapsibleContent>
-          </Collapsible>
-      </SidebarMenuItem>
+
     </SidebarMenu>
   );
 }
