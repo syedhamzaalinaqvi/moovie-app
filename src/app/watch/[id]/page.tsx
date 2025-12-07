@@ -129,7 +129,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
                   </Button>
                 )
               )
-              )}
+              }
 
               <ShareButton
                 title={content.title}
