@@ -136,7 +136,19 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
     }
   };
 
-  // ... handleAddLink, handleRemoveLink, handleLinkChange ...
+  const handleAddLink = () => {
+    setDownloadLinks([...downloadLinks, { label: '', url: '' }]);
+  };
+
+  const handleRemoveLink = (index: number) => {
+    setDownloadLinks(downloadLinks.filter((_, i) => i !== index));
+  };
+
+  const handleLinkChange = (index: number, field: keyof DownloadLink, value: string) => {
+    const newLinks = [...downloadLinks];
+    newLinks[index] = { ...newLinks[index], [field]: value };
+    setDownloadLinks(newLinks);
+  };
 
   const handleSave = async () => {
     if (!previewContent) {
