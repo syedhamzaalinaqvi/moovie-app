@@ -17,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
+import { ShareButton } from "@/components/share-button";
+import { slugify } from "@/lib/utils";
 
 type WatchPageProps = {
   params: Promise<{
@@ -126,7 +128,13 @@ export default async function WatchPage({ params }: WatchPageProps) {
                     </Link>
                   </Button>
                 )
+              )
               )}
+
+              <ShareButton
+                title={content.title}
+                url={`https://linkshare.online/moovie/watch/${contentId}-${slugify(content.title)}`}
+              />
             </div>
           </div>
           <div className="w-full max-w-[200px] md:max-w-none mx-auto md:mx-0">

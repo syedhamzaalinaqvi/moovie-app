@@ -19,6 +19,8 @@ type TmdbContent = {
     first_air_date?: string; // TV
     vote_average: number;
     media_type?: 'movie' | 'tv';
+    runtime?: number;
+    number_of_seasons?: number;
 };
 
 type Genre = {
@@ -121,6 +123,8 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
             type: type,
             youtubeTrailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
             cast: cast,
+            runtime: data.runtime,
+            numberOfSeasons: data.number_of_seasons,
         };
     } catch (error) {
         console.error(`Failed to fetch from ${url}:`, error);
@@ -178,6 +182,8 @@ export async function getContentById(id: string): Promise<Content | null> {
             releaseDate: manualItem.releaseDate || apiContent?.releaseDate || 'N/A',
             rating: manualItem.rating || apiContent?.rating || 0,
             type: manualItem.type || apiContent?.type || 'movie',
+            runtime: manualItem.runtime || apiContent?.runtime,
+            numberOfSeasons: manualItem.numberOfSeasons || apiContent?.numberOfSeasons,
             youtubeTrailerUrl: apiContent?.youtubeTrailerUrl, // Keep the TMDB trailer if manual doesn't provide one
             cast: apiContent?.cast || [],
         };

@@ -22,6 +22,8 @@ export type Content = {
   isHindiDubbed?: boolean;
   customTags?: string[];
   cast?: CastMember[];
+  runtime?: number; // Minutes
+  numberOfSeasons?: number;
 };
 
 export type AppUser = {
