@@ -14,8 +14,19 @@ const CONTENT_COLLECTION = 'manually_added_content';
 export async function addContentToFirestore(content: Content): Promise<{ success: boolean }> {
     try {
         const contentRef = doc(db, CONTENT_COLLECTION, String(content.id));
+        // Fetch existing doc to preserve createdAt
+        const docSnap = await import('firebase/firestore').then(mod => mod.getDoc(contentRef));
+
+        let createdAt = new Date().toISOString();
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            // Use existing createdAt, or fallback to existing updatedAt, or fallback to current time (if really nothing)
+            createdAt = data.createdAt || data.updatedAt || createdAt;
+        }
+
         await setDoc(contentRef, {
             ...content,
+            createdAt: createdAt,
             updatedAt: new Date().toISOString(),
         });
         return { success: true };
@@ -31,20 +42,23 @@ export async function addContentToFirestore(content: Content): Promise<{ success
 export async function getContentFromFirestore(): Promise<Content[]> {
     try {
         const contentQuery = query(
-            collection(db, CONTENT_COLLECTION),
-            orderBy('updatedAt', 'desc')
+            collection(db, CONTENT_COLLECTION)
         );
         const snapshot = await getDocs(contentQuery);
 
         const content: Content[] = [];
         snapshot.forEach((doc) => {
             const data = doc.data();
-            // Remove the updatedAt field before returning
-            const { updatedAt, ...contentData } = data;
-            content.push(contentData as Content);
+            content.push(data as Content);
         });
 
-        return content;
+        // Client-side sort to handle mixed data (some with createdAt, some without)
+        // Sort by createdAt desc, fallback to updatedAt desc
+        return content.sort((a, b) => {
+            const dateA = a.createdAt || a.updatedAt || '';
+            const dateB = b.createdAt || b.updatedAt || '';
+            return dateB.localeCompare(dateA);
+        });
     } catch (error) {
         console.error('Failed to fetch content from Firestore:', error);
         return [];

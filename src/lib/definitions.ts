@@ -26,6 +26,8 @@ export type Content = {
   numberOfSeasons?: number;
   languages?: string[];
   quality?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type AppUser = {
