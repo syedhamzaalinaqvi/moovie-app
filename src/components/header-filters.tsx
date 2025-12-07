@@ -84,7 +84,7 @@ export function HeaderFilters() {
     getAllGenres().then(setGenres);
   }, []);
 
-  const genreOptions = genres.map(g => ({ value: String(g.id), label: g.name }));
+  const genreOptions = genres.map(g => ({ value: g.name, label: g.name }));
   const yearOptions = years.map(y => ({ value: y, label: y }));
   const languageOptions = languages;
 

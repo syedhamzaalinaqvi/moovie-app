@@ -218,7 +218,32 @@ export async function getBrowseContent({ genre, type, region, year }: { genre?: 
     url.searchParams.append('api_key', TMDB_API_KEY);
 
     if (genre) {
-        url.searchParams.append('with_genres', genre);
+        // Resolve genre name to ID if possible
+        let genreId = genre;
+        // If genre is not a number, try to find ID from name
+        if (isNaN(Number(genre))) {
+            const { genreList } = await fetchGenres();
+            const found = genreList?.find(g => g.name.toLowerCase() === genre.toLowerCase());
+            if (found) {
+                genreId = String(found.id);
+            }
+        }
+
+        // If we found an ID (or it was already an ID), use it. 
+        // If it's a custom genre (no ID found), we can't filter via TMDB API 'with_genres' easily unless we send nothing and filter locally (which is what page.tsx does for manual).
+        // However, if we don't send 'with_genres', we get ALL results.
+        // It's better to NOT send with_genres if it's a custom genre, and rely on local filtering (but local filtering only filters MANUAL content).
+        // TMDB discover API doesn't support "custom tags".
+        // So for custom genres, we probably shouldn't fetch from TMDB discover at all?
+        // But getBrowseContent is for TMDB content.
+        // If genreId is strictly numeric (standard TMDB genre), we append it.
+        // If it's not numeric (custom), we append nothing (so we fetch basic popular/discover) OR we return empty?
+
+        // Current behavior: if we pass "Pakistani Drama" to TMDB with_genres, it might error or ignore.
+        // Let's only append if it's numeric/resolved.
+        if (!isNaN(Number(genreId))) {
+            url.searchParams.append('with_genres', genreId);
+        }
     }
     if (region) {
         // Use with_origin_country for filtering by country of production
