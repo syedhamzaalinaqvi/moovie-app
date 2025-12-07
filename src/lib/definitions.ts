@@ -1,5 +1,10 @@
 import type { User as FirebaseUser } from 'firebase/auth';
 
+export type DownloadLink = {
+  label: string;
+  url: string;
+};
+
 export type Content = {
   id: string;
   title: string;
@@ -12,7 +17,8 @@ export type Content = {
   type: 'movie' | 'tv';
   trailerUrl?: string;
   youtubeTrailerUrl?: string;
-  downloadLink?: string;
+  downloadLink?: string; // Deprecated, but kept for backward compatibility
+  downloadLinks?: DownloadLink[];
   isHindiDubbed?: boolean;
   customTags?: string[];
   cast?: CastMember[];
@@ -34,18 +40,18 @@ export interface AuthContextType {
 }
 
 export type Comment = {
-    id: string;
-    author: string;
-    authorId: string;
-    avatarUrl: string;
-    text: string;
-    timestamp: number;
-    replies: Comment[];
+  id: string;
+  author: string;
+  authorId: string;
+  avatarUrl: string;
+  text: string;
+  timestamp: number;
+  replies: Comment[];
 }
 
 export type CastMember = {
-    id: number;
-    name: string;
-    character: string;
-    profilePath: string;
+  id: number;
+  name: string;
+  character: string;
+  profilePath: string;
 }

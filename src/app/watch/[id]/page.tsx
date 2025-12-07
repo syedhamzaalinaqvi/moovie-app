@@ -10,6 +10,13 @@ import type { Content } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { CastSection } from '@/components/cast-section';
 import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 type WatchPageProps = {
   params: Promise<{
@@ -86,13 +93,39 @@ export default async function WatchPage({ params }: WatchPageProps) {
                   </Link>
                 </Button>
               )}
-              {content.downloadLink && (
-                <Button asChild size="lg" variant="outline">
-                  <Link href={content.downloadLink} target="_blank" rel="noopener noreferrer">
-                    <Download className="mr-2 h-5 w-5" />
-                    Download
-                  </Link>
-                </Button>
+              {/* Download Button Logic */}
+              {content.downloadLinks && content.downloadLinks.length > 1 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="lg" variant="outline">
+                      <Download className="mr-2 h-5 w-5" />
+                      Download Options
+                      <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {content.downloadLinks.map((link, index) => (
+                      <DropdownMenuItem key={index} asChild>
+                        <Link href={link.url} target="_blank" rel="noopener noreferrer" className="cursor-pointer font-medium">
+                          {link.label || `Link ${index + 1}`}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                (content.downloadLink || (content.downloadLinks && content.downloadLinks.length === 1)) && (
+                  <Button asChild size="lg" variant="outline">
+                    <Link
+                      href={content.downloadLink || (content.downloadLinks ? content.downloadLinks[0].url : '#')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Download className="mr-2 h-5 w-5" />
+                      Download
+                    </Link>
+                  </Button>
+                )
               )}
             </div>
           </div>

@@ -19,10 +19,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getContentById } from '@/lib/tmdb';
-import type { Content } from '@/lib/definitions';
+import type { Content, DownloadLink } from '@/lib/definitions';
 import { updateContent } from '@/ai/flows/update-content';
 import { ContentCard } from './content-card';
 
@@ -41,10 +41,11 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
 
   // Form fields state
   const [trailerUrl, setTrailerUrl] = useState(contentToEdit?.trailerUrl || '');
-  const [downloadLink, setDownloadLink] = useState(contentToEdit?.downloadLink || '');
+  // Removed single downloadLink state in favor of list
+  const [downloadLinks, setDownloadLinks] = useState<DownloadLink[]>([]);
   const [isHindiDubbed, setIsHindiDubbed] = useState(contentToEdit?.isHindiDubbed || false);
   const [customTags, setCustomTags] = useState(contentToEdit?.customTags?.join(', ') || '');
-  
+
   const { toast } = useToast();
   const isEditing = !!contentToEdit;
 
@@ -54,23 +55,32 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
       setTmdbId(contentToEdit.id);
       setPreviewContent(contentToEdit);
       setTrailerUrl(contentToEdit.trailerUrl || '');
-      setDownloadLink(contentToEdit.downloadLink || '');
+
+      // Initialize links: use new array if exists, otherwise migrate old single link
+      if (contentToEdit.downloadLinks && contentToEdit.downloadLinks.length > 0) {
+        setDownloadLinks(contentToEdit.downloadLinks);
+      } else if (contentToEdit.downloadLink) {
+        setDownloadLinks([{ label: 'Download', url: contentToEdit.downloadLink }]);
+      } else {
+        setDownloadLinks([]);
+      }
+
       setIsHindiDubbed(contentToEdit.isHindiDubbed || false);
       setCustomTags(contentToEdit.customTags?.join(', ') || '');
     } else {
-        resetForm();
+      resetForm();
     }
   }, [contentToEdit, isOpen]);
 
-   const resetForm = () => {
+  const resetForm = () => {
     if (!isEditing) {
-        setTmdbId('');
-        setPreviewContent(null);
-        setTrailerUrl('');
-        setDownloadLink('');
-        setIsHindiDubbed(false);
-        setCustomTags('');
-        setPreviewError(null);
+      setTmdbId('');
+      setPreviewContent(null);
+      setTrailerUrl('');
+      setDownloadLinks([]);
+      setIsHindiDubbed(false);
+      setCustomTags('');
+      setPreviewError(null);
     }
   };
 
@@ -92,7 +102,14 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
       // Reset custom fields when previewing a new ID, but try to preserve existing ones if it's the same ID
       if (contentToEdit?.id !== tmdbId) {
         setTrailerUrl(content.trailerUrl || '');
-        setDownloadLink(content.downloadLink || '');
+        // For new content, check if it has links (unlikely from TMDB directly but safe)
+        if (content.downloadLinks?.length) {
+          setDownloadLinks(content.downloadLinks);
+        } else if (content.downloadLink) {
+          setDownloadLinks([{ label: 'Download', url: content.downloadLink }]);
+        } else {
+          setDownloadLinks([]);
+        }
         setIsHindiDubbed(content.isHindiDubbed || false);
         setCustomTags(content.customTags?.join(', ') || '');
       }
@@ -105,6 +122,20 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
     }
   };
 
+  const handleAddLink = () => {
+    setDownloadLinks([...downloadLinks, { label: '', url: '' }]);
+  };
+
+  const handleRemoveLink = (index: number) => {
+    setDownloadLinks(downloadLinks.filter((_, i) => i !== index));
+  };
+
+  const handleLinkChange = (index: number, field: keyof DownloadLink, value: string) => {
+    const newLinks = [...downloadLinks];
+    newLinks[index] = { ...newLinks[index], [field]: value };
+    setDownloadLinks(newLinks);
+  };
+
   const handleSave = async () => {
     if (!previewContent) {
       toast({ variant: 'destructive', title: 'Error', description: 'Cannot save without content details.' });
@@ -112,16 +143,21 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
     }
     setIsLoading(true);
 
+    // Filter out empty links
+    const validLinks = downloadLinks.filter(l => l.url.trim() !== '');
+
     const finalContentToAdd: Content = {
       ...previewContent,
       // The ID from the input field is the source of truth
-      id: tmdbId, 
+      id: tmdbId,
       trailerUrl: trailerUrl || undefined,
-      downloadLink: downloadLink || undefined,
+      downloadLinks: validLinks,
+      // Maintain backward compatibility for now by setting the first link as legacy downloadLink
+      downloadLink: validLinks.length > 0 ? validLinks[0].url : undefined,
       isHindiDubbed: isHindiDubbed,
       customTags: customTags.split(',').map(tag => tag.trim()).filter(Boolean),
     };
-    
+
     try {
       const result = await updateContent(finalContentToAdd);
       if (!result.success) throw new Error('The AI flow failed to update the content.');
@@ -144,7 +180,7 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Content' : 'Add New Content'}</DialogTitle>
           <DialogDescription>
@@ -153,92 +189,126 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
         </DialogHeader>
 
         <div className="space-y-4">
-            <div>
-              <Label htmlFor="tmdbId">TMDB ID</Label>
-              <div className="flex gap-2">
-                  <Input
-                    id="tmdbId"
-                    value={tmdbId}
-                    onChange={(e) => setTmdbId(e.target.value)}
-                    placeholder="e.g., 550 for Fight Club"
-                    disabled={isLoading}
-                  />
-                  <Button onClick={handlePreview} disabled={isLoading || !tmdbId} variant="outline">
-                      {isLoading && tmdbId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4"/>}
-                      Preview
-                  </Button>
-              </div>
+          <div>
+            <Label htmlFor="tmdbId">TMDB ID</Label>
+            <div className="flex gap-2">
+              <Input
+                id="tmdbId"
+                value={tmdbId}
+                onChange={(e) => setTmdbId(e.target.value)}
+                placeholder="e.g., 550 for Fight Club"
+                disabled={isLoading}
+              />
+              <Button onClick={handlePreview} disabled={isLoading || !tmdbId} variant="outline">
+                {isLoading && tmdbId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+                Preview
+              </Button>
             </div>
-            
-            {previewError && !previewContent && (
-                <Alert variant="destructive">
-                    <AlertTitle>Preview Failed</AlertTitle>
-                    <AlertDescription>{previewError}</AlertDescription>
-                </Alert>
-            )}
+          </div>
 
-            {previewContent && (
-                <div className='space-y-4 pt-4'>
-                  <Separator/>
-                  <h3 className="text-lg font-medium text-center">Content Details</h3>
-                  <div className="mx-auto w-1/2">
-                      <ContentCard content={previewContent} />
+          {previewError && !previewContent && (
+            <Alert variant="destructive">
+              <AlertTitle>Preview Failed</AlertTitle>
+              <AlertDescription>{previewError}</AlertDescription>
+            </Alert>
+          )}
+
+          {previewContent && (
+            <div className='space-y-4 pt-4'>
+              <Separator />
+              <h3 className="text-lg font-medium text-center">Content Details</h3>
+              <div className="mx-auto w-1/2">
+                <ContentCard content={previewContent} />
+              </div>
+              <div className="space-y-4 pt-4">
+                <div>
+                  <Label htmlFor="trailerUrl">IFrame/Embed or Video URL</Label>
+                  <Textarea
+                    id="trailerUrl"
+                    placeholder="<iframe...> or https://..."
+                    value={trailerUrl}
+                    onChange={(e) => setTrailerUrl(e.target.value)}
+                    disabled={isLoading}
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>Download Links / Episodes</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={handleAddLink}>
+                      <Plus className="h-4 w-4 mr-1" /> Add Link
+                    </Button>
                   </div>
-                   <div className="space-y-4 pt-4">
-                      <div>
-                          <Label htmlFor="trailerUrl">IFrame/Embed or Video URL</Label>
-                          <Textarea
-                              id="trailerUrl"
-                              placeholder="<iframe...> or https://..."
-                              value={trailerUrl}
-                              onChange={(e) => setTrailerUrl(e.target.value)}
-                              disabled={isLoading}
-                              rows={3}
-                          />
-                      </div>
-                      <div>
-                          <Label htmlFor="downloadLink">Download Link</Label>
+                  <div className="space-y-3">
+                    {downloadLinks.map((link, index) => (
+                      <div key={index} className="flex gap-2 items-start">
+                        <div className="flex-1 space-y-2">
                           <Input
-                              id="downloadLink"
-                              placeholder="https://..."
-                              value={downloadLink}
-                              onChange={(e) => setDownloadLink(e.target.value)}
-                              disabled={isLoading}
+                            placeholder="Label (e.g. 720p, S01E01)"
+                            value={link.label}
+                            onChange={(e) => handleLinkChange(index, 'label', e.target.value)}
+                            className="h-8"
                           />
-                      </div>
-                      <div>
-                          <Label htmlFor="customTags">Custom Tags (comma-separated)</Label>
                           <Input
-                              id="customTags"
-                              placeholder="e.g., must watch, new, 4k"
-                              value={customTags}
-                              onChange={(e) => setCustomTags(e.target.value)}
-                              disabled={isLoading}
+                            placeholder="URL (https://...)"
+                            value={link.url}
+                            onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
+                            className="h-8"
                           />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="mt-1 text-destructive hover:text-destructive/90"
+                          onClick={() => handleRemoveLink(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <div className="flex items-center space-x-2">
-                          <Checkbox
-                              id="isHindiDubbed"
-                              checked={isHindiDubbed}
-                              onCheckedChange={(checked) => setIsHindiDubbed(!!checked)}
-                              disabled={isLoading}
-                          />
-                          <Label htmlFor="isHindiDubbed" className="font-medium">Hindi Dubbed</Label>
-                      </div>
+                    ))}
+                    {downloadLinks.length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-2 border border-dashed rounded-md">
+                        No download links added.
+                      </p>
+                    )}
                   </div>
                 </div>
-            )}
+
+                <div>
+                  <Label htmlFor="customTags">Custom Tags (comma-separated)</Label>
+                  <Input
+                    id="customTags"
+                    placeholder="e.g., must watch, new, 4k"
+                    value={customTags}
+                    onChange={(e) => setCustomTags(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isHindiDubbed"
+                    checked={isHindiDubbed}
+                    onCheckedChange={(checked) => setIsHindiDubbed(!!checked)}
+                    disabled={isLoading}
+                  />
+                  <Label htmlFor="isHindiDubbed" className="font-medium">Hindi Dubbed</Label>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {previewContent && (
           <DialogFooter>
-               <DialogClose asChild>
-                    <Button variant="outline" onClick={resetForm}>Cancel</Button>
-                </DialogClose>
-               <Button onClick={handleSave} disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {isEditing ? 'Save Changes' : 'Add to Library'}
-              </Button>
+            <DialogClose asChild>
+              <Button variant="outline" onClick={resetForm}>Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isEditing ? 'Save Changes' : 'Add to Library'}
+            </Button>
           </DialogFooter>
         )}
       </DialogContent>
