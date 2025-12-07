@@ -78,7 +78,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
             <p className="mt-6 text-foreground/80 leading-relaxed">
               {content.description}
             </p>
-            <div className="mt-6 flex gap-4">
+            <div className="mt-6 flex flex-wrap gap-3 sm:gap-4">
               {content.trailerUrl && (
                 <Button asChild size="lg">
                   <Link href="#player">
@@ -101,7 +101,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
                   <DropdownMenuTrigger asChild>
                     <Button size="lg" variant="outline">
                       <Download className="mr-2 h-5 w-5" />
-                      Download Options
+                      Download
                       <ChevronDown className="ml-2 h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
