@@ -24,6 +24,8 @@ export type Content = {
   cast?: CastMember[];
   runtime?: number; // Minutes
   numberOfSeasons?: number;
+  languages?: string[];
+  quality?: string[];
 };
 
 export type AppUser = {

@@ -43,7 +43,9 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
   const [trailerUrl, setTrailerUrl] = useState(contentToEdit?.trailerUrl || '');
   // Removed single downloadLink state in favor of list
   const [downloadLinks, setDownloadLinks] = useState<DownloadLink[]>([]);
-  const [isHindiDubbed, setIsHindiDubbed] = useState(contentToEdit?.isHindiDubbed || false);
+  // const [isHindiDubbed, setIsHindiDubbed] = useState(contentToEdit?.isHindiDubbed || false); // Deprecated state, mapped to languages
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [selectedQuality, setSelectedQuality] = useState<string[]>([]);
   const [customTags, setCustomTags] = useState(contentToEdit?.customTags?.join(', ') || '');
 
   const { toast } = useToast();
@@ -56,7 +58,7 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
       setPreviewContent(contentToEdit);
       setTrailerUrl(contentToEdit.trailerUrl || '');
 
-      // Initialize links: use new array if exists, otherwise migrate old single link
+      // Initialize links
       if (contentToEdit.downloadLinks && contentToEdit.downloadLinks.length > 0) {
         setDownloadLinks(contentToEdit.downloadLinks);
       } else if (contentToEdit.downloadLink) {
@@ -65,7 +67,14 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
         setDownloadLinks([]);
       }
 
-      setIsHindiDubbed(contentToEdit.isHindiDubbed || false);
+      // Initialize Languages and Quality
+      let langs = contentToEdit.languages || [];
+      if (contentToEdit.isHindiDubbed && !langs.includes('Hindi Dubbed')) {
+        langs = ['Hindi Dubbed', ...langs];
+      }
+      setSelectedLanguages(langs);
+      setSelectedQuality(contentToEdit.quality || []);
+
       setCustomTags(contentToEdit.customTags?.join(', ') || '');
     } else {
       resetForm();
@@ -78,7 +87,8 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
       setPreviewContent(null);
       setTrailerUrl('');
       setDownloadLinks([]);
-      setIsHindiDubbed(false);
+      setSelectedLanguages([]);
+      setSelectedQuality([]);
       setCustomTags('');
       setPreviewError(null);
     }
@@ -110,7 +120,11 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
         } else {
           setDownloadLinks([]);
         }
-        setIsHindiDubbed(content.isHindiDubbed || false);
+
+        // Initialize from TMDB or defaults
+        setSelectedLanguages(content.languages || (content.isHindiDubbed ? ['Hindi Dubbed'] : []));
+        setSelectedQuality(content.quality || []);
+
         setCustomTags(content.customTags?.join(', ') || '');
       }
     } catch (error) {
@@ -122,19 +136,7 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
     }
   };
 
-  const handleAddLink = () => {
-    setDownloadLinks([...downloadLinks, { label: '', url: '' }]);
-  };
-
-  const handleRemoveLink = (index: number) => {
-    setDownloadLinks(downloadLinks.filter((_, i) => i !== index));
-  };
-
-  const handleLinkChange = (index: number, field: keyof DownloadLink, value: string) => {
-    const newLinks = [...downloadLinks];
-    newLinks[index] = { ...newLinks[index], [field]: value };
-    setDownloadLinks(newLinks);
-  };
+  // ... handleAddLink, handleRemoveLink, handleLinkChange ...
 
   const handleSave = async () => {
     if (!previewContent) {
@@ -154,7 +156,9 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
       downloadLinks: validLinks,
       // Maintain backward compatibility for now by setting the first link as legacy downloadLink
       downloadLink: validLinks.length > 0 ? validLinks[0].url : undefined,
-      isHindiDubbed: isHindiDubbed,
+      languages: selectedLanguages,
+      quality: selectedQuality,
+      isHindiDubbed: selectedLanguages.includes('Hindi Dubbed'), // Sync for legacy visual support until fully migrated
       customTags: customTags.split(',').map(tag => tag.trim()).filter(Boolean),
     };
 
@@ -280,21 +284,61 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
                   <Label htmlFor="customTags">Custom Tags (comma-separated)</Label>
                   <Input
                     id="customTags"
-                    placeholder="e.g., must watch, new, 4k"
+                    placeholder="e.g., must watch, new, viral"
                     value={customTags}
                     onChange={(e) => setCustomTags(e.target.value)}
                     disabled={isLoading}
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="isHindiDubbed"
-                    checked={isHindiDubbed}
-                    onCheckedChange={(checked) => setIsHindiDubbed(!!checked)}
-                    disabled={isLoading}
-                  />
-                  <Label htmlFor="isHindiDubbed" className="font-medium">Hindi Dubbed</Label>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="mb-2 block">Languages</Label>
+                    <div className="flex flex-wrap gap-4">
+                      {['Hindi Dubbed', 'English', 'Urdu Dubbed', 'Multi Audio'].map((lang) => (
+                        <div key={lang} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`lang-${lang}`}
+                            checked={selectedLanguages.includes(lang)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedLanguages([...selectedLanguages, lang]);
+                              } else {
+                                setSelectedLanguages(selectedLanguages.filter(l => l !== lang));
+                              }
+                            }}
+                            disabled={isLoading}
+                          />
+                          <Label htmlFor={`lang-${lang}`}>{lang}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="mb-2 block">Quality</Label>
+                    <div className="flex flex-wrap gap-4">
+                      {['HD', '4K', 'HDCAM', 'HDTS', 'HEVC'].map((q) => (
+                        <div key={q} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`qual-${q}`}
+                            checked={selectedQuality.includes(q)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedQuality([...selectedQuality, q]);
+                              } else {
+                                setSelectedQuality(selectedQuality.filter(item => item !== q));
+                              }
+                            }}
+                            disabled={isLoading}
+                          />
+                          <Label htmlFor={`qual-${q}`}>{q}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
+
               </div>
             </div>
           )}

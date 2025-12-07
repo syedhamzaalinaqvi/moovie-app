@@ -68,7 +68,13 @@ export default async function WatchPage({ params }: WatchPageProps) {
                 <span>{content.rating.toFixed(1)}</span>
               </div>
               <Badge variant="outline" className="capitalize">{content.type}</Badge>
-              {content.isHindiDubbed && <Badge variant="secondary">Hindi Dubbed</Badge>}
+              {!content.languages?.length && content.isHindiDubbed && <Badge variant="secondary">Hindi Dubbed</Badge>}
+              {content.languages?.map(lang => (
+                <Badge key={lang} variant="secondary">{lang}</Badge>
+              ))}
+              {content.quality?.map(q => (
+                <Badge key={q} variant="outline" className="border-primary/50">{q}</Badge>
+              ))}
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {allTags.map(tag => (

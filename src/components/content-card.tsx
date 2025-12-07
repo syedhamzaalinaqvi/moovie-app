@@ -104,9 +104,15 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
               {content.genres?.slice(0, 3).map(genre => (
                 <Badge key={genre} variant="secondary">{genre}</Badge>
               ))}
-              {content.isHindiDubbed && (
+              {content.isHindiDubbed && !content.languages?.includes('Hindi Dubbed') && (
                 <Badge variant="secondary">Hindi Dubbed</Badge>
               )}
+              {content.languages?.map(lang => (
+                <Badge key={lang} variant="secondary">{lang}</Badge>
+              ))}
+              {content.quality?.map(q => (
+                <Badge key={q} variant="outline">{q}</Badge>
+              ))}
             </div>
             <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
               {content.description}
@@ -133,9 +139,17 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
                 sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 12.5vw"
                 data-ai-hint="movie poster"
               />
-              {content.isHindiDubbed && (
-                <Badge variant="secondary" className="absolute top-2 left-2 z-10">Hindi Dubbed</Badge>
-              )}
+              <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+                {content.quality?.map(q => (
+                  <Badge key={q} variant="secondary" className="text-[10px] px-1 h-5">{q}</Badge>
+                ))}
+                {content.languages?.map(lang => (
+                  <Badge key={lang} variant="default" className="text-[10px] px-1 h-5">{lang}</Badge>
+                ))}
+                {!content.languages?.length && content.isHindiDubbed && (
+                  <Badge variant="secondary" className="text-[10px] px-1 h-5">Hindi Dubbed</Badge>
+                )}
+              </div>
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-lg">
                 <PlayCircle className="w-12 h-12 text-primary" />
               </div>
