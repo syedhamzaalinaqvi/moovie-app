@@ -168,49 +168,11 @@ export default function BrowsePage() {
               </Button>
               <Button variant="ghost" size="icon" onClick={() => setView('list')} className={cn(view === 'list' && 'bg-accent text-accent-foreground')}>
                 <List className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-          {isLoading ? (
-            view === 'grid' ? <GridSkeleton /> : <ListSkeleton />
-          ) : filteredContent.length > 0 ? (
-            <div className={cn({
-              "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6": view === 'grid',
-              "flex flex-col gap-4": view === 'list'
-            })}>
-              {filteredContent.slice(0, visibleCount).map((item) => (
-                <ContentCard key={`${item.id}-${item.title}`} content={item} view={view} />
-              ))}
-            </div>
-            
-            {/* Load More Button */}
-          {visibleCount < filteredContent.length && (
-            <div className="flex justify-center mt-12 mb-8">
-              <Button
-                onClick={() => setVisibleCount(prev => prev + loadLimit)}
-                variant="outline"
-                size="lg"
-                className="group relative overflow-hidden px-8 py-6 rounded-full border-primary/50 hover:border-primary hover:bg-primary/10 transition-all duration-300 shadow-lg hover:shadow-primary/20"
-              >
-                <span className="relative z-10 flex items-center gap-2 text-lg font-medium">
-                  Load More Movies
-                  <ChevronDown className="w-5 h-5 group-hover:translate-y-1 transition-transform duration-300" />
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent h-full w-full -translate-x-full group-hover:animate-shimmer" />
-              </Button>
+              </p>
             </div>
           )}
-          ) : (
-          <div className="flex flex-col items-center justify-center text-center h-64">
-            <Search className="w-16 h-16 text-muted-foreground mb-4" />
-            <h2 className="text-2xl font-semibold">No Results Found</h2>
-            <p className="text-muted-foreground mt-2">
-              We couldn't find any content matching your filters.
-            </p>
           </div>
-          )}
         </div>
-      </div>
-    </>
-  );
+      </>
+      );
 }
