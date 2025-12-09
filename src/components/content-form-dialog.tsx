@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
@@ -38,6 +39,9 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
   const [isLoading, setIsLoading] = useState(false);
   const [previewContent, setPreviewContent] = useState<Content | null>(contentToEdit || null);
   const [previewError, setPreviewError] = useState<string | null>(null);
+
+  // Content Type State
+  const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
 
   // Form fields state
   const [trailerUrl, setTrailerUrl] = useState(contentToEdit?.trailerUrl || '');
@@ -104,7 +108,7 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
     setPreviewContent(null);
     setPreviewError(null);
     try {
-      const content = await getContentById(tmdbId);
+      const content = await getContentById(tmdbId, contentType);
       if (!content) {
         throw new Error('Content not found with the provided ID.');
       }
@@ -207,6 +211,20 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
         <div className="space-y-4">
           <div>
             <Label htmlFor="tmdbId">TMDB ID</Label>
+
+            <div className="flex items-center gap-4 mb-2">
+              <RadioGroup defaultValue="movie" value={contentType} onValueChange={(v) => setContentType(v as 'movie' | 'tv')} className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="movie" id="r1" />
+                  <Label htmlFor="r1">Movie</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="tv" id="r2" />
+                  <Label htmlFor="r2">TV Show</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
             <div className="flex gap-2">
               <Input
                 id="tmdbId"

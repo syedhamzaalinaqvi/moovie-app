@@ -162,16 +162,21 @@ export async function getNewReleases(): Promise<Content[]> {
     return (await fetchAndTransformContent(url, 'movie')).slice(0, 12);
 }
 
-export async function getContentById(id: string): Promise<Content | null> {
+export async function getContentById(id: string, type?: 'movie' | 'tv'): Promise<Content | null> {
     const manuallyAdded = await getManuallyAddedContent();
     const manualItem = manuallyAdded.find(c => String(c.id) === id);
 
     let apiContent: Content | null = null;
 
-    let movieContent = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos,credits`, 'movie');
-    if (movieContent) {
-        apiContent = movieContent;
-    } else {
+    if (type === 'movie' || !type) {
+        let movieContent = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos,credits`, 'movie');
+        if (movieContent) {
+            apiContent = movieContent;
+        }
+    }
+
+    // If explicit type is tv, OR if (no type was specified AND we didn't find a movie), try TV
+    if (!apiContent && (type === 'tv' || !type)) {
         let tvContent = await fetchAndTransformSingleContent(`${TMDB_BASE_URL}/tv/${id}?api_key=${TMDB_API_KEY}&append_to_response=videos,credits`, 'tv');
         if (tvContent) {
             apiContent = tvContent;
