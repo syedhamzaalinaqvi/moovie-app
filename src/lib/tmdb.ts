@@ -21,6 +21,7 @@ type TmdbContent = {
     media_type?: 'movie' | 'tv';
     runtime?: number;
     number_of_seasons?: number;
+    last_air_date?: string;
 };
 
 type Genre = {
@@ -86,6 +87,7 @@ function tmdbContentToContent(item: TmdbContent, type: 'movie' | 'tv' | 'person'
         releaseDate: item.release_date || item.first_air_date || 'N/A',
         rating: item.vote_average,
         type: itemType,
+        lastAirDate: item.last_air_date,
     };
 }
 
@@ -134,6 +136,7 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
             cast: cast,
             runtime: data.runtime,
             numberOfSeasons: data.number_of_seasons,
+            lastAirDate: data.last_air_date,
         };
     } catch (error) {
         console.error(`Failed to fetch from ${url}:`, error);
@@ -200,6 +203,7 @@ export async function getContentById(id: string, type?: 'movie' | 'tv'): Promise
             numberOfSeasons: manualItem.numberOfSeasons || apiContent?.numberOfSeasons,
             youtubeTrailerUrl: apiContent?.youtubeTrailerUrl, // Keep the TMDB trailer if manual doesn't provide one
             cast: apiContent?.cast || [],
+            lastAirDate: apiContent?.lastAirDate,
         };
     }
 

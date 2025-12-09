@@ -27,7 +27,9 @@ export type Content = {
   languages?: string[];
   quality?: string[];
   createdAt?: string;
+  createdAt?: string;
   updatedAt?: string;
+  lastAirDate?: string;
 };
 
 export type AppUser = {
