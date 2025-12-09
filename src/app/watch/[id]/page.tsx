@@ -184,12 +184,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
 
             </div>
 
-            {/* Disclaimer Note */}
-            <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border/50 text-sm text-muted-foreground leading-relaxed">
-              <p>
-                <strong>Disclaimer:</strong> Moovie does not host any file on its servers. All files or contents hosted on third-party websites. Moovie accepts no responsibility for content hosted on third-party websites. We are just indexing those links which are already available on the internet.
-              </p>
-            </div>
+
 
           </div>
         </div>
@@ -204,19 +199,29 @@ export default async function WatchPage({ params }: WatchPageProps) {
           />
         </div>
       </div>
+    </div>
 
-      {content.cast && content.cast.length > 0 && (
-        <>
-          <Separator />
-          <CastSection cast={content.cast} />
-        </>
-      )}
+      {/* Disclaimer Note */ }
+  <div className="mt-6 md:mt-0 p-4 bg-muted/50 rounded-lg border border-border/50 text-sm text-muted-foreground leading-relaxed">
+    <p>
+      <strong>Disclaimer:</strong> Moovie does not host any file on its servers. All files or contents hosted on third-party websites. Moovie accepts no responsibility for content hosted on third-party websites. We are just indexing those links which are already available on the internet.
+    </p>
+  </div>
+
+  {
+    content.cast && content.cast.length > 0 && (
+      <>
+        <Separator />
+        <CastSection cast={content.cast} />
+      </>
+    )
+  }
 
       <AdBanner />
 
       <Separator />
       <CommentSection contentId={String(content.id)} />
 
-    </div>
+    </div >
   );
 }
