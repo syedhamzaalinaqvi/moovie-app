@@ -218,6 +218,5 @@ export default async function WatchPage({ params }: WatchPageProps) {
       <CommentSection contentId={String(content.id)} />
 
     </div>
-    </div >
   );
 }
