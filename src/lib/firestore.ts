@@ -52,11 +52,14 @@ export async function getContentFromFirestore(): Promise<Content[]> {
             content.push(data as Content);
         });
 
-        // Client-side sort to handle mixed data (some with createdAt, some without)
-        // Sort by createdAt desc, fallback to updatedAt desc
+        // Client-side sort to handle mixed data
+        // Sort by releaseDate desc (newest first), fallback to createdAt
         return content.sort((a, b) => {
-            const dateA = a.createdAt || a.updatedAt || '';
-            const dateB = b.createdAt || b.updatedAt || '';
+            const dateA = a.releaseDate || a.createdAt || '';
+            const dateB = b.releaseDate || b.createdAt || '';
+            // Compare as strings works for ISO dates (YYYY-MM-DD), but releaseDate might be just YYYY or YYYY-MM-DD.
+            // Let's safe guard it.
+            if (dateA === dateB) return 0;
             return dateB.localeCompare(dateA);
         });
     } catch (error) {
