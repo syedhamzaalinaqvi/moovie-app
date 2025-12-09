@@ -11,7 +11,7 @@ import { HeroCarousel } from "@/components/hero-carousel";
 import RecommendedContent from "@/components/recommended-content";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { AdBanner } from '@/components/ad-banner';
+
 
 // By adding a version query parameter that changes, we can force a re-render
 // and ensure the latest added-content.json is loaded.
@@ -144,7 +144,6 @@ export default function BrowsePage() {
         )
       )}
       <div className="p-4 md:p-6 space-y-8">
-        <AdBanner />
         {!isFilteredView && <RecommendedContent />}
         <div>
           <div className="flex justify-between items-center mb-6">
