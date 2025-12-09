@@ -19,6 +19,7 @@ import {
 import { ChevronDown } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { slugify } from "@/lib/utils";
+import { AdBanner } from '@/components/ad-banner';
 
 import type { Metadata } from 'next';
 
@@ -205,6 +206,8 @@ export default async function WatchPage({ params }: WatchPageProps) {
             <CastSection cast={content.cast} />
           </>
         )}
+
+        <AdBanner />
 
         <Separator />
         <CommentSection contentId={String(content.id)} />
