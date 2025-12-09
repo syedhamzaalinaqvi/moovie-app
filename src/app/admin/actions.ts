@@ -3,6 +3,8 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { getContentFromFirestore, addContentToFirestore } from '@/lib/firestore';
+import { getContentById } from '@/lib/tmdb';
 
 const configPath = path.join(process.cwd(), 'src', 'lib', 'site-config.json');
 

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { getBrowseContent, getManuallyAddedContent } from '@/lib/tmdb';
 import type { Content } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2 } from 'lucide-react';
+import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentCard } from './content-card';
 import { Separator } from './ui/separator';
@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ContentFormDialog } from './content-form-dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { getLogoText, updateLogoText, getPaginationLimit, updatePaginationLimit } from '@/app/admin/actions';
+import { getLogoText, updateLogoText, getPaginationLimit, updatePaginationLimit, syncContentMetadata } from '@/app/admin/actions';
 import { deleteContent } from '@/ai/flows/delete-content';
 import {
   AlertDialog,
@@ -57,6 +57,7 @@ export default function AdminDashboard() {
   const [logoText, setLogoText] = useState('');
   const [paginationLimit, setPaginationLimit] = useState(20);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
@@ -133,6 +134,23 @@ export default function AdminDashboard() {
       setIsSavingSettings(false);
     }
   }
+
+  const handleSyncMetadata = async () => {
+    setIsSyncing(true);
+    try {
+      const result = await syncContentMetadata();
+      if (result.success) {
+        toast({ title: 'Sync Complete', description: `Successfully updated metadata for ${result.updatedCount} items.` });
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      toast({ variant: 'destructive', title: "Sync Failed", description: "Could not sync metadata. Check console." });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleSelectionChange = (id: string, isSelected: boolean) => {
     setSelectedIds(prev => isSelected ? [...prev, id] : prev.filter(selectedId => selectedId !== id));
@@ -232,6 +250,21 @@ export default function AdminDashboard() {
               Save Settings
             </Button>
           </form>
+
+          <Separator className="my-6" />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium">Sync Content Metadata</h3>
+              <p className="text-sm text-muted-foreground">
+                Refresh all content functionality (e.g. updating Last Air Dates for TV shows).
+              </p>
+            </div>
+            <Button variant="outline" onClick={handleSyncMetadata} disabled={isSyncing}>
+              {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+              Sync Now
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
