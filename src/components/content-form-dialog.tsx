@@ -141,7 +141,7 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
   };
 
   const handleAddLink = () => {
-    setDownloadLinks([...downloadLinks, { label: '', url: '' }]);
+    setDownloadLinks([...downloadLinks, { label: 'Download', url: '' }]);
   };
 
   const handleRemoveLink = (index: number) => {
