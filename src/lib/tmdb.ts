@@ -22,6 +22,7 @@ type TmdbContent = {
     runtime?: number;
     number_of_seasons?: number;
     last_air_date?: string;
+    next_episode_to_air?: { air_date: string };
 };
 
 type Genre = {
@@ -136,7 +137,7 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
             cast: cast,
             runtime: data.runtime,
             numberOfSeasons: data.number_of_seasons,
-            lastAirDate: data.last_air_date,
+            lastAirDate: data.next_episode_to_air?.air_date || data.last_air_date,
         };
     } catch (error) {
         console.error(`Failed to fetch from ${url}:`, error);
