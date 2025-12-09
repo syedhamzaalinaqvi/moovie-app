@@ -4,18 +4,17 @@
 import { useEffect, useState } from 'react';
 import { getBrowseContent, getManuallyAddedContent } from '@/lib/tmdb';
 import type { Content } from '@/lib/definitions';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Film, Tv, History, PlusCircle, Loader2, Search, Settings, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentCard } from './content-card';
 import { Separator } from './ui/separator';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
 import { ContentFormDialog } from './content-form-dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { getLogoText, updateLogoText } from '@/app/admin/actions';
+import { getLogoText, updateLogoText, getPaginationLimit, updatePaginationLimit } from '@/app/admin/actions';
 import { deleteContent } from '@/ai/flows/delete-content';
 import {
   AlertDialog,
@@ -56,49 +55,51 @@ export default function AdminDashboard() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [recentlyAdded, setRecentlyAdded] = useState<Content[]>([]);
   const [logoText, setLogoText] = useState('');
-  const [isSavingLogo, setIsSavingLogo] = useState(false);
+  const [paginationLimit, setPaginationLimit] = useState(20);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
 
   const fetchDashboardData = async () => {
-      setLoadingStats(true);
-      try {
-        const [localContent, currentLogoText] = await Promise.all([
-          getManuallyAddedContent(),
-          getLogoText()
-        ]);
-        
-        setLogoText(currentLogoText);
+    setLoadingStats(true);
+    try {
+      const [localContent, currentLogoText, currentLimit] = await Promise.all([
+        getManuallyAddedContent(),
+        getLogoText(),
+        getPaginationLimit()
+      ]);
 
-        const apiMovies = await getBrowseContent({ type: 'movie' });
-        const apiTvShows = await getBrowseContent({ type: 'tv' });
+      setLogoText(currentLogoText);
+      setPaginationLimit(currentLimit);
 
-        const movieMap = new Map<string, Content>();
-        localContent.filter(c => c.type === 'movie').forEach(c => movieMap.set(String(c.id), c));
-        apiMovies.forEach(c => {
-          if (!movieMap.has(String(c.id))) movieMap.set(String(c.id), c);
-        });
+      const apiMovies = await getBrowseContent({ type: 'movie' });
+      const apiTvShows = await getBrowseContent({ type: 'tv' });
 
-        const tvMap = new Map<string, Content>();
-        localContent.filter(c => c.type === 'tv').forEach(c => tvMap.set(String(c.id), c));
-        apiTvShows.forEach(c => {
-          if (!tvMap.has(String(c.id))) tvMap.set(String(c.id), c);
-        });
+      const movieMap = new Map<string, Content>();
+      localContent.filter(c => c.type === 'movie').forEach(c => movieMap.set(String(c.id), c));
+      apiMovies.forEach(c => {
+        if (!movieMap.has(String(c.id))) movieMap.set(String(c.id), c);
+      });
 
-        setMovieCount(movieMap.size);
-        setTvShowCount(tvMap.size);
-        
-        setRecentlyAdded(localContent);
+      const tvMap = new Map<string, Content>();
+      localContent.filter(c => c.type === 'tv').forEach(c => tvMap.set(String(c.id), c));
+      apiTvShows.forEach(c => {
+        if (!tvMap.has(String(c.id))) tvMap.set(String(c.id), c);
+      });
 
-      } catch (error) {
-        console.error("Failed to fetch stats:", error);
-        toast({ variant: 'destructive', title: "Error", description: "Failed to load dashboard data."});
-      } finally {
-        setLoadingStats(false);
-      }
-    };
+      setMovieCount(movieMap.size);
+      setTvShowCount(tvMap.size);
+
+      setRecentlyAdded(localContent);
+
+    } catch (error) {
+      console.error("Failed to fetch stats:", error);
+      toast({ variant: 'destructive', title: "Error", description: "Failed to load dashboard data." });
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
 
   useEffect(() => {
@@ -111,22 +112,25 @@ export default function AdminDashboard() {
     window.location.reload();
   }
 
-  const handleLogoSave = async (e: React.FormEvent) => {
+  const handleSettingsSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSavingLogo(true);
+    setIsSavingSettings(true);
     try {
-      const result = await updateLogoText(logoText);
-      if (result.success) {
-        toast({ title: 'Success', description: 'Logo text updated. Refreshing...' });
-        // We reload the page to make sure the new logo is fetched by the layouts.
+      const [logoResult, limitResult] = await Promise.all([
+        updateLogoText(logoText),
+        updatePaginationLimit(Number(paginationLimit))
+      ]);
+
+      if (logoResult.success && limitResult.success) {
+        toast({ title: 'Success', description: 'Settings updated. Refreshing...' });
         setTimeout(() => window.location.reload(), 1500);
       } else {
-        throw new Error(result.error || 'An unknown error occurred.');
+        throw new Error(logoResult.error || limitResult.error || 'An unknown error occurred.');
       }
     } catch (error) {
-       toast({ variant: 'destructive', title: "Error", description: error instanceof Error ? error.message : "Failed to save logo text."});
+      toast({ variant: 'destructive', title: "Error", description: error instanceof Error ? error.message : "Failed to save settings." });
     } finally {
-      setIsSavingLogo(false);
+      setIsSavingSettings(false);
     }
   }
 
@@ -146,12 +150,12 @@ export default function AdminDashboard() {
         throw new Error("Failed to delete content.");
       }
     } catch (error) {
-       toast({ variant: 'destructive', title: "Error", description: error instanceof Error ? error.message : "Could not delete content."});
+      toast({ variant: 'destructive', title: "Error", description: error instanceof Error ? error.message : "Could not delete content." });
     } finally {
       setIsDeleting(false);
     }
   };
-  
+
   const toggleSelectAll = () => {
     if (selectedIds.length === recentlyAdded.length) {
       setSelectedIds([]);
@@ -163,24 +167,24 @@ export default function AdminDashboard() {
   return (
     <div className="p-4 md:p-8 space-y-8">
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-      
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard title="Total Movies" value={movieCount} icon={Film} isLoading={loadingStats} />
         <StatCard title="Total TV Shows" value={tvShowCount} icon={Tv} isLoading={loadingStats} />
         <Card>
-           <CardHeader>
+          <CardHeader>
             <CardTitle className="flex items-center">
               <PlusCircle className="mr-2 h-6 w-6" />
               Add New Content
             </CardTitle>
             <CardDescription>
-                Add new content using its TMDB ID.
+              Add new content using its TMDB ID.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <ContentFormDialog onSave={onContentUpdated}>
               <Button className="w-full">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add Content
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Content
               </Button>
             </ContentFormDialog>
           </CardContent>
@@ -200,18 +204,31 @@ export default function AdminDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogoSave} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="logoText">Logo Text</Label>
-              <Input
-                id="logoText"
-                value={logoText}
-                onChange={(e) => setLogoText(e.target.value)}
-                disabled={isSavingLogo}
-              />
+          <form onSubmit={handleSettingsSave} className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="logoText">Logo Text</Label>
+                <Input
+                  id="logoText"
+                  value={logoText}
+                  onChange={(e) => setLogoText(e.target.value)}
+                  disabled={isSavingSettings}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="paginationLimit">Movies per Page (Load More Limit)</Label>
+                <Input
+                  id="paginationLimit"
+                  type="number"
+                  min="1"
+                  value={paginationLimit}
+                  onChange={(e) => setPaginationLimit(Number(e.target.value))}
+                  disabled={isSavingSettings}
+                />
+              </div>
             </div>
-            <Button type="submit" disabled={isSavingLogo}>
-              {isSavingLogo && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={isSavingSettings}>
+              {isSavingSettings && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Settings
             </Button>
           </form>
@@ -223,34 +240,34 @@ export default function AdminDashboard() {
 
       <div>
         <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold flex items-center">
-              <History className="mr-2 h-6 w-6" />
-              Recently Added Content
-            </h2>
-            {selectedIds.length > 0 && (
-                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive" disabled={isDeleting}>
-                            {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-                            Delete ({selectedIds.length})
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete {selectedIds.length} item(s).
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(selectedIds)}>
-                                Continue
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            )}
+          <h2 className="text-2xl font-bold flex items-center">
+            <History className="mr-2 h-6 w-6" />
+            Recently Added Content
+          </h2>
+          {selectedIds.length > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={isDeleting}>
+                  {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                  Delete ({selectedIds.length})
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete {selectedIds.length} item(s).
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDelete(selectedIds)}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
 
         {loadingStats ? (
@@ -279,14 +296,14 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {recentlyAdded.map((item, i) => (
                 <div key={`${item.id}-${i}`} className="relative group">
-                   <div className="absolute top-2 left-2 z-30">
-                     <Checkbox
-                       id={`select-${item.id}`}
-                       checked={selectedIds.includes(String(item.id))}
-                       onCheckedChange={(checked) => handleSelectionChange(String(item.id), !!checked)}
-                       className="bg-background/70 border-white/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary-foreground"
-                     />
-                   </div>
+                  <div className="absolute top-2 left-2 z-30">
+                    <Checkbox
+                      id={`select-${item.id}`}
+                      checked={selectedIds.includes(String(item.id))}
+                      onCheckedChange={(checked) => handleSelectionChange(String(item.id), !!checked)}
+                      className="bg-background/70 border-white/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary-foreground"
+                    />
+                  </div>
                   <ContentCard
                     content={item}
                     showAdminControls
@@ -298,7 +315,7 @@ export default function AdminDashboard() {
             </div>
           </>
         ) : (
-            <p className="text-muted-foreground">No content has been added manually yet.</p>
+          <p className="text-muted-foreground">No content has been added manually yet.</p>
         )}
       </div>
     </div>

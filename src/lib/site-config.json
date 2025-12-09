@@ -1,3 +1,4 @@
 {
-  "logoText": "moovie"
+  "logoText": "moovie",
+  "paginationLimit": 20
 }
