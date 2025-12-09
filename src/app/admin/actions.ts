@@ -62,3 +62,26 @@ export async function updatePaginationLimit(newLimit: number): Promise<{ success
     return { success: false, error: 'Failed to save configuration.' };
   }
 }
+
+export async function syncContentMetadata(): Promise<{ success: boolean; updatedCount: number; error?: string }> {
+  try {
+    const allContent = await getContentFromFirestore();
+    let updatedCount = 0;
+
+    for (const item of allContent) {
+      // Re-fetch from TMDB to get latest data including lastAirDate
+      const freshData = await getContentById(item.id, item.type);
+
+      if (freshData) {
+        // Save fresh data back to Firestore.
+        await addContentToFirestore(freshData);
+        updatedCount++;
+      }
+    }
+
+    return { success: true, updatedCount };
+  } catch (error) {
+    console.error("Failed to sync metadata:", error);
+    return { success: false, updatedCount: 0, error: "Failed to sync metadata." };
+  }
+}
