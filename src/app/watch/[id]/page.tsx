@@ -20,11 +20,55 @@ import { ChevronDown } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { slugify } from "@/lib/utils";
 
+import type { Metadata } from 'next';
+
 type WatchPageProps = {
   params: Promise<{
     id: string;
   }>;
 };
+
+export async function generateMetadata({ params }: WatchPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const contentId = id.split('-')[0];
+  const content = await getContentById(contentId);
+
+  if (!content) {
+    return {
+      title: 'Content Not Found',
+    };
+  }
+
+  return {
+    title: `${content.title} - Moovie`,
+    description: content.description,
+    openGraph: {
+      title: content.title,
+      description: content.description,
+      images: [
+        {
+          url: content.posterPath,
+          width: 500,
+          height: 750,
+          alt: content.title,
+        },
+        {
+          url: content.backdropPath,
+          width: 1280,
+          height: 720,
+          alt: content.title
+        }
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: content.title,
+      description: content.description,
+      images: [content.posterPath],
+    },
+  };
+}
 
 export default async function WatchPage({ params }: WatchPageProps) {
   const { id } = await params;
