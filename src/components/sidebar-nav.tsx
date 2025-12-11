@@ -6,7 +6,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Home, Clapperboard, Tv, Film } from 'lucide-react';
+import { Home, Clapperboard, Tv, Film, ShieldAlert, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from '@/components/ui/sidebar';
@@ -16,6 +16,8 @@ const navItems = [
   { href: '/', label: 'Browse All', icon: Home, type: null, genre: null, region: null },
   { href: '/?type=movie', label: 'Movies', icon: Clapperboard, type: 'movie', genre: null, region: null },
   { href: '/?type=tv', label: 'TV Shows', icon: Tv, type: 'tv', genre: null, region: null },
+  { href: '/disclaimer', label: 'Disclaimer', icon: ShieldAlert, type: null, genre: null, region: null },
+  { href: 'https://www.linkshare.online/contact', label: 'Contact', icon: Mail, type: null, genre: null, region: null },
 ];
 
 const categories = [
