@@ -1,0 +1,153 @@
+
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { getContentById } from '@/lib/tmdb';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
+import Script from 'next/script';
+import { getSecureDownloadSettings } from '@/app/admin/actions';
+
+export default function DownloadPage() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const id = searchParams.get('id');
+    const index = searchParams.get('index');
+    const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+    const [timeLeft, setTimeLeft] = useState(5);
+    const [maxTime, setMaxTime] = useState(5);
+    const [isReady, setIsReady] = useState(false);
+    const [contentTitle, setContentTitle] = useState('');
+
+    useEffect(() => {
+        async function init() {
+            if (!id) return;
+
+            // Fetch content to get the real link
+            // Note: In a real secure env, this resolution should happen server-side 
+            // to strictly hide it from network tab until ready, but for this generic implementation
+            // client-side fetching is acceptable as per request "hide link from public view" (casual)
+            try {
+                // Get delay settings first
+                const settings = await getSecureDownloadSettings();
+                setTimeLeft(settings.delay);
+                setMaxTime(settings.delay);
+
+                const content = await getContentById(Number(id));
+                if (content) {
+                    setContentTitle(content.title);
+                    let url = '';
+                    if (content.downloadLinks && content.downloadLinks.length > 0) {
+                        const linkIndex = index ? parseInt(index) : 0;
+                        url = content.downloadLinks[linkIndex]?.url;
+                    } else if (content.downloadLink) {
+                        url = content.downloadLink;
+                    }
+                    setDownloadUrl(url);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        init();
+    }, [id, index]);
+
+    useEffect(() => {
+        if (!downloadUrl) return;
+
+        if (timeLeft > 0) {
+            const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+            return () => clearTimeout(timer);
+        } else {
+            setIsReady(true);
+            // Auto redirect
+            window.location.href = downloadUrl;
+        }
+    }, [timeLeft, downloadUrl]);
+
+    const progress = ((maxTime - timeLeft) / maxTime) * 100;
+
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-hidden">
+
+            {/* Top Ad */}
+            <div className="w-full max-w-[970px] h-[90px] bg-muted/20 mb-8 flex items-center justify-center border border-dashed text-muted-foreground text-xs overflow-hidden">
+                <ins className="adsbygoogle"
+                    style={{ display: 'block' }}
+                    data-ad-client="ca-pub-8130991342525434"
+                    data-ad-slot="4008318379"
+                    data-ad-format="fluid"
+                    data-ad-layout-key="-7h+f1-18-54+ds"
+                ></ins>
+                <Script id="adsense-init">
+                    {`(adsbygoogle = window.adsbygoogle || []).push({});`}
+                </Script>
+            </div>
+
+            <div className="text-center space-y-8 z-10 max-w-md w-full">
+                <h1 className="text-3xl font-bold tracking-tight">Downloading...</h1>
+                <p className="text-muted-foreground">Please wait while we prepare your download for <span className="font-semibold text-foreground">{contentTitle}</span>.</p>
+
+                <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
+                    {/* SVG Circle Progress */}
+                    <svg className="w-full h-full transform -rotate-90">
+                        <circle
+                            cx="64"
+                            cy="64"
+                            r="58"
+                            className="stroke-muted"
+                            strokeWidth="8"
+                            fill="none"
+                        />
+                        <circle
+                            cx="64"
+                            cy="64"
+                            r="58"
+                            className="stroke-primary transition-all duration-1000 ease-linear"
+                            strokeWidth="8"
+                            fill="none"
+                            strokeDasharray="364"
+                            strokeDashoffset={364 - (364 * progress) / 100}
+                            strokeLinecap="round"
+                        />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center text-4xl font-bold">
+                        {timeLeft}
+                    </div>
+                </div>
+
+                {isReady && downloadUrl ? (
+                    <div className="animate-in fade-in zoom-in duration-300">
+                        <p className="mb-2 text-sm text-muted-foreground">If download does not start automatically:</p>
+                        <Button asChild size="lg" className="w-full">
+                            <a href={downloadUrl} rel="noopener noreferrer">Click Here to Download</a>
+                        </Button>
+                    </div>
+                ) : (
+                    <Button disabled size="lg" className="w-full opacity-80">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                    </Button>
+                )}
+            </div>
+
+            {/* Bottom Ad */}
+            <div className="w-full max-w-[970px] h-[90px] bg-muted/20 mt-12 flex items-center justify-center border border-dashed text-muted-foreground text-xs overflow-hidden">
+                <ins className="adsbygoogle"
+                    style={{ display: 'block' }}
+                    data-ad-client="ca-pub-8130991342525434"
+                    data-ad-slot="4008318379"
+                    data-ad-format="fluid"
+                    data-ad-layout-key="-7h+f1-18-54+ds"
+                ></ins>
+                <Script id="adsense-init-2">
+                    {`(adsbygoogle = window.adsbygoogle || []).push({});`}
+                </Script>
+            </div>
+
+            <Script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8130991342525434" crossOrigin="anonymous" strategy="afterInteractive" />
+
+        </div>
+    );
+}

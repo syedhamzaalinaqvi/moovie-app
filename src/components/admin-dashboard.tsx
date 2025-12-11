@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ContentFormDialog } from './content-form-dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { getLogoText, updateLogoText, getPaginationLimit, updatePaginationLimit, syncContentMetadata } from '@/app/admin/actions';
+import { getLogoText, updateLogoText, getPaginationLimit, updatePaginationLimit, syncContentMetadata, getSecureDownloadSettings, updateSecureDownloadSettings } from '@/app/admin/actions';
 import { deleteContent } from '@/ai/flows/delete-content';
 import {
   AlertDialog,
@@ -28,6 +28,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Checkbox } from './ui/checkbox';
+import { Switch } from './ui/switch';
 
 
 function StatCard({ title, value, icon: Icon, isLoading }: { title: string; value: number; icon: React.ElementType; isLoading: boolean }) {
@@ -56,6 +57,8 @@ export default function AdminDashboard() {
   const [recentlyAdded, setRecentlyAdded] = useState<Content[]>([]);
   const [logoText, setLogoText] = useState('');
   const [paginationLimit, setPaginationLimit] = useState(20);
+  const [secureDownloadsEnabled, setSecureDownloadsEnabled] = useState(false);
+  const [downloadDelay, setDownloadDelay] = useState(5);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -66,14 +69,17 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     setLoadingStats(true);
     try {
-      const [localContent, currentLogoText, currentLimit] = await Promise.all([
+      const [localContent, currentLogoText, currentLimit, secureSettings] = await Promise.all([
         getManuallyAddedContent(),
         getLogoText(),
-        getPaginationLimit()
+        getPaginationLimit(),
+        getSecureDownloadSettings()
       ]);
 
       setLogoText(currentLogoText);
       setPaginationLimit(currentLimit);
+      setSecureDownloadsEnabled(secureSettings.enabled);
+      setDownloadDelay(secureSettings.delay);
 
       const apiMovies = await getBrowseContent({ type: 'movie' });
       const apiTvShows = await getBrowseContent({ type: 'tv' });
@@ -114,27 +120,26 @@ export default function AdminDashboard() {
     window.location.reload();
   }
 
-  const handleSettingsSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveSettings = async () => {
     setIsSavingSettings(true);
     try {
-      const [logoResult, limitResult] = await Promise.all([
+      const [logoResult, limitResult, secureResult] = await Promise.all([
         updateLogoText(logoText),
-        updatePaginationLimit(Number(paginationLimit))
+        updatePaginationLimit(paginationLimit),
+        updateSecureDownloadSettings(secureDownloadsEnabled, downloadDelay)
       ]);
 
-      if (logoResult.success && limitResult.success) {
-        toast({ title: 'Success', description: 'Settings updated. Refreshing...' });
-        setTimeout(() => window.location.reload(), 1500);
+      if (logoResult.success && limitResult.success && secureResult.success) {
+        toast({ title: "Success", description: "Site settings updated successfully." });
       } else {
-        throw new Error(logoResult.error || limitResult.error || 'An unknown error occurred.');
+        toast({ variant: 'destructive', title: "Error", description: logoResult.error || limitResult.error || secureResult.error || "Failed to update settings." });
       }
-    } catch (error) {
-      toast({ variant: 'destructive', title: "Error", description: error instanceof Error ? error.message : "Failed to save settings." });
+    } catch {
+      toast({ variant: 'destructive', title: "Error", description: "An unexpected error occurred." });
     } finally {
       setIsSavingSettings(false);
     }
-  }
+  };
 
   const handleSyncMetadata = async () => {
     setIsSyncing(true);
@@ -250,9 +255,34 @@ export default function AdminDashboard() {
                 />
               </div>
             </div>
-            <Button type="submit" disabled={isSavingSettings}>
+            <div className="flex items-center justify-between space-x-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="secure-downloads" className="text-base font-medium">Secure Downloads</Label>
+                <p className="text-sm text-muted-foreground">Enable interstitial page with ads and countdown.</p>
+              </div>
+              <Switch
+                id="secure-downloads"
+                checked={secureDownloadsEnabled}
+                onCheckedChange={setSecureDownloadsEnabled}
+                disabled={isSavingSettings}
+              />
+            </div>
+            {secureDownloadsEnabled && (
+              <div className="space-y-2">
+                <Label htmlFor="downloadDelay">Countdown Timer (seconds)</Label>
+                <Input
+                  id="downloadDelay"
+                  type="number"
+                  min="0"
+                  value={downloadDelay}
+                  onChange={(e) => setDownloadDelay(Number(e.target.value))}
+                  disabled={isSavingSettings}
+                />
+              </div>
+            )}
+            <Button onClick={handleSaveSettings} disabled={isSavingSettings}>
               {isSavingSettings && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Settings
+              Save Changes
             </Button>
           </form>
 

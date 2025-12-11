@@ -63,6 +63,31 @@ export async function updatePaginationLimit(newLimit: number): Promise<{ success
   }
 }
 
+export async function getSecureDownloadSettings(): Promise<{ enabled: boolean; delay: number }> {
+  const config = await readConfig();
+  return {
+    enabled: config.secureDownloadsEnabled || false,
+    delay: typeof config.downloadButtonDelay === 'number' ? config.downloadButtonDelay : 5
+  };
+}
+
+export async function updateSecureDownloadSettings(enabled: boolean, delay: number): Promise<{ success: boolean; error?: string }> {
+  if (typeof delay !== 'number' || delay < 0) {
+    return { success: false, error: 'Delay must be a positive number.' };
+  }
+
+  try {
+    const config = await readConfig();
+    config.secureDownloadsEnabled = enabled;
+    config.downloadButtonDelay = delay;
+    await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to update secure download settings:', error);
+    return { success: false, error: 'Failed to save configuration.' };
+  }
+}
+
 export async function syncContentMetadata(): Promise<{ success: boolean; updatedCount: number; error?: string }> {
   try {
     const allContent = await getContentFromFirestore();

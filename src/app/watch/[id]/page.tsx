@@ -1,4 +1,5 @@
 import { getContentById } from '@/lib/tmdb';
+import { getSecureDownloadSettings } from '@/app/admin/actions';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -90,6 +91,9 @@ export default async function WatchPage({ params }: WatchPageProps) {
   // The primary video source is the custom trailerUrl. If not present, fallback to youtube trailer.
   const primaryVideoSrc = content.trailerUrl || content.youtubeTrailerUrl;
 
+  // Fetch secure download settings
+  const { enabled: secureEnabled } = await getSecureDownloadSettings();
+
   return (
     <div className="flex flex-col">
       <div id="player" className="relative w-full bg-black aspect-video">
@@ -157,21 +161,28 @@ export default async function WatchPage({ params }: WatchPageProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {content.downloadLinks.map((link, index) => (
-                      <DropdownMenuItem key={index} asChild>
-                        <Link href={link.url} target="_blank" rel="noopener noreferrer" className="cursor-pointer font-medium">
-                          {link.label || `Link ${index + 1}`}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
+                    {content.downloadLinks.map((link, index) => {
+                      const downloadHref = secureEnabled
+                        ? `/download?id=${content.id}&index=${index}`
+                        : link.url;
+                      return (
+                        <DropdownMenuItem key={index} asChild>
+                          <Link href={downloadHref} target={secureEnabled ? "_self" : "_blank"} rel="noopener noreferrer" className="cursor-pointer font-medium">
+                            {link.label || `Link ${index + 1}`}
+                          </Link>
+                        </DropdownMenuItem>
+                      );
+                    })}
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
                 (content.downloadLink || (content.downloadLinks && content.downloadLinks.length === 1)) && (
                   <Button asChild size="lg" variant="outline">
                     <Link
-                      href={content.downloadLink || (content.downloadLinks ? content.downloadLinks[0].url : '#')}
-                      target="_blank"
+                      href={secureEnabled
+                        ? `/download?id=${content.id}`
+                        : (content.downloadLink || (content.downloadLinks ? content.downloadLinks[0].url : '#'))}
+                      target={secureEnabled ? "_self" : "_blank"}
                       rel="noopener noreferrer"
                     >
                       <Download className="mr-2 h-5 w-5" />
@@ -181,7 +192,6 @@ export default async function WatchPage({ params }: WatchPageProps) {
                 )
               )
               }
-
               <ShareButton title={content.title} url={`/watch/${id}`} />
             </div>
 
