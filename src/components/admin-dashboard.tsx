@@ -232,7 +232,7 @@ export default function AdminDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSettingsSave} className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleSaveSettings(); }} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="logoText">Logo Text</Label>
