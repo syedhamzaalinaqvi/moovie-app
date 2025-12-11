@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { getBrowseContent, getManuallyAddedContent } from '@/lib/tmdb';
 import type { Content } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2, RefreshCw } from 'lucide-react';
+import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2, RefreshCw, Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentCard } from './content-card';
 import { Separator } from './ui/separator';
@@ -60,6 +60,7 @@ export default function AdminDashboard() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
   const fetchDashboardData = async () => {
@@ -175,12 +176,16 @@ export default function AdminDashboard() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === recentlyAdded.length) {
+    if (selectedIds.length === filteredContent.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(recentlyAdded.map(item => String(item.id)));
+      setSelectedIds(filteredContent.map(item => String(item.id)));
     }
   }
+
+  const filteredContent = recentlyAdded.filter(item =>
+    item.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="p-4 md:p-8 space-y-8">
@@ -313,21 +318,35 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
-        ) : recentlyAdded.length > 0 ? (
+
+        ) : filteredContent.length > 0 ? (
           <>
-            <div className="flex items-center mb-4 space-x-2">
-              <Checkbox
-                id="selectAll"
-                checked={selectedIds.length > 0 && selectedIds.length === recentlyAdded.length}
-                onCheckedChange={toggleSelectAll}
-                aria-label="Select all"
-              />
-              <Label htmlFor="selectAll" className='text-sm font-medium'>
-                {selectedIds.length > 0 ? `${selectedIds.length} of ${recentlyAdded.length} selected` : 'Select all'}
-              </Label>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search content..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="selectAll"
+                  checked={selectedIds.length > 0 && selectedIds.length === filteredContent.length}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Select all"
+                />
+                <Label htmlFor="selectAll" className='text-sm font-medium'>
+                  {selectedIds.length > 0 ? `${selectedIds.length} of ${filteredContent.length} selected` : 'Select all'}
+                </Label>
+              </div>
             </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {recentlyAdded.map((item, i) => (
+              {filteredContent.map((item, i) => (
                 <div key={`${item.id}-${i}`} className="relative group">
                   <div className="absolute top-2 left-2 z-30">
                     <Checkbox
@@ -348,9 +367,20 @@ export default function AdminDashboard() {
             </div>
           </>
         ) : (
-          <p className="text-muted-foreground">No content has been added manually yet.</p>
+          <div className="space-y-4">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search content..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <p className="text-muted-foreground">No content found.</p>
+          </div>
         )}
       </div>
-    </div>
-  );
+
+      );
 }
