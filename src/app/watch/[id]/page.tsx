@@ -182,7 +182,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
               )
               }
 
-              <ShareButton title={content.title} />
+              <ShareButton title={content.title} url={`/watch/${id}`} />
             </div>
 
             {/* Disclaimer Note */}
@@ -199,7 +199,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
               alt={content.title}
               width={500}
               height={750}
-              className="rounded-lg shadow-lg w-full h-auto"
+              className="rounded-lg shadow-lg w-auto h-auto"
               data-ai-hint="movie poster"
             />
           </div>
