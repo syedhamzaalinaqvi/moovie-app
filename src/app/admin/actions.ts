@@ -89,3 +89,27 @@ export async function syncContentMetadata(): Promise<{ success: boolean; updated
     return { success: false, updatedCount: 0, error: "Failed to sync metadata." };
   }
 }
+
+export async function getDownloadUrl(contentId: number, linkIndex?: number): Promise<{ url: string; title: string } | null> {
+  try {
+    const content = await getContentById(contentId);
+    if (!content) return null;
+
+    let url = '';
+    if (content.downloadLinks && content.downloadLinks.length > 0) {
+      const index = linkIndex !== undefined ? linkIndex : 0;
+      url = content.downloadLinks[index]?.url || '';
+    } else if (content.downloadLink) {
+      url = content.downloadLink;
+    }
+
+    return {
+      url,
+      title: content.title
+    };
+  } catch (error) {
+    console.error('Failed to get download URL:', error);
+    return null;
+  }
+}
+
