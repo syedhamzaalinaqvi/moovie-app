@@ -83,3 +83,39 @@ export async function deleteContentFromFirestore(ids: string[]): Promise<{ succe
         return { success: false };
     }
 }
+
+const CONFIG_COLLECTION = 'settings';
+const CONFIG_DOC = 'site_config';
+
+export type SiteConfig = {
+    logoText?: string;
+    paginationLimit?: number;
+    secureDownloadsEnabled?: boolean;
+    downloadButtonDelay?: number;
+}
+
+export async function getSiteConfigFromFirestore(): Promise<SiteConfig> {
+    try {
+        const docRef = doc(db, CONFIG_COLLECTION, CONFIG_DOC);
+        const docSnap = await import('firebase/firestore').then(mod => mod.getDoc(docRef));
+
+        if (docSnap.exists()) {
+            return docSnap.data() as SiteConfig;
+        }
+        return {};
+    } catch (error) {
+        console.error('Failed to fetch config from Firestore:', error);
+        return {};
+    }
+}
+
+export async function saveSiteConfigToFirestore(config: SiteConfig): Promise<{ success: boolean }> {
+    try {
+        const docRef = doc(db, CONFIG_COLLECTION, CONFIG_DOC);
+        await setDoc(docRef, config, { merge: true });
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to save config to Firestore:', error);
+        return { success: false };
+    }
+}
