@@ -59,7 +59,7 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
   const [tvShowCount, setTvShowCount] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
   const [recentlyAdded, setRecentlyAdded] = useState<Content[]>([]);
-  const [filteredContent, setFilteredContent] = useState<Content[]>([]);
+  // filteredContent state removed, derived below
   const [partnerRequests, setPartnerRequests] = useState<PartnerRequest[]>([]);
   const [logoText, setLogoText] = useState('');
   const [paginationLimit, setPaginationLimit] = useState(20);
@@ -71,6 +71,10 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
+
+  const filteredContent = recentlyAdded.filter(item =>
+    item.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const fetchDashboardData = async () => {
     setLoadingStats(true);
@@ -105,7 +109,8 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
       });
 
       setRecentlyAdded(sorted);
-      setFilteredContent(sorted); // Initialize filtered content
+      setRecentlyAdded(sorted);
+      // setFilteredContent(sorted); // Removed
 
       // Calculate stats based on WHAT THEY SEE
       setMovieCount(sorted.filter(c => c.type === 'movie').length);
@@ -245,9 +250,7 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
     }
   }
 
-  const filteredContent = recentlyAdded.filter(item =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // filteredContent declaration removed from here
 
   return (
     <div className="p-4 md:p-8 space-y-8">

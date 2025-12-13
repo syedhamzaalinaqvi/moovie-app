@@ -24,6 +24,8 @@ export async function updateLogoText(newLogoText: string): Promise<{ success: bo
   }
 }
 
+
+
 export async function getPaginationLimit(): Promise<number> {
   const config = await getSiteConfigFromFirestore();
   return typeof config.paginationLimit === 'number' ? config.paginationLimit : 20;
@@ -42,6 +44,8 @@ export async function updatePaginationLimit(newLimit: number): Promise<{ success
     return { success: false, error: 'Failed to save to database.' };
   }
 }
+
+
 
 export async function getSecureDownloadSettings(): Promise<{ enabled: boolean; delay: number }> {
   const config = await getSiteConfigFromFirestore();
@@ -68,6 +72,8 @@ export async function updateSecureDownloadSettings(enabled: boolean, delay: numb
   }
 }
 
+
+
 export async function syncContentMetadata(): Promise<{ success: boolean; updatedCount: number; error?: string }> {
   try {
     const allContent = await getContentFromFirestore();
@@ -90,6 +96,8 @@ export async function syncContentMetadata(): Promise<{ success: boolean; updated
     return { success: false, updatedCount: 0, error: "Failed to sync metadata." };
   }
 }
+
+
 
 export async function getDownloadUrl(contentId: number | string, linkIndex?: number): Promise<{ url: string; title: string } | null> {
   try {
@@ -114,6 +122,8 @@ export async function getDownloadUrl(contentId: number | string, linkIndex?: num
   }
 }
 
+
+
 export async function submitPartnerRequest(data: { fullname: string; email: string; message: string }): Promise<{ success: boolean }> {
   try {
     const request: PartnerRequest = {
@@ -129,3 +139,5 @@ export async function submitPartnerRequest(data: { fullname: string; email: stri
     return { success: false };
   }
 }
+
+export { createSystemUser, getPartnerRequests, updatePartnerRequestStatus } from '@/lib/firestore';
