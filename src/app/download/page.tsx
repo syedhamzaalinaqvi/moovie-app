@@ -109,10 +109,11 @@ export default function DownloadPage() {
 
                 {isReady && downloadUrl ? (
                     <div className="animate-in fade-in zoom-in duration-300">
-                        <p className="mb-2 text-sm text-muted-foreground">If download does not start automatically:</p>
-                        <Button asChild size="lg" className="w-full">
-                            <a href={downloadUrl} rel="noopener noreferrer">Click Here to Download</a>
-                        </Button>
+                        <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground border border-border/50">
+                            <p>Your download should start automatically.</p>
+                            <p className="mt-2">If it doesn't start or you see an error, please <strong>refresh the page</strong>.</p>
+                            <p className="mt-1">If the issue persists, go back and try clicking the download button again.</p>
+                        </div>
                     </div>
                 ) : (
                     <Button disabled size="lg" className="w-full opacity-80">
