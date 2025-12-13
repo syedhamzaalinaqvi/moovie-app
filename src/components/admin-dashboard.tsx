@@ -533,6 +533,6 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
           </Card>
         </TabsContent>
       </Tabs>
-
-      );
+    </div>
+  );
 }
