@@ -90,9 +90,9 @@ export async function syncContentMetadata(): Promise<{ success: boolean; updated
   }
 }
 
-export async function getDownloadUrl(contentId: number, linkIndex?: number): Promise<{ url: string; title: string } | null> {
+export async function getDownloadUrl(contentId: number | string, linkIndex?: number): Promise<{ url: string; title: string } | null> {
   try {
-    const content = await getContentById(contentId);
+    const content = await getContentById(String(contentId));
     if (!content) return null;
 
     let url = '';
