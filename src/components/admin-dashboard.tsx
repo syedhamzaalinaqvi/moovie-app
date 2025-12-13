@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ContentFormDialog } from './content-form-dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { getLogoText, updateLogoText, getPaginationLimit, updatePaginationLimit, syncContentMetadata, getSecureDownloadSettings, updateSecureDownloadSettings } from '@/app/admin/actions';
+import { getLogoText, updateLogoText, getPaginationLimit, updatePaginationLimit, syncContentMetadata, getSecureDownloadSettings, updateSecureDownloadSettings, getPartnerRequests, updatePartnerRequestStatus, createSystemUser } from '@/app/admin/actions';
 import { deleteContent } from '@/ai/flows/delete-content';
 import {
   AlertDialog,
@@ -29,6 +29,10 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Checkbox } from './ui/checkbox';
 import { Switch } from './ui/switch';
+import type { SystemUser, PartnerRequest } from '@/lib/definitions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 
 
 function StatCard({ title, value, icon: Icon, isLoading }: { title: string; value: number; icon: React.ElementType; isLoading: boolean }) {
@@ -50,11 +54,13 @@ function StatCard({ title, value, icon: Icon, isLoading }: { title: string; valu
 }
 
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ user }: { user?: SystemUser }) {
   const [movieCount, setMovieCount] = useState(0);
   const [tvShowCount, setTvShowCount] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
   const [recentlyAdded, setRecentlyAdded] = useState<Content[]>([]);
+  const [filteredContent, setFilteredContent] = useState<Content[]>([]);
+  const [partnerRequests, setPartnerRequests] = useState<PartnerRequest[]>([]);
   const [logoText, setLogoText] = useState('');
   const [paginationLimit, setPaginationLimit] = useState(20);
   const [secureDownloadsEnabled, setSecureDownloadsEnabled] = useState(false);
@@ -81,31 +87,82 @@ export default function AdminDashboard() {
       setSecureDownloadsEnabled(secureSettings.enabled);
       setDownloadDelay(secureSettings.delay);
 
-      const apiMovies = await getBrowseContent({ type: 'movie' });
-      const apiTvShows = await getBrowseContent({ type: 'tv' });
+      let myContent = localContent;
 
-      const movieMap = new Map<string, Content>();
-      localContent.filter(c => c.type === 'movie').forEach(c => movieMap.set(String(c.id), c));
-      apiMovies.forEach(c => {
-        if (!movieMap.has(String(c.id))) movieMap.set(String(c.id), c);
+      // Filter for Partner
+      if (user?.role === 'partner') {
+        // Only show content uploaded by this partner
+        myContent = localContent.filter(c => c.uploadedBy === user.id || c.uploadedBy === user.username);
+      } else if (user?.role === 'admin') {
+        // Fetch requests if admin
+        const requests = await getPartnerRequests();
+        setPartnerRequests(requests);
+      }
+
+      // Sort by createdAt (newest first)
+      const sorted = myContent.sort((a, b) => {
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
       });
 
-      const tvMap = new Map<string, Content>();
-      localContent.filter(c => c.type === 'tv').forEach(c => tvMap.set(String(c.id), c));
-      apiTvShows.forEach(c => {
-        if (!tvMap.has(String(c.id))) tvMap.set(String(c.id), c);
-      });
+      setRecentlyAdded(sorted);
+      setFilteredContent(sorted); // Initialize filtered content
 
-      setMovieCount(movieMap.size);
-      setTvShowCount(tvMap.size);
-
-      setRecentlyAdded(localContent);
+      // Calculate stats based on WHAT THEY SEE
+      setMovieCount(sorted.filter(c => c.type === 'movie').length);
+      setTvShowCount(sorted.filter(c => c.type === 'tv').length);
 
     } catch (error) {
       console.error("Failed to fetch stats:", error);
       toast({ variant: 'destructive', title: "Error", description: "Failed to load dashboard data." });
     } finally {
       setLoadingStats(false);
+    }
+  };
+
+  const handleApproveRequest = async (request: PartnerRequest) => {
+    try {
+      // 1. Create User
+      const username = request.email.split('@')[0]; // Simple username generation
+      const password = Math.random().toString(36).slice(-8); // Random password
+
+      const newUser: SystemUser = {
+        username: username,
+        password: password,
+        role: 'partner',
+        createdAt: new Date().toISOString(),
+        partnerId: request.id
+      };
+
+      const userResult = await createSystemUser(newUser);
+      if (!userResult.success) throw new Error(userResult.error || "Failed to create user");
+
+      // 2. Update Request Status
+      await updatePartnerRequestStatus(request.id!, 'approved');
+
+      // 3. Refresh List
+      const requests = await getPartnerRequests();
+      setPartnerRequests(requests);
+
+      // 4. Notify Admin (to send email manually for now)
+      toast({
+        title: "Partner Approved",
+        description: `User created! Username: ${username}, Password: ${password}. Please save this safely!`,
+        duration: 10000,
+      });
+
+    } catch (error) {
+      toast({ variant: 'destructive', title: "Error", description: "Failed to approve partner." });
+    }
+  };
+
+  const handleRejectRequest = async (id: string) => {
+    try {
+      await updatePartnerRequestStatus(id, 'rejected');
+      const requests = await getPartnerRequests();
+      setPartnerRequests(requests);
+      toast({ title: "Request Rejected", description: "The application has been rejected." });
+    } catch (error) {
+      toast({ variant: 'destructive', title: "Error", description: "Failed to reject request." });
     }
   };
 
@@ -219,198 +276,263 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <Separator />
+      <Tabs defaultValue="content" className="w-full">
+        <TabsList>
+          <TabsTrigger value="content">Content</TabsTrigger>
+          {user?.role === 'admin' && <TabsTrigger value="requests">Partner Requests</TabsTrigger>}
+        </TabsList>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Settings className="mr-2 h-6 w-6" />
-            Site Settings
-          </CardTitle>
-          <CardDescription>
-            Change global settings for the website.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={(e) => { e.preventDefault(); handleSaveSettings(); }} className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="logoText">Logo Text</Label>
-                <Input
-                  id="logoText"
-                  value={logoText}
-                  onChange={(e) => setLogoText(e.target.value)}
-                  disabled={isSavingSettings}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="paginationLimit">Movies per Page (Load More Limit)</Label>
-                <Input
-                  id="paginationLimit"
-                  type="number"
-                  min="1"
-                  value={paginationLimit}
-                  onChange={(e) => setPaginationLimit(Number(e.target.value))}
-                  disabled={isSavingSettings}
-                />
-              </div>
-            </div>
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="secure-downloads" className="text-base font-medium">Secure Downloads</Label>
-                <p className="text-sm text-muted-foreground">Enable interstitial page with ads and countdown.</p>
-              </div>
-              <Switch
-                id="secure-downloads"
-                checked={secureDownloadsEnabled}
-                onCheckedChange={setSecureDownloadsEnabled}
-                disabled={isSavingSettings}
-              />
-            </div>
-            {secureDownloadsEnabled && (
-              <div className="space-y-2">
-                <Label htmlFor="downloadDelay">Countdown Timer (seconds)</Label>
-                <Input
-                  id="downloadDelay"
-                  type="number"
-                  min="0"
-                  value={downloadDelay}
-                  onChange={(e) => setDownloadDelay(Number(e.target.value))}
-                  disabled={isSavingSettings}
-                />
-              </div>
-            )}
-            <Button onClick={handleSaveSettings} disabled={isSavingSettings}>
-              {isSavingSettings && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
-            </Button>
-          </form>
+        <TabsContent value="content">
+          <Separator className="my-4" />
 
-          <Separator className="my-6" />
+          {/* Only Admins can see Settings */}
+          {user?.role === 'admin' && (
+            <>
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Settings className="mr-2 h-6 w-6" />
+                    Site Settings
+                  </CardTitle>
+                  <CardDescription>
+                    Change global settings for the website.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={(e) => { e.preventDefault(); handleSaveSettings(); }} className="space-y-4">
 
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium">Sync Content Metadata</h3>
-              <p className="text-sm text-muted-foreground">
-                Refresh all content functionality (e.g. updating Last Air Dates for TV shows).
-              </p>
-            </div>
-            <Button variant="outline" onClick={handleSyncMetadata} disabled={isSyncing}>
-              {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-              Sync Now
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="logoText">Logo Text</Label>
+                        <Input
+                          id="logoText"
+                          value={logoText}
+                          onChange={(e) => setLogoText(e.target.value)}
+                          disabled={isSavingSettings}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="paginationLimit">Movies per Page (Load More Limit)</Label>
+                        <Input
+                          id="paginationLimit"
+                          type="number"
+                          min="1"
+                          value={paginationLimit}
+                          onChange={(e) => setPaginationLimit(Number(e.target.value))}
+                          disabled={isSavingSettings}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between space-x-2">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="secure-downloads" className="text-base font-medium">Secure Downloads</Label>
+                        <p className="text-sm text-muted-foreground">Enable interstitial page with ads and countdown.</p>
+                      </div>
+                      <Switch
+                        id="secure-downloads"
+                        checked={secureDownloadsEnabled}
+                        onCheckedChange={setSecureDownloadsEnabled}
+                        disabled={isSavingSettings}
+                      />
+                    </div>
+                    {secureDownloadsEnabled && (
+                      <div className="space-y-2">
+                        <Label htmlFor="downloadDelay">Countdown Timer (seconds)</Label>
+                        <Input
+                          id="downloadDelay"
+                          type="number"
+                          min="0"
+                          value={downloadDelay}
+                          onChange={(e) => setDownloadDelay(Number(e.target.value))}
+                          disabled={isSavingSettings}
+                        />
+                      </div>
+                    )}
+                    <Button onClick={handleSaveSettings} disabled={isSavingSettings}>
+                      {isSavingSettings && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save Changes
+                    </Button>
+                  </form>
 
+                  <Separator className="my-6" />
 
-      <Separator />
-
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold flex items-center">
-            <History className="mr-2 h-6 w-6" />
-            Recently Added Content
-          </h2>
-          {selectedIds.length > 0 && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={isDeleting}>
-                  {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-                  Delete ({selectedIds.length})
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete {selectedIds.length} item(s).
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => handleDelete(selectedIds)}>
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium">Sync Content Metadata</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Refresh all content functionality (e.g. updating Last Air Dates for TV shows).
+                      </p>
+                    </div>
+                    <Button variant="outline" onClick={handleSyncMetadata} disabled={isSyncing}>
+                      {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                      Sync Now
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
           )}
-        </div>
 
-        {loadingStats ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i}>
-                <Skeleton className="aspect-[2/3] w-full rounded-lg" />
-                <Skeleton className="h-4 w-3/4 mt-2" />
-                <Skeleton className="h-3 w-1/2 mt-1" />
-              </div>
-            ))}
-          </div>
-
-        ) : filteredContent.length > 0 ? (
-          <>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-              <div className="relative w-full max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search content..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="selectAll"
-                  checked={selectedIds.length > 0 && selectedIds.length === filteredContent.length}
-                  onCheckedChange={toggleSelectAll}
-                  aria-label="Select all"
-                />
-                <Label htmlFor="selectAll" className='text-sm font-medium'>
-                  {selectedIds.length > 0 ? `${selectedIds.length} of ${filteredContent.length} selected` : 'Select all'}
-                </Label>
-              </div>
+          <div>
+            {/* Content Management Section */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold flex items-center">
+                <History className="mr-2 h-6 w-6" />
+                Recently Added Content
+              </h2>
+              {selectedIds.length > 0 && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={isDeleting}>
+                      {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                      Delete ({selectedIds.length})
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete {selectedIds.length} item(s).
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(selectedIds)}>
+                        Continue
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {filteredContent.map((item, i) => (
-                <div key={`${item.id}-${i}`} className="relative group">
-                  <div className="absolute top-2 left-2 z-30">
-                    <Checkbox
-                      id={`select-${item.id}`}
-                      checked={selectedIds.includes(String(item.id))}
-                      onCheckedChange={(checked) => handleSelectionChange(String(item.id), !!checked)}
-                      className="bg-background/70 border-white/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary-foreground"
+            {loadingStats ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i}>
+                    <Skeleton className="aspect-[2/3] w-full rounded-lg" />
+                    <Skeleton className="h-4 w-3/4 mt-2" />
+                    <Skeleton className="h-3 w-1/2 mt-1" />
+                  </div>
+                ))}
+              </div>
+
+            ) : filteredContent.length > 0 ? (
+              <>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                  <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search content..."
+                      className="pl-8"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <ContentCard
-                    content={item}
-                    showAdminControls
-                    onEditSuccess={onContentUpdated}
-                    onDeleteSuccess={() => handleDelete([String(item.id)])}
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="selectAll"
+                      checked={selectedIds.length > 0 && selectedIds.length === filteredContent.length}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all"
+                    />
+                    <Label htmlFor="selectAll" className='text-sm font-medium'>
+                      {selectedIds.length > 0 ? `${selectedIds.length} of ${filteredContent.length} selected` : 'Select all'}
+                    </Label>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  {filteredContent.map((item, i) => (
+                    <div key={`${item.id}-${i}`} className="relative group">
+                      <div className="absolute top-2 left-2 z-30">
+                        <Checkbox
+                          id={`select-${item.id}`}
+                          checked={selectedIds.includes(String(item.id))}
+                          onCheckedChange={(checked) => handleSelectionChange(String(item.id), !!checked)}
+                          className="bg-background/70 border-white/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary-foreground"
+                        />
+                      </div>
+                      <ContentCard
+                        content={item}
+                        showAdminControls
+                        onEditSuccess={onContentUpdated}
+                        onDeleteSuccess={() => handleDelete([String(item.id)])}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="relative w-full max-w-sm">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search content..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="space-y-4">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search content..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <p className="text-muted-foreground">No content found.</p>
+                <p className="text-muted-foreground">No content found.</p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </div>
-  );
+        </TabsContent>
+
+        <TabsContent value="requests">
+          <Card>
+            <CardHeader>
+              <CardTitle>Partner Applications</CardTitle>
+              <CardDescription>Manage incoming requests to join the platform.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Message</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {partnerRequests.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-4">No pending requests</TableCell>
+                    </TableRow>
+                  ) : (
+                    partnerRequests.map((req) => (
+                      <TableRow key={req.id}>
+                        <TableCell>{new Date(req.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>{req.fullname}</TableCell>
+                        <TableCell>{req.email}</TableCell>
+                        <TableCell className="max-w-xs truncate" title={req.message}>{req.message}</TableCell>
+                        <TableCell>
+                          <Badge variant={req.status === 'approved' ? "default" : req.status === 'rejected' ? "destructive" : "secondary"}>
+                            {req.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {req.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => handleApproveRequest(req)}>Approve</Button>
+                              <Button size="sm" variant="outline" onClick={() => handleRejectRequest(req.id!)}>Reject</Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      );
 }
