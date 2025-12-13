@@ -3,6 +3,7 @@
 
 import { getContentFromFirestore, addContentToFirestore, getSiteConfigFromFirestore, saveSiteConfigToFirestore, createPartnerRequest } from '@/lib/firestore';
 import { getContentById } from '@/lib/tmdb';
+import type { PartnerRequest } from '@/lib/definitions';
 
 export async function getLogoText(): Promise<string> {
   const config = await getSiteConfigFromFirestore();
@@ -113,3 +114,18 @@ export async function getDownloadUrl(contentId: number | string, linkIndex?: num
   }
 }
 
+export async function submitPartnerRequest(data: { fullname: string; email: string; message: string }): Promise<{ success: boolean }> {
+  try {
+    const request: PartnerRequest = {
+      fullname: data.fullname,
+      email: data.email,
+      message: data.message,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    return await createPartnerRequest(request);
+  } catch (error) {
+    console.error('Failed to submit partner request:', error);
+    return { success: false };
+  }
+}
