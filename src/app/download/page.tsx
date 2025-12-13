@@ -2,16 +2,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { getContentById } from '@/lib/tmdb';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import Script from 'next/script';
-import { getSecureDownloadSettings } from '@/app/admin/actions';
+import { getSecureDownloadSettings, getDownloadUrl } from '@/app/admin/actions';
 
 export default function DownloadPage() {
     const searchParams = useSearchParams();
-    const router = useRouter();
     const id = searchParams.get('id');
     const index = searchParams.get('index');
     const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
@@ -24,27 +22,19 @@ export default function DownloadPage() {
         async function init() {
             if (!id) return;
 
-            // Fetch content to get the real link
-            // Note: In a real secure env, this resolution should happen server-side 
-            // to strictly hide it from network tab until ready, but for this generic implementation
-            // client-side fetching is acceptable as per request "hide link from public view" (casual)
             try {
-                // Get delay settings first
-                const settings = await getSecureDownloadSettings();
+                // Fetch settings and download URL in parallel using Server Actions
+                const [settings, downloadData] = await Promise.all([
+                    getSecureDownloadSettings(),
+                    getDownloadUrl(Number(id), index ? parseInt(index) : undefined)
+                ]);
+
                 setTimeLeft(settings.delay);
                 setMaxTime(settings.delay);
 
-                const content = await getContentById(Number(id));
-                if (content) {
-                    setContentTitle(content.title);
-                    let url = '';
-                    if (content.downloadLinks && content.downloadLinks.length > 0) {
-                        const linkIndex = index ? parseInt(index) : 0;
-                        url = content.downloadLinks[linkIndex]?.url;
-                    } else if (content.downloadLink) {
-                        url = content.downloadLink;
-                    }
-                    setDownloadUrl(url);
+                if (downloadData) {
+                    setContentTitle(downloadData.title);
+                    setDownloadUrl(downloadData.url);
                 }
             } catch (e) {
                 console.error(e);
@@ -66,7 +56,7 @@ export default function DownloadPage() {
         }
     }, [timeLeft, downloadUrl]);
 
-    const progress = ((maxTime - timeLeft) / maxTime) * 100;
+    const progress = maxTime > 0 ? ((maxTime - timeLeft) / maxTime) * 100 : 100;
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-hidden">
