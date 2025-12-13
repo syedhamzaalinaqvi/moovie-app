@@ -26,10 +26,29 @@ export type Content = {
   numberOfSeasons?: number;
   languages?: string[];
   quality?: string[];
-  createdAt?: string;
+  quality?: string[];
   createdAt?: string;
   updatedAt?: string;
   lastAirDate?: string;
+  uploadedBy?: string; // ID of the user who uploaded this content
+};
+
+export type SystemUser = {
+  username: string;
+  password?: string; // Optional when fetching for display
+  role: 'admin' | 'partner';
+  partnerId?: string; // Optional, for identifying the partner entity
+  createdAt: string;
+  id?: string; // Firestore Doc ID
+};
+
+export type PartnerRequest = {
+  id?: string;
+  fullname: string;
+  email: string;
+  message: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
 };
 
 export type AppUser = {

@@ -119,3 +119,104 @@ export async function saveSiteConfigToFirestore(config: SiteConfig): Promise<{ s
         return { success: false };
     }
 }
+
+// --- PARTNER SYSTEM ---
+import type { SystemUser, PartnerRequest } from './definitions';
+import { where } from 'firebase/firestore';
+
+const USERS_COLLECTION = 'users';
+const REQUESTS_COLLECTION = 'partner_requests';
+
+// USERS
+export async function getSystemUser(username: string): Promise<SystemUser | null> {
+    try {
+        const q = query(collection(db, USERS_COLLECTION), where("username", "==", username));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const doc = querySnapshot.docs[0];
+            return { id: doc.id, ...doc.data() } as SystemUser;
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        return null;
+    }
+}
+
+export async function createSystemUser(user: SystemUser): Promise<{ success: boolean; error?: string }> {
+    try {
+        // Check if exists
+        const existing = await getSystemUser(user.username);
+        if (existing) return { success: false, error: 'Username already taken' };
+
+        await setDoc(doc(db, USERS_COLLECTION, user.username), user); // Use username as Doc ID for uniqueness
+        return { success: true };
+    } catch (error) {
+        console.error('Error creating user:', error);
+        return { success: false, error: 'Database error' };
+    }
+}
+
+export async function getAllPartners(): Promise<SystemUser[]> {
+    try {
+        const q = query(collection(db, USERS_COLLECTION), where("role", "==", "partner"));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SystemUser));
+    } catch (error) {
+        console.error('Error fetching partners:', error);
+        return [];
+    }
+}
+
+export async function deleteSystemUser(username: string): Promise<{ success: boolean }> {
+    try {
+        await deleteDoc(doc(db, USERS_COLLECTION, username));
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        return { success: false };
+    }
+}
+
+export async function updateSystemUserPassword(username: string, newPassword: string): Promise<{ success: boolean }> {
+    try {
+        await setDoc(doc(db, USERS_COLLECTION, username), { password: newPassword }, { merge: true });
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating password:', error);
+        return { success: false };
+    }
+}
+
+// REQUESTS
+export async function createPartnerRequest(req: PartnerRequest): Promise<{ success: boolean }> {
+    try {
+        const newRef = doc(collection(db, REQUESTS_COLLECTION));
+        await setDoc(newRef, { ...req, id: newRef.id });
+        return { success: true };
+    } catch (error) {
+        console.error('Error creating request:', error);
+        return { success: false };
+    }
+}
+
+export async function getPartnerRequests(): Promise<PartnerRequest[]> {
+    try {
+        const q = query(collection(db, REQUESTS_COLLECTION), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(d => d.data() as PartnerRequest);
+    } catch (error) {
+        console.error('Error fetching requests:', error);
+        return [];
+    }
+}
+
+export async function updatePartnerRequestStatus(id: string, status: 'approved' | 'rejected'): Promise<{ success: boolean }> {
+    try {
+        await setDoc(doc(db, REQUESTS_COLLECTION, id), { status }, { merge: true });
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating request:', error);
+        return { success: false };
+    }
+}

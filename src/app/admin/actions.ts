@@ -1,7 +1,7 @@
 
 'use server';
 
-import { getContentFromFirestore, addContentToFirestore, getSiteConfigFromFirestore, saveSiteConfigToFirestore } from '@/lib/firestore';
+import { getContentFromFirestore, addContentToFirestore, getSiteConfigFromFirestore, saveSiteConfigToFirestore, createPartnerRequest } from '@/lib/firestore';
 import { getContentById } from '@/lib/tmdb';
 
 export async function getLogoText(): Promise<string> {
