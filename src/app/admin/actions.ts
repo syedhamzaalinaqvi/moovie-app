@@ -143,16 +143,25 @@ export async function submitPartnerRequest(data: { fullname: string; email: stri
 // USER LOGIN VERIFICATION
 export async function verifyUserLogin(username: string, password: string): Promise<{ success: boolean; user?: SystemUser; error?: string }> {
   try {
+    console.log('🔐 Login attempt for username:', username);
+
     const user = await getSystemUser(username);
 
+    console.log('👤 User found:', user ? 'YES' : 'NO');
+
     if (!user) {
+      console.log('❌ User not found in database');
       return { success: false, error: 'Invalid username or password' };
     }
 
+    console.log('🔑 Checking password...');
     // Check password (in production, you should use proper password hashing)
     if (user.password !== password) {
+      console.log('❌ Password mismatch');
       return { success: false, error: 'Invalid username or password' };
     }
+
+    console.log('✅ Login successful for user:', user.username);
 
     // Don't return password in the response
     const { password: _, ...userWithoutPassword } = user;
@@ -162,7 +171,7 @@ export async function verifyUserLogin(username: string, password: string): Promi
       user: userWithoutPassword as SystemUser
     };
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('❌ Login error:', error);
     return { success: false, error: 'An error occurred during login' };
   }
 }

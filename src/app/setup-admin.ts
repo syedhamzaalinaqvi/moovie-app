@@ -9,6 +9,8 @@ import type { SystemUser } from '@/lib/definitions';
  */
 export async function setupAdminUser() {
     try {
+        console.log('🔄 Starting admin user setup...');
+
         const adminUser: SystemUser = {
             username: 'hworldplayz',
             password: 'hworldplayz@512',
@@ -16,7 +18,11 @@ export async function setupAdminUser() {
             createdAt: new Date().toISOString(),
         };
 
+        console.log('📝 Creating user:', { username: adminUser.username, role: adminUser.role });
+
         const result = await createSystemUser(adminUser);
+
+        console.log('✅ Create user result:', result);
 
         if (result.success) {
             return {
@@ -24,13 +30,14 @@ export async function setupAdminUser() {
                 message: `Admin user '${adminUser.username}' created successfully!`
             };
         } else {
+            console.error('❌ Failed to create user:', result.error);
             return {
                 success: false,
                 error: result.error || 'Failed to create admin user'
             };
         }
     } catch (error) {
-        console.error('Error in setupAdminUser:', error);
+        console.error('❌ Error in setupAdminUser:', error);
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error'
