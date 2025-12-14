@@ -483,33 +483,37 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
                     />
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="selectAll"
-                      checked={selectedIds.length > 0 && selectedIds.length === filteredContent.length}
-                      onCheckedChange={toggleSelectAll}
-                      aria-label="Select all"
-                    />
-                    <Label htmlFor="selectAll" className='text-sm font-medium'>
-                      {selectedIds.length > 0 ? `${selectedIds.length} of ${filteredContent.length} selected` : 'Select all'}
-                    </Label>
-                  </div>
+                  {user?.role === 'admin' && (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="selectAll"
+                        checked={selectedIds.length > 0 && selectedIds.length === filteredContent.length}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all"
+                      />
+                      <Label htmlFor="selectAll" className='text-sm font-medium'>
+                        {selectedIds.length > 0 ? `${selectedIds.length} of ${filteredContent.length} selected` : 'Select all'}
+                      </Label>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                   {filteredContent.map((item, i) => (
                     <div key={`${item.id}-${i}`} className="relative group">
-                      <div className="absolute top-2 left-2 z-30">
-                        <Checkbox
-                          id={`select-${item.id}`}
-                          checked={selectedIds.includes(String(item.id))}
-                          onCheckedChange={(checked) => handleSelectionChange(String(item.id), !!checked)}
-                          className="bg-background/70 border-white/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary-foreground"
-                        />
-                      </div>
+                      {user?.role === 'admin' && (
+                        <div className="absolute top-2 left-2 z-30">
+                          <Checkbox
+                            id={`select-${item.id}`}
+                            checked={selectedIds.includes(String(item.id))}
+                            onCheckedChange={(checked) => handleSelectionChange(String(item.id), !!checked)}
+                            className="bg-background/70 border-white/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary-foreground"
+                          />
+                        </div>
+                      )}
                       <ContentCard
                         content={item}
-                        showAdminControls
+                        showAdminControls={user?.role === 'admin'}
                         onEditSuccess={onContentUpdated}
                         onDeleteSuccess={() => handleDelete([String(item.id)])}
                         currentUser={user}
