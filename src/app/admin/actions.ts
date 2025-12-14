@@ -47,15 +47,16 @@ export async function updatePaginationLimit(newLimit: number): Promise<{ success
 
 
 
-export async function getSecureDownloadSettings(): Promise<{ enabled: boolean; delay: number }> {
+export async function getSecureDownloadSettings(): Promise<{ enabled: boolean; delay: number; globalEnabled: boolean }> {
   const config = await getSiteConfigFromFirestore();
   return {
     enabled: config.secureDownloadsEnabled || false,
-    delay: typeof config.downloadButtonDelay === 'number' ? config.downloadButtonDelay : 5
+    delay: typeof config.downloadButtonDelay === 'number' ? config.downloadButtonDelay : 5,
+    globalEnabled: config.globalDownloadsEnabled !== undefined ? config.globalDownloadsEnabled : true // Default to true
   };
 }
 
-export async function updateSecureDownloadSettings(enabled: boolean, delay: number): Promise<{ success: boolean; error?: string }> {
+export async function updateSecureDownloadSettings(enabled: boolean, delay: number, globalEnabled: boolean): Promise<{ success: boolean; error?: string }> {
   if (typeof delay !== 'number' || delay < 0) {
     return { success: false, error: 'Delay must be a positive number.' };
   }
@@ -63,7 +64,8 @@ export async function updateSecureDownloadSettings(enabled: boolean, delay: numb
   try {
     await saveSiteConfigToFirestore({
       secureDownloadsEnabled: enabled,
-      downloadButtonDelay: delay
+      downloadButtonDelay: delay,
+      globalDownloadsEnabled: globalEnabled
     });
     return { success: true };
   } catch (error) {

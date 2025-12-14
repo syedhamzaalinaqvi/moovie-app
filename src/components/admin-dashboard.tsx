@@ -74,6 +74,7 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
   const [paginationLimit, setPaginationLimit] = useState(20);
   const [secureDownloadsEnabled, setSecureDownloadsEnabled] = useState(false);
   const [downloadDelay, setDownloadDelay] = useState(5);
+  const [globalDownloadsEnabled, setGlobalDownloadsEnabled] = useState(true);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -99,6 +100,7 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
       setPaginationLimit(currentLimit);
       setSecureDownloadsEnabled(secureSettings.enabled);
       setDownloadDelay(secureSettings.delay);
+      setGlobalDownloadsEnabled(secureSettings.globalEnabled);
 
       let myContent = localContent;
 
@@ -238,7 +240,7 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
       const [logoResult, limitResult, secureResult] = await Promise.all([
         updateLogoText(logoText),
         updatePaginationLimit(paginationLimit),
-        updateSecureDownloadSettings(secureDownloadsEnabled, downloadDelay)
+        updateSecureDownloadSettings(secureDownloadsEnabled, downloadDelay, globalDownloadsEnabled)
       ]);
 
       if (logoResult.success && limitResult.success && secureResult.success) {
@@ -376,6 +378,20 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
                         />
                       </div>
                     </div>
+
+                    <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg bg-red-50/50">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="global-downloads" className="text-base font-medium text-red-900">Enable "Download" Buttons Site-Wide</Label>
+                        <p className="text-sm text-red-700">Turn this OFF to hide download buttons everywhere immediately.</p>
+                      </div>
+                      <Switch
+                        id="global-downloads"
+                        checked={globalDownloadsEnabled}
+                        onCheckedChange={setGlobalDownloadsEnabled}
+                        disabled={isSavingSettings}
+                      />
+                    </div>
+
                     <div className="flex items-center justify-between space-x-2">
                       <div className="space-y-0.5">
                         <Label htmlFor="secure-downloads" className="text-base font-medium">Secure Downloads</Label>

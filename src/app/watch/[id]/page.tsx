@@ -92,7 +92,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
   const primaryVideoSrc = content.trailerUrl || content.youtubeTrailerUrl;
 
   // Fetch secure download settings
-  const { enabled: secureEnabled } = await getSecureDownloadSettings();
+  const { enabled: secureEnabled, globalEnabled } = await getSecureDownloadSettings();
 
   return (
     <div className="flex flex-col">
@@ -150,47 +150,48 @@ export default async function WatchPage({ params }: WatchPageProps) {
                   </Link>
                 </Button>
               )}
-              {/* Download Button Logic */}
-              {content.downloadLinks && content.downloadLinks.length > 1 ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="lg" variant="outline">
-                      <Download className="mr-2 h-5 w-5" />
-                      Download
-                      <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {content.downloadLinks.map((link, index) => {
-                      const downloadHref = secureEnabled
-                        ? `/download?id=${content.id}&index=${index}`
-                        : link.url;
-                      return (
-                        <DropdownMenuItem key={index} asChild>
-                          <Link href={downloadHref} target={secureEnabled ? "_self" : "_blank"} rel="noopener noreferrer" className="cursor-pointer font-medium">
-                            {link.label || `Link ${index + 1}`}
-                          </Link>
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                (content.downloadLink || (content.downloadLinks && content.downloadLinks.length === 1)) && (
-                  <Button asChild size="lg" variant="outline">
-                    <Link
-                      href={secureEnabled
-                        ? `/download?id=${content.id}`
-                        : (content.downloadLink || (content.downloadLinks ? content.downloadLinks[0].url : '#'))}
-                      target={secureEnabled ? "_self" : "_blank"}
-                      rel="noopener noreferrer"
-                    >
-                      <Download className="mr-2 h-5 w-5" />
-                      Download
-                    </Link>
-                  </Button>
-                )
-              )
+              {/* Download Button Logic */
+                (globalEnabled) && (
+                  content.downloadLinks && content.downloadLinks.length > 1 ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="lg" variant="outline">
+                          <Download className="mr-2 h-5 w-5" />
+                          Download
+                          <ChevronDown className="ml-2 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {content.downloadLinks.map((link, index) => {
+                          const downloadHref = secureEnabled
+                            ? `/download?id=${content.id}&index=${index}`
+                            : link.url;
+                          return (
+                            <DropdownMenuItem key={index} asChild>
+                              <Link href={downloadHref} target={secureEnabled ? "_self" : "_blank"} rel="noopener noreferrer" className="cursor-pointer font-medium">
+                                {link.label || `Link ${index + 1}`}
+                              </Link>
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    (content.downloadLink || (content.downloadLinks && content.downloadLinks.length === 1)) && (
+                      <Button asChild size="lg" variant="outline">
+                        <Link
+                          href={secureEnabled
+                            ? `/download?id=${content.id}`
+                            : (content.downloadLink || (content.downloadLinks ? content.downloadLinks[0].url : '#'))}
+                          target={secureEnabled ? "_self" : "_blank"}
+                          rel="noopener noreferrer"
+                        >
+                          <Download className="mr-2 h-5 w-5" />
+                          Download
+                        </Link>
+                      </Button>
+                    )
+                  ))
               }
               <ShareButton title={content.title} url={`/watch/${id}`} />
             </div>
