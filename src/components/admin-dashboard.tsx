@@ -14,7 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { ContentFormDialog } from './content-form-dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { getLogoText, updateLogoText, getPaginationLimit, updatePaginationLimit, syncContentMetadata, getSecureDownloadSettings, updateSecureDownloadSettings, getPartnerRequests, updatePartnerRequestStatus, createSystemUser } from '@/app/admin/actions';
+import { getLogoText, updateLogoText, getPaginationLimit, updatePaginationLimit, syncContentMetadata, getSecureDownloadSettings, updateSecureDownloadSettings } from '@/app/admin/actions';
+import { createSystemUser, getPartnerRequests, updatePartnerRequestStatus } from '@/lib/firestore';
 import { deleteContent } from '@/ai/flows/delete-content';
 import {
   AlertDialog,

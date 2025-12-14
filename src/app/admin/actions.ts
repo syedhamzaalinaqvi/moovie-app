@@ -139,5 +139,3 @@ export async function submitPartnerRequest(data: { fullname: string; email: stri
     return { success: false };
   }
 }
-
-export { createSystemUser, getPartnerRequests, updatePartnerRequestStatus } from '@/lib/firestore';
