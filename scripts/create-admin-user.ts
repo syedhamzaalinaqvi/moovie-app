@@ -21,10 +21,10 @@ const db = getFirestore(app);
 
 async function createAdminUser() {
     try {
-        // Create default admin user
+        // Create admin user with your credentials
         const adminUser: SystemUser = {
-            username: 'admin',
-            password: 'admin123', // CHANGE THIS IN PRODUCTION!
+            username: 'hworldplayz',
+            password: 'hworldplayz@512',
             role: 'admin',
             createdAt: new Date().toISOString(),
         };
