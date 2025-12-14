@@ -320,7 +320,7 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ContentFormDialog onSave={onContentUpdated}>
+            <ContentFormDialog onSave={onContentUpdated} currentUser={user}>
               <Button className="w-full">
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Content
               </Button>
@@ -512,6 +512,7 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
                         showAdminControls
                         onEditSuccess={onContentUpdated}
                         onDeleteSuccess={() => handleDelete([String(item.id)])}
+                        currentUser={user}
                       />
                     </div>
                   ))}

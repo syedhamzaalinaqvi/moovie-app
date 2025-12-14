@@ -31,9 +31,10 @@ type ContentFormDialogProps = {
   children: React.ReactNode;
   contentToEdit?: Content;
   onSave?: () => void;
+  currentUser?: { username: string; role: string };
 };
 
-export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFormDialogProps) {
+export function ContentFormDialog({ children, contentToEdit, onSave, currentUser }: ContentFormDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [tmdbId, setTmdbId] = useState(contentToEdit?.id || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -170,13 +171,16 @@ export function ContentFormDialog({ children, contentToEdit, onSave }: ContentFo
       id: tmdbId,
       trailerUrl: trailerUrl || undefined,
       downloadLinks: validLinks,
-      // Maintain backward compatibility for now by setting the first link as legacy downloadLink
+      // Maintain backward compatibility
       downloadLink: validLinks.length > 0 ? validLinks[0].url : undefined,
       languages: selectedLanguages,
       quality: selectedQuality,
-      isHindiDubbed: selectedLanguages.includes('Hindi Dubbed'), // Sync for legacy visual support until fully migrated
+      isHindiDubbed: selectedLanguages.includes('Hindi Dubbed'),
       customTags: customTags.split(',').map(tag => tag.trim()).filter(Boolean),
+      // Add uploadedBy if current user is provided, but preserve existing if editing
+      uploadedBy: previewContent?.uploadedBy || currentUser?.username,
     };
+
 
     try {
       const result = await updateContent(finalContentToAdd);
