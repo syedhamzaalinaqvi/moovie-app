@@ -1,9 +1,9 @@
 
 'use server';
 
-import { getContentFromFirestore, addContentToFirestore, getSiteConfigFromFirestore, saveSiteConfigToFirestore, createPartnerRequest } from '@/lib/firestore';
+import { getContentFromFirestore, addContentToFirestore, getSiteConfigFromFirestore, saveSiteConfigToFirestore, createPartnerRequest, getSystemUser } from '@/lib/firestore';
 import { getContentById } from '@/lib/tmdb';
-import type { PartnerRequest } from '@/lib/definitions';
+import type { PartnerRequest, SystemUser } from '@/lib/definitions';
 
 export async function getLogoText(): Promise<string> {
   const config = await getSiteConfigFromFirestore();
@@ -137,5 +137,32 @@ export async function submitPartnerRequest(data: { fullname: string; email: stri
   } catch (error) {
     console.error('Failed to submit partner request:', error);
     return { success: false };
+  }
+}
+
+// USER LOGIN VERIFICATION
+export async function verifyUserLogin(username: string, password: string): Promise<{ success: boolean; user?: SystemUser; error?: string }> {
+  try {
+    const user = await getSystemUser(username);
+
+    if (!user) {
+      return { success: false, error: 'Invalid username or password' };
+    }
+
+    // Check password (in production, you should use proper password hashing)
+    if (user.password !== password) {
+      return { success: false, error: 'Invalid username or password' };
+    }
+
+    // Don't return password in the response
+    const { password: _, ...userWithoutPassword } = user;
+
+    return {
+      success: true,
+      user: userWithoutPassword as SystemUser
+    };
+  } catch (error) {
+    console.error('Login error:', error);
+    return { success: false, error: 'An error occurred during login' };
   }
 }
