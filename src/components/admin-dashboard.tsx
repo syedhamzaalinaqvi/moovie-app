@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { getBrowseContent, getManuallyAddedContent } from '@/lib/tmdb';
 import type { Content } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2, RefreshCw, Search } from 'lucide-react';
+import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2, RefreshCw, Search, Edit } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentCard } from './content-card';
 import { Separator } from './ui/separator';
@@ -15,7 +15,7 @@ import { ContentFormDialog } from './content-form-dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { getLogoText, updateLogoText, getPaginationLimit, updatePaginationLimit, syncContentMetadata, getSecureDownloadSettings, updateSecureDownloadSettings } from '@/app/admin/actions';
-import { createSystemUser, getPartnerRequests, updatePartnerRequestStatus } from '@/lib/firestore';
+import { createSystemUser, getPartnerRequests, updatePartnerRequestStatus, updatePartnerCredentials } from '@/lib/firestore';
 import { deleteContent } from '@/ai/flows/delete-content';
 import {
   AlertDialog,
@@ -28,6 +28,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Checkbox } from './ui/checkbox';
 import { Switch } from './ui/switch';
 import type { SystemUser, PartnerRequest } from '@/lib/definitions';
@@ -142,8 +150,8 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
       const userResult = await createSystemUser(newUser);
       if (!userResult.success) throw new Error(userResult.error || "Failed to create user");
 
-      // 2. Update Request Status
-      await updatePartnerRequestStatus(request.id!, 'approved');
+      // 2. Update Request Status WITH credentials
+      await updatePartnerRequestStatus(request.id!, 'approved', { username, password });
 
       // 3. Refresh List
       const requests = await getPartnerRequests();
@@ -169,6 +177,47 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
       toast({ title: "Request Rejected", description: "The application has been rejected." });
     } catch (error) {
       toast({ variant: 'destructive', title: "Error", description: "Failed to reject request." });
+    }
+  };
+
+  // Partner Credential Editing
+  const [editingCredentials, setEditingCredentials] = useState<PartnerRequest | null>(null);
+  const [editUsername, setEditUsername] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [isUpdatingCreds, setIsUpdatingCreds] = useState(false);
+
+  const openCredentialEditor = (req: PartnerRequest) => {
+    setEditingCredentials(req);
+    setEditUsername(req.username || '');
+    setEditPassword(req.password || '');
+  };
+
+  const handleSaveCredentials = async () => {
+    if (!editingCredentials || !editingCredentials.id) return;
+
+    setIsUpdatingCreds(true);
+    try {
+      const result = await updatePartnerCredentials(
+        editingCredentials.id,
+        editingCredentials.username || '', // Old username
+        editUsername,
+        editPassword
+      );
+
+      if (result.success) {
+        toast({ title: "Success", description: "Partner credentials updated." });
+
+        // Refresh list
+        const requests = await getPartnerRequests();
+        setPartnerRequests(requests);
+        setEditingCredentials(null);
+      } else {
+        throw new Error(result.error || "Failed");
+      }
+    } catch (error) {
+      toast({ variant: 'destructive', title: "Error", description: "Failed to update credentials." });
+    } finally {
+      setIsUpdatingCreds(false);
     }
   };
 
@@ -498,6 +547,8 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
                     <TableHead>Date</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Username</TableHead>
+                    <TableHead>Password</TableHead>
                     <TableHead>Message</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
@@ -506,7 +557,7 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
                 <TableBody>
                   {partnerRequests.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-4">No pending requests</TableCell>
+                      <TableCell colSpan={8} className="text-center py-4">No requests found</TableCell>
                     </TableRow>
                   ) : (
                     partnerRequests.map((req) => (
@@ -514,6 +565,26 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
                         <TableCell>{new Date(req.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>{req.fullname}</TableCell>
                         <TableCell>{req.email}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <span>{req.username || '-'}</span>
+                            {req.status === 'approved' && (
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openCredentialEditor(req)}>
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <span className="font-mono">{req.password || '-'}</span>
+                            {req.status === 'approved' && (
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openCredentialEditor(req)}>
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="max-w-xs truncate" title={req.message}>{req.message}</TableCell>
                         <TableCell>
                           <Badge variant={req.status === 'approved' ? "default" : req.status === 'rejected' ? "destructive" : "secondary"}>
@@ -535,6 +606,42 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
               </Table>
             </CardContent>
           </Card>
+
+          <Dialog open={!!editingCredentials} onOpenChange={(open) => !open && setEditingCredentials(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Partner Credentials</DialogTitle>
+                <DialogDescription>
+                  Update the login credentials for {editingCredentials?.fullname}.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-username">Username</Label>
+                  <Input
+                    id="edit-username"
+                    value={editUsername}
+                    onChange={(e) => setEditUsername(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-password">Password</Label>
+                  <Input
+                    id="edit-password"
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditingCredentials(null)}>Cancel</Button>
+                <Button onClick={handleSaveCredentials} disabled={isUpdatingCreds}>
+                  {isUpdatingCreds && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
       </Tabs>
     </div>

@@ -26,7 +26,6 @@ export type Content = {
   numberOfSeasons?: number;
   languages?: string[];
   quality?: string[];
-  quality?: string[];
   createdAt?: string;
   updatedAt?: string;
   lastAirDate?: string;
@@ -49,6 +48,8 @@ export type PartnerRequest = {
   message: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  username?: string; // Generated username after approval
+  password?: string; // Generated password after approval
 };
 
 export type AppUser = {

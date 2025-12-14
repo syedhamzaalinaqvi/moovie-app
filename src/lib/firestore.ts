@@ -211,12 +211,61 @@ export async function getPartnerRequests(): Promise<PartnerRequest[]> {
     }
 }
 
-export async function updatePartnerRequestStatus(id: string, status: 'approved' | 'rejected'): Promise<{ success: boolean }> {
+export async function updatePartnerRequestStatus(id: string, status: 'approved' | 'rejected', credentials?: { username: string; password: string }): Promise<{ success: boolean }> {
     try {
-        await setDoc(doc(db, REQUESTS_COLLECTION, id), { status }, { merge: true });
+        const updateData: any = { status };
+
+        // If credentials are provided, save them to the request
+        if (credentials) {
+            updateData.username = credentials.username;
+            updateData.password = credentials.password;
+        }
+
+        await setDoc(doc(db, REQUESTS_COLLECTION, id), updateData, { merge: true });
         return { success: true };
     } catch (error) {
         console.error('Error updating request:', error);
         return { success: false };
+    }
+}
+
+export async function updatePartnerCredentials(requestId: string, oldUsername: string, newUsername: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        // 1. Update the partner request document
+        await setDoc(doc(db, REQUESTS_COLLECTION, requestId), {
+            username: newUsername,
+            password: newPassword
+        }, { merge: true });
+
+        // 2. If username changed, we need to create a new user doc and delete the old one
+        if (oldUsername !== newUsername) {
+            // Get the old user data
+            const oldUserRef = doc(db, USERS_COLLECTION, oldUsername);
+            const oldUserSnap = await import('firebase/firestore').then(mod => mod.getDoc(oldUserRef));
+
+            if (oldUserSnap.exists()) {
+                const userData = oldUserSnap.data();
+
+                // Create new user doc with new username
+                await setDoc(doc(db, USERS_COLLECTION, newUsername), {
+                    ...userData,
+                    username: newUsername,
+                    password: newPassword
+                });
+
+                // Delete old user doc
+                await deleteDoc(oldUserRef);
+            }
+        } else {
+            // Just update the password in the existing user doc
+            await setDoc(doc(db, USERS_COLLECTION, oldUsername), {
+                password: newPassword
+            }, { merge: true });
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating partner credentials:', error);
+        return { success: false, error: 'Failed to update credentials' };
     }
 }
