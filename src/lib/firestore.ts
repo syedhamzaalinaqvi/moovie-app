@@ -3,10 +3,11 @@
  * @fileOverview Firestore helper functions for content management
  */
 import { db } from './firebase';
-import { collection, doc, setDoc, getDocs, deleteDoc, query, orderBy } from 'firebase/firestore';
-import type { Content } from './definitions';
+import { collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, limit, getDoc, where } from 'firebase/firestore';
+import type { Content, LiveChannel } from './definitions';
 
 const CONTENT_COLLECTION = 'manually_added_content';
+const LIVE_TV_COLLECTION = 'live_tv_channels';
 
 /**
  * Add or update content in Firestore
@@ -123,7 +124,6 @@ export async function saveSiteConfigToFirestore(config: SiteConfig): Promise<{ s
 
 // --- PARTNER SYSTEM ---
 import type { SystemUser, PartnerRequest } from './definitions';
-import { where } from 'firebase/firestore';
 
 const USERS_COLLECTION = 'users';
 const REQUESTS_COLLECTION = 'partner_requests';
@@ -268,5 +268,56 @@ export async function updatePartnerCredentials(requestId: string, oldUsername: s
     } catch (error) {
         console.error('Error updating partner credentials:', error);
         return { success: false, error: 'Failed to update credentials' };
+    }
+}
+// --- LIVE TV SYSTEM ---
+
+export async function addLiveChannel(channel: LiveChannel): Promise<{ success: boolean }> {
+    try {
+        const docRef = doc(collection(db, LIVE_TV_COLLECTION));
+        const finalChannel = { ...channel, id: docRef.id, createdAt: new Date().toISOString() };
+        await setDoc(docRef, finalChannel);
+        return { success: true };
+    } catch (error) {
+        console.error('Error adding live channel:', error);
+        return { success: false };
+    }
+}
+
+export async function getLiveChannels(limitCount?: number): Promise<LiveChannel[]> {
+    try {
+        let q = query(collection(db, LIVE_TV_COLLECTION), orderBy('createdAt', 'desc'));
+        if (limitCount) {
+            q = query(q, limit(limitCount));
+        }
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LiveChannel));
+    } catch (error) {
+        console.error('Error fetching live channels:', error);
+        return [];
+    }
+}
+
+export async function getLiveChannelById(id: string): Promise<LiveChannel | null> {
+    try {
+        const docRef = doc(db, LIVE_TV_COLLECTION, id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return { id: docSnap.id, ...docSnap.data() } as LiveChannel;
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching live channel:', error);
+        return null;
+    }
+}
+
+export async function deleteLiveChannel(id: string): Promise<{ success: boolean }> {
+    try {
+        await deleteDoc(doc(db, LIVE_TV_COLLECTION, id));
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting live channel:', error);
+        return { success: false };
     }
 }

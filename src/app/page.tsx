@@ -4,7 +4,7 @@ import { getManuallyAddedContent, getTrending } from "@/lib/tmdb";
 import { ContentCard } from "@/components/content-card";
 import { LayoutGrid, List, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { Content } from "@/lib/definitions";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "next/navigation";
 import { HeroCarousel } from "@/components/hero-carousel";
@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getPaginationLimit } from "@/app/admin/actions";
 import { Loader2, ChevronDown } from "lucide-react";
+import { LiveTvCarousel } from "@/components/live-tv-carousel";
+import { getLiveChannels } from "@/lib/firestore";
+import type { Content, LiveChannel } from "@/lib/definitions";
 
 
 // By adding a version query parameter that changes, we can force a re-render
@@ -30,6 +33,7 @@ export default function BrowsePage() {
 
   const [content, setContent] = useState<Content[]>([]);
   const [heroContent, setHeroContent] = useState<Content[]>([]);
+  const [liveChannels, setLiveChannels] = useState<LiveChannel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isHeroLoading, setIsHeroLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'list'>('grid');
@@ -56,10 +60,14 @@ export default function BrowsePage() {
       };
       setIsHeroLoading(true);
       try {
-        const trending = await getTrending();
-        setHeroContent(trending.slice(0, 5)); // Take top 5 for hero
+        const [trending, channels] = await Promise.all([
+          getTrending(),
+          getLiveChannels(5) // Fetch 5 recent live channels
+        ]);
+        setHeroContent(trending.slice(0, 5));
+        setLiveChannels(channels);
       } catch (error) {
-        console.error("Failed to fetch hero content", error);
+        console.error("Failed to fetch hero/live content", error);
       } finally {
         setIsHeroLoading(false);
       }
@@ -158,7 +166,12 @@ export default function BrowsePage() {
         )
       )}
       <div className="p-4 md:p-6 space-y-8">
-        {!isFilteredView && <RecommendedContent />}
+        {!isFilteredView && (
+          <>
+            <RecommendedContent />
+            <LiveTvCarousel channels={liveChannels} />
+          </>
+        )}
         <div>
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">{getTitle()}</h1>

@@ -83,3 +83,16 @@ export type CastMember = {
   character: string;
   profilePath: string;
 }
+
+export type LiveChannel = {
+  id: string; // Auto-generated ID
+  title: string;
+  description: string;
+  country: string;
+  tags: string[];
+  streamUrl?: string; // Direct HLS/M3U8 link
+  embedCode?: string; // Iframe embed code
+  posterPath?: string; // Optional logo/poster
+  createdAt: string;
+  userAgent?: string;
+};

@@ -14,6 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 const navItems = [
   { href: '/', label: 'Browse All', icon: Home, type: null, genre: null, region: null },
+  { href: '/live-tv', label: 'Live TV', icon: Tv, type: null, genre: null, region: null },
   { href: '/?type=movie', label: 'Movies', icon: Clapperboard, type: 'movie', genre: null, region: null },
   { href: '/?type=tv', label: 'TV Shows', icon: Tv, type: 'tv', genre: null, region: null },
   { href: '/disclaimer', label: 'Disclaimer', icon: ShieldAlert, type: null, genre: null, region: null },
@@ -50,7 +51,6 @@ export function SidebarNav() {
         <SidebarMenuItem key={item.label}>
           <SidebarMenuButton
             asChild
-            href={item.href}
             isActive={isActive(item)}
             tooltip={item.label}
           >
