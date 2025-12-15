@@ -11,7 +11,7 @@ import { HeroCarousel } from "@/components/hero-carousel";
 import RecommendedContent from "@/components/recommended-content";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getPaginationLimit } from "@/app/admin/actions";
+import { getPaginationLimit, getSecureDownloadSettings } from "@/app/admin/actions";
 import { Loader2, ChevronDown } from "lucide-react";
 import { LiveTvCarousel } from "@/components/live-tv-carousel";
 import { getLiveChannels } from "@/lib/firestore";
@@ -60,12 +60,19 @@ export default function BrowsePage() {
       };
       setIsHeroLoading(true);
       try {
-        const [trending, channels] = await Promise.all([
+        const [trending, secureSettings] = await Promise.all([
           getTrending(),
-          getLiveChannels(5) // Fetch 5 recent live channels
+          getSecureDownloadSettings()
         ]);
+
         setHeroContent(trending.slice(0, 5));
-        setLiveChannels(channels);
+
+        if (secureSettings.showLiveTvCarousel) {
+          const channels = await getLiveChannels(5);
+          setLiveChannels(channels);
+        } else {
+          setLiveChannels([]);
+        }
       } catch (error) {
         console.error("Failed to fetch hero/live content", error);
       } finally {

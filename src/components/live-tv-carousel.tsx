@@ -51,7 +51,16 @@ export function LiveTvCarousel({ channels }: LiveTvCarouselProps) {
                         <CarouselItem key={channel.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                             <div className="relative aspect-video rounded-xl overflow-hidden group border border-border/50 shadow-md">
                                 {/* Background Gradient / Placeholder since we might not have images */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800" />
+                                {/* Poster Image or Placeholder */}
+                                {channel.posterUrl ? (
+                                    <img
+                                        src={channel.posterUrl}
+                                        alt={channel.title}
+                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800" />
+                                )}
 
                                 {/* Dynamic gradient overlay on hover */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-90" />

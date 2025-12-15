@@ -82,12 +82,7 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
   const [recentlyAdded, setRecentlyAdded] = useState<Content[]>([]);
   // filteredContent state removed, derived below
   const [partnerRequests, setPartnerRequests] = useState<PartnerRequest[]>([]);
-  const [logoText, setLogoText] = useState('');
-  const [paginationLimit, setPaginationLimit] = useState(20);
-  const [secureDownloadsEnabled, setSecureDownloadsEnabled] = useState(false);
-  const [downloadDelay, setDownloadDelay] = useState(5);
-  const [globalDownloadsEnabled, setGlobalDownloadsEnabled] = useState(true);
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -98,12 +93,21 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
     streamUrl: '',
     embedCode: '',
     description: '',
+    posterUrl: '',
     country: 'USA',
     customCountry: '',
     tags: ''
   });
   const [isAddingChannel, setIsAddingChannel] = useState(false);
   const { toast } = useToast();
+
+  const [globalDownloadsEnabled, setGlobalDownloadsEnabled] = useState(true);
+  const [logoText, setLogoText] = useState('');
+  const [paginationLimit, setPaginationLimit] = useState(20);
+  const [secureDownloadsEnabled, setSecureDownloadsEnabled] = useState(false);
+  const [downloadDelay, setDownloadDelay] = useState(5);
+  const [showLiveTvCarousel, setShowLiveTvCarousel] = useState(true);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const filteredContent = recentlyAdded.filter(item =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -124,6 +128,10 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
       setSecureDownloadsEnabled(secureSettings.enabled);
       setDownloadDelay(secureSettings.delay);
       setGlobalDownloadsEnabled(secureSettings.globalEnabled);
+      // Fetch Site Config for other settings
+      const siteConfig = await getSiteConfigFromFirestore();
+      setShowLiveTvCarousel(siteConfig.showLiveTvCarousel !== undefined ? siteConfig.showLiveTvCarousel : true);
+
 
       let myContent = localContent;
 
@@ -290,6 +298,7 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
         tags: liveTvForm.tags.split(',').map(t => t.trim()).filter(Boolean),
         streamUrl: liveTvForm.streamUrl || undefined,
         embedCode: liveTvForm.embedCode || undefined,
+        posterUrl: liveTvForm.posterUrl || undefined,
         createdAt: new Date().toISOString(),
       });
 
@@ -299,6 +308,7 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
         streamUrl: '',
         embedCode: '',
         description: '',
+        posterUrl: '',
         country: 'USA',
         customCountry: '',
         tags: ''
@@ -328,6 +338,15 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
         updatePaginationLimit(paginationLimit),
         updateSecureDownloadSettings(secureDownloadsEnabled, downloadDelay, globalDownloadsEnabled)
       ]);
+
+      await saveSiteConfigToFirestore({
+        secureDownloadsEnabled,
+        downloadButtonDelay: downloadDelay,
+        globalDownloadsEnabled,
+        showLiveTvCarousel,
+        logoText,
+        paginationLimit
+      });
 
       if (logoResult.success && limitResult.success && secureResult.success) {
         toast({ title: "Success", description: "Site settings updated successfully." });
@@ -477,6 +496,19 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
                         id="global-downloads"
                         checked={globalDownloadsEnabled}
                         onCheckedChange={setGlobalDownloadsEnabled}
+                        disabled={isSavingSettings}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg bg-blue-50/50">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="live-carousel" className="text-base font-medium text-blue-900">Show Live TV Carousel</Label>
+                        <p className="text-sm text-blue-700">Display the slide of recent Live TV channels on the home page.</p>
+                      </div>
+                      <Switch
+                        id="live-carousel"
+                        checked={showLiveTvCarousel}
+                        onCheckedChange={setShowLiveTvCarousel}
                         disabled={isSavingSettings}
                       />
                     </div>
@@ -825,6 +857,15 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
                     value={liveTvForm.tags}
                     onChange={e => setLiveTvForm({ ...liveTvForm, tags: e.target.value })}
                     placeholder="News, Sports, Music"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Poster Image URL</Label>
+                  <Input
+                    value={liveTvForm.posterUrl}
+                    onChange={e => setLiveTvForm({ ...liveTvForm, posterUrl: e.target.value })}
+                    placeholder="https://example.com/poster.jpg"
                   />
                 </div>
 

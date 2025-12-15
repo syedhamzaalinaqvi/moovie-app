@@ -92,7 +92,8 @@ export type LiveChannel = {
   tags: string[];
   streamUrl?: string; // Direct HLS/M3U8 link
   embedCode?: string; // Iframe embed code
-  posterPath?: string; // Optional logo/poster
+  posterUrl?: string; // Optional logo/poster
+  posterPath?: string; // Deprecated or alias, keeping for safety
   createdAt: string;
   userAgent?: string;
 };

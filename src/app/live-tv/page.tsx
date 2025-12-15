@@ -54,10 +54,18 @@ export default function LiveTvPage() {
                         <Link key={channel.id} href={`/live-tv/${channel.id}`} className="group">
                             <Card className="h-full overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 hover:bg-card hover:border-primary/50">
                                 <div className="relative aspect-video w-full bg-muted flex items-center justify-center overflow-hidden group-hover:bg-black/5">
-                                    {/* Placeholder for Channel Logo/Poster if we add image upload later, currently just an icon or generic */}
-                                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20 group-hover:scale-105 transition-transform duration-500">
-                                        <Tv className="h-12 w-12 text-primary/50 group-hover:text-primary transition-colors duration-300" />
-                                    </div>
+                                    {/* Poster Image or Placeholder */}
+                                    {channel.posterUrl ? (
+                                        <img
+                                            src={channel.posterUrl}
+                                            alt={channel.title}
+                                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        />
+                                    ) : (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20 group-hover:scale-105 transition-transform duration-500">
+                                            <Tv className="h-12 w-12 text-primary/50 group-hover:text-primary transition-colors duration-300" />
+                                        </div>
+                                    )}
 
                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                         <div className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">

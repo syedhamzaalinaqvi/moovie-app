@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import { getLiveChannelById } from '@/lib/firestore';
 import type { LiveChannel } from '@/lib/definitions';
-import { VideoPlayer } from '@/components/video-player';
+import PlyrPlayer from '@/components/plyr-player';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -89,7 +89,12 @@ export default function LiveTvWatchPage({ params }: { params: Promise<{ id: stri
                 </div>
 
                 <div className="rounded-xl overflow-hidden border bg-black shadow-2xl">
-                    <VideoPlayer src={playerSrc} />
+                    <PlyrPlayer
+                        source={playerSrc}
+                        poster={channel.posterUrl || channel.posterPath}
+                        title={channel.title}
+                        isEmbed={!!channel.embedCode} // If embed code exists, treat as embed
+                    />
                 </div>
 
                 <div className="bg-card p-6 rounded-xl border">

@@ -47,12 +47,13 @@ export async function updatePaginationLimit(newLimit: number): Promise<{ success
 
 
 
-export async function getSecureDownloadSettings(): Promise<{ enabled: boolean; delay: number; globalEnabled: boolean }> {
+export async function getSecureDownloadSettings(): Promise<{ enabled: boolean; delay: number; globalEnabled: boolean; showLiveTvCarousel: boolean }> {
   const config = await getSiteConfigFromFirestore();
   return {
     enabled: config.secureDownloadsEnabled || false,
     delay: typeof config.downloadButtonDelay === 'number' ? config.downloadButtonDelay : 5,
-    globalEnabled: config.globalDownloadsEnabled !== undefined ? config.globalDownloadsEnabled : true // Default to true
+    globalEnabled: config.globalDownloadsEnabled !== undefined ? config.globalDownloadsEnabled : true,
+    showLiveTvCarousel: config.showLiveTvCarousel !== undefined ? config.showLiveTvCarousel : true
   };
 }
 
