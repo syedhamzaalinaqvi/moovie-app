@@ -514,6 +514,29 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
 
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
+                        <Label htmlFor="siteTitle">Site Title (SEO)</Label>
+                        <Input
+                          id="siteTitle"
+                          value={siteTitle}
+                          onChange={(e) => setSiteTitle(e.target.value)}
+                          placeholder="Moovie: Streaming Hub"
+                          disabled={isSavingSettings}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="titleSuffix">Title Suffix (e.g. Hindi Dubbed)</Label>
+                        <Input
+                          id="titleSuffix"
+                          value={titleSuffix}
+                          onChange={(e) => setTitleSuffix(e.target.value)}
+                          placeholder="Hindi Dubbed"
+                          disabled={isSavingSettings}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
                         <Label htmlFor="logoText">Logo Text</Label>
                         <Input
                           id="logoText"

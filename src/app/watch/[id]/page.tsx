@@ -46,11 +46,28 @@ export async function generateMetadata({ params }: WatchPageProps): Promise<Meta
     };
   }
 
-  const suffix = siteConfig.titleSuffix ? ` (${siteConfig.titleSuffix})` : '';
+  /* User requested format: "Watch or Download {Title} Hindi Dubbed Dual Audio - 480p 720p 1080p - {Site Title}" */
+
+  // Use config suffix if provided, otherwise default to "Hindi Dubbed Dual Audio - 480p 720p 1080p" if suffix is "Hindi Dubbed" or similar, 
+  // actually user asked for "Hindi Dubbed Dual Audio - 480p 720p 1080p".
+  // If the user configures "Hindi Dubbed" in settings, we should probably append the rest.
+  // But strictly following the "Watch or Download ... " request pattern is safer.
+
   const siteTitle = siteConfig.siteTitle || 'Moovie';
+  // If suffix is set, we use it, but user wants specific keyword stuffing. 
+  // Let's assume titleSuffix from admin is used for the "Hindi Dubbed" part, and we hardcode the rest for max SEO as requested, 
+  // OR we just use the requested string structure.
+
+  const keywords = siteConfig.titleSuffix || "Hindi Dubbed Dual Audio - 480p 720p 1080p";
+  // If user only has "Hindi Dubbed" in admin, we might want to append the quality tags too?
+  // User request: "Watch or Download Zootopia Hindi Dubbed Dual Audio - 480p 720p 1080p - Moovie"
+  // So: `Watch or Download ${content.title} ${keywords} - ${siteTitle}`
+
+  const seoTitle = `Watch or Download ${content.title} ${keywords} - ${siteTitle}`;
+  const suffix = ` ${keywords}`; // Define suffix for OG title consistency
 
   return {
-    title: `${content.title}${suffix} - ${siteTitle}`,
+    title: seoTitle,
     description: content.description,
     openGraph: {
       title: `${content.title}${suffix}`,
