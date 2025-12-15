@@ -3,7 +3,7 @@
  * @fileOverview Firestore helper functions for content management
  */
 import { db } from './firebase';
-import { collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, limit, getDoc, where } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, deleteDoc, updateDoc, query, orderBy, limit, getDoc, where } from 'firebase/firestore';
 import type { Content, LiveChannel } from './definitions';
 
 const CONTENT_COLLECTION = 'manually_added_content';
@@ -319,6 +319,21 @@ export async function deleteLiveChannel(id: string): Promise<{ success: boolean 
         return { success: true };
     } catch (error) {
         console.error('Error deleting live channel:', error);
+        return { success: false };
+    }
+}
+
+export async function updateLiveChannel(id: string, data: Partial<LiveChannel>): Promise<{ success: boolean }> {
+    try {
+        const docRef = doc(db, LIVE_TV_COLLECTION, id);
+        // Remove undefined fields
+        const updateData = Object.fromEntries(
+            Object.entries(data).filter(([_, v]) => v !== undefined)
+        );
+        await updateDoc(docRef, updateData);
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating live channel:', error);
         return { success: false };
     }
 }
