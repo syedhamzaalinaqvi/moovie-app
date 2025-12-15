@@ -36,24 +36,24 @@ export default function PlyrPlayer({ source, poster, title, isEmbed }: PlyrPlaye
             video.src = source;
         }
 
-        // Initialize Plyr safely
-        // require('plyr') often returns the module, checking .default ensures we get the constructor
-        const PlyrModule = require('plyr');
-        const PlyrCtor = PlyrModule.default || PlyrModule;
+        // Initialize Plyr dynamically to avoid SSR/Constructor issues
+        import('plyr').then((PlyrModule) => {
+            const Plyr = PlyrModule.default || PlyrModule;
+            // Ensure video ref is still valid and we haven't unmounted
+            if (!video) return;
 
-        player = new PlyrCtor(video, {
-            title: title,
-            controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'],
-            settings: ['quality', 'speed', 'loop'],
-            poster: poster,
-        });
+            player = new Plyr(video, {
+                title: title,
+                controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'],
+                settings: ['quality', 'speed', 'loop'],
+                poster: poster,
+            });
+        }).catch(err => console.error("Failed to load Plyr", err));
 
-        // Plyr takes over the video element, but if HLS is attached, it should work fine.
-        // If HLS events need hookup to Plyr (quality selector), Plyr usually handles it via listeners if HLS is passed, 
-        // but basic playback works this way.
 
         return () => {
             if (hls) hls.destroy();
+            // Player might be null if promise hasn't resolved yet
             if (player) player.destroy();
         };
     }, [source, isEmbed, title, poster]);
@@ -80,7 +80,7 @@ export default function PlyrPlayer({ source, poster, title, isEmbed }: PlyrPlaye
                 className="plyr-react plyr"
                 playsInline
                 controls
-                crossOrigin="anonymous"
+                // Removed crossOrigin="anonymous" to fix CORS issues with external images
                 poster={poster}
             />
         </div>
