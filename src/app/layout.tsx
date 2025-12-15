@@ -7,13 +7,17 @@ import { AuthProvider } from '@/providers/auth-provider';
 import MainLayout from '@/components/main-layout';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { ScrollToTop } from '@/components/scroll-to-top';
+import { getSiteConfigFromFirestore } from '@/lib/firestore';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
-export const metadata: Metadata = {
-  title: 'Moovie: Streaming Hub',
-  description: 'A modern video streaming platform.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await getSiteConfigFromFirestore();
+  return {
+    title: config.siteTitle || 'Moovie: Streaming Hub',
+    description: 'A modern video streaming platform.',
+  };
+}
 
 export default function RootLayout({
   children,

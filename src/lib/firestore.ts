@@ -95,6 +95,8 @@ export type SiteConfig = {
     downloadButtonDelay?: number;
     globalDownloadsEnabled?: boolean;
     showLiveTvCarousel?: boolean;
+    siteTitle?: string;
+    titleSuffix?: string;
 }
 
 export async function getSiteConfigFromFirestore(): Promise<SiteConfig> {

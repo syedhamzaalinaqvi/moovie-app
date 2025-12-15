@@ -109,6 +109,8 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
   const [secureDownloadsEnabled, setSecureDownloadsEnabled] = useState(false);
   const [downloadDelay, setDownloadDelay] = useState(5);
   const [showLiveTvCarousel, setShowLiveTvCarousel] = useState(true);
+  const [siteTitle, setSiteTitle] = useState('Moovie: Streaming Hub');
+  const [titleSuffix, setTitleSuffix] = useState('Hindi Dubbed');
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const filteredContent = recentlyAdded.filter(item =>
@@ -133,6 +135,8 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
       // Fetch Site Config for other settings
       const siteConfig = await getSiteConfigFromFirestore();
       setShowLiveTvCarousel(siteConfig.showLiveTvCarousel !== undefined ? siteConfig.showLiveTvCarousel : true);
+      if (siteConfig.siteTitle) setSiteTitle(siteConfig.siteTitle);
+      if (siteConfig.titleSuffix) setTitleSuffix(siteConfig.titleSuffix);
 
 
       let myContent = localContent;
@@ -387,7 +391,9 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
         globalDownloadsEnabled,
         showLiveTvCarousel,
         logoText,
-        paginationLimit
+        paginationLimit,
+        siteTitle,
+        titleSuffix
       });
 
       if (logoResult.success && limitResult.success && secureResult.success) {

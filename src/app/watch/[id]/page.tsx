@@ -1,4 +1,5 @@
 import { getContentById } from '@/lib/tmdb';
+import { getSiteConfigFromFirestore } from '@/lib/firestore';
 import { getSecureDownloadSettings } from '@/app/admin/actions';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -33,7 +34,11 @@ type WatchPageProps = {
 export async function generateMetadata({ params }: WatchPageProps): Promise<Metadata> {
   const { id } = await params;
   const contentId = id.split('-')[0];
-  const content = await getContentById(contentId);
+
+  const [content, siteConfig] = await Promise.all([
+    getContentById(contentId),
+    getSiteConfigFromFirestore()
+  ]);
 
   if (!content) {
     return {
@@ -41,11 +46,14 @@ export async function generateMetadata({ params }: WatchPageProps): Promise<Meta
     };
   }
 
+  const suffix = siteConfig.titleSuffix ? ` (${siteConfig.titleSuffix})` : '';
+  const siteTitle = siteConfig.siteTitle || 'Moovie';
+
   return {
-    title: `${content.title} - Moovie`,
+    title: `${content.title}${suffix} - ${siteTitle}`,
     description: content.description,
     openGraph: {
-      title: content.title,
+      title: `${content.title}${suffix}`,
       description: content.description,
       images: [
         {

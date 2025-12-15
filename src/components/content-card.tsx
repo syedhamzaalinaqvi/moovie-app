@@ -34,6 +34,17 @@ interface ContentCardProps {
 export function ContentCard({ content, view = 'grid', showAdminControls = false, onEditSuccess, onDeleteSuccess, currentUser }: ContentCardProps) {
   const watchUrl = `/watch/${content.id}-${slugify(content.title)}`;
 
+  /* Helper to optimize TMDB images manually by requesting smaller size */
+  const getOptimizedPoster = (url: string) => {
+    if (url.includes('image.tmdb.org')) {
+      // Replace typical sizes (original, w500) with w342 for grid cards
+      return url.replace(/\/w\d+\//, '/w342/').replace('/original/', '/w342/');
+    }
+    return url;
+  };
+
+  const optimizedPoster = getOptimizedPoster(content.posterPath);
+
   const adminControls = showAdminControls && (
     <div className="absolute top-2 right-2 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
       <ContentFormDialog contentToEdit={content} onSave={onEditSuccess} currentUser={currentUser}>
@@ -72,12 +83,12 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
           <Link href={watchUrl} className="block flex-shrink-0">
             <div className="relative w-24 aspect-[2/3]">
               <Image
-                src={content.posterPath}
+                src={optimizedPoster}
                 alt={content.title}
                 fill
                 className="object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
-                sizes="10vw"
-                data-ai-hint="movie poster"
+                sizes="100px"
+                unoptimized
               />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-lg">
                 <PlayCircle className="w-8 h-8 text-primary" />
@@ -133,12 +144,12 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
           <CardContent className="p-0">
             <div className="relative aspect-[2/3] w-full">
               <Image
-                src={content.posterPath}
+                src={optimizedPoster}
                 alt={content.title}
                 fill
                 className="object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
-                sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 12.5vw"
-                data-ai-hint="movie poster"
+                sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 12.5vw" // Keep responsive sizes
+                unoptimized
               />
               <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
                 {content.quality?.map(q => (
