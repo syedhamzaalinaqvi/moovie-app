@@ -293,3 +293,36 @@ export async function getDownloadUrl(
     return null;
   }
 }
+
+/**
+ * Verify user login credentials
+ * Used by admin login page
+ */
+export async function verifyUserLogin(
+  username: string,
+  password: string
+): Promise<{ success: boolean; user?: SystemUser; error?: string }> {
+  try {
+    const user = await getSystemUser(username);
+
+    if (!user) {
+      return { success: false, error: 'Invalid username or password' };
+    }
+
+    // Check password (in production, use proper password hashing)
+    if (user.password !== password) {
+      return { success: false, error: 'Invalid username or password' };
+    }
+
+    // Don't return password in the response
+    const { password: _, ...userWithoutPassword } = user;
+
+    return {
+      success: true,
+      user: userWithoutPassword as SystemUser
+    };
+  } catch (error) {
+    console.error('Login verification failed:', error);
+    return { success: false, error: 'An unexpected error occurred' };
+  }
+}
