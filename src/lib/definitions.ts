@@ -31,6 +31,7 @@ export type Content = {
   lastAirDate?: string;
   uploadedBy?: string; // ID of the user who uploaded this content
   country?: string;
+  isFeatured?: boolean;
 };
 
 export type SystemUser = {

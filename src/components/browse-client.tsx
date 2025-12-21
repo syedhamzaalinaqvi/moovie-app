@@ -1,6 +1,7 @@
 'use client';
 
 import { ContentCard } from "@/components/content-card";
+import { ContentCarousel } from "@/components/content-carousel";
 import { LayoutGrid, List, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +19,7 @@ import { getManuallyAddedContent, getTrending } from "@/lib/tmdb";
 
 interface BrowseClientProps {
     initialContent: Content[];
+    initialFeaturedContent: Content[];
     initialHero: Content[];
     initialLiveChannels: LiveChannel[];
     initialPaginationLimit: number;
@@ -25,6 +27,7 @@ interface BrowseClientProps {
 
 export default function BrowseClient({
     initialContent,
+    initialFeaturedContent,
     initialHero,
     initialLiveChannels,
     initialPaginationLimit
@@ -133,6 +136,13 @@ export default function BrowseClient({
             {(!isFilteredView && liveChannels.length > 0) && (
                 <section className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
                     <LiveTvCarousel channels={liveChannels} />
+                </section>
+            )}
+
+            {/* Featured Content Carousel */}
+            {(!isFilteredView && initialFeaturedContent.length > 0) && (
+                <section className="animate-in fade-in slide-in-from-bottom-5 duration-700 delay-150">
+                    <ContentCarousel title="Featured Movies & TV" content={initialFeaturedContent} />
                 </section>
             )}
 

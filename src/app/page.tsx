@@ -1,6 +1,7 @@
 import { getManuallyAddedContent, getTrending } from "@/lib/tmdb";
 import { getPaginationLimit, getSecureDownloadSettings } from "@/app/admin/actions";
 import { getLiveChannels } from "@/lib/firestore";
+import type { Content, LiveChannel } from "@/lib/definitions";
 import BrowseClient from "@/components/browse-client";
 
 // ISR: Revalidate page every 60 seconds. Instant serving from cache.
@@ -21,14 +22,18 @@ export default async function BrowsePage() {
     getSecureDownloadSettings()
   ]);
 
-  let liveChannels = [];
+  let liveChannels: LiveChannel[] = [];
   if (secureSettings.showLiveTvCarousel) {
     liveChannels = await getLiveChannels(10);
   }
 
+  // Filter for featured content
+  const featuredContent = localContent.filter(item => item.isFeatured === true);
+
   return (
     <BrowseClient
       initialContent={localContent}
+      initialFeaturedContent={featuredContent}
       initialHero={trending.slice(0, 5)}
       initialLiveChannels={liveChannels}
       initialPaginationLimit={paginationLimit}

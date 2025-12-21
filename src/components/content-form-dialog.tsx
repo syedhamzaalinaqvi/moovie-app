@@ -53,6 +53,9 @@ export function ContentFormDialog({ children, contentToEdit, onSave, currentUser
   const [selectedQuality, setSelectedQuality] = useState<string[]>([]);
   const [customTags, setCustomTags] = useState(contentToEdit?.customTags?.join(', ') || '');
 
+  /* New state for Featured Content */
+  const [isFeatured, setIsFeatured] = useState(contentToEdit?.isFeatured || false);
+
   const { toast } = useToast();
   const isEditing = !!contentToEdit;
 
@@ -177,6 +180,7 @@ export function ContentFormDialog({ children, contentToEdit, onSave, currentUser
       quality: selectedQuality,
       isHindiDubbed: selectedLanguages.includes('Hindi Dubbed'),
       customTags: customTags.split(',').map(tag => tag.trim()).filter(Boolean),
+      isFeatured: isFeatured,
       // Add uploadedBy if current user is provided, but preserve existing if editing
       uploadedBy: previewContent?.uploadedBy || currentUser?.username,
     };
@@ -314,20 +318,38 @@ export function ContentFormDialog({ children, contentToEdit, onSave, currentUser
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="customTags">Custom Tags (comma-separated)</Label>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="customTags" className="text-right">Custom Tags</Label>
                   <Input
                     id="customTags"
-                    placeholder="e.g., must watch, new, viral"
                     value={customTags}
                     onChange={(e) => setCustomTags(e.target.value)}
+                    placeholder="e.g. Action, 2024, Best"
+                    className="col-span-3"
                     disabled={isLoading}
                   />
                 </div>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="isFeatured" className="text-right">Featured Content</Label>
+                  <div className="col-span-3 flex items-center space-x-2">
+                    <Checkbox
+                      id="isFeatured"
+                      checked={isFeatured}
+                      onCheckedChange={(checked) => setIsFeatured(!!checked)}
+                      disabled={isLoading}
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                      <p className="text-[0.8rem] text-muted-foreground">
+                        Show this content in the "Featured Movies" section on the homepage.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t">
                   <div>
-                    <Label className="mb-2 block">Languages</Label>
+                    <Label className="mb-2 block font-medium">Languages</Label>
                     <div className="flex flex-wrap gap-4">
                       {['Hindi Dubbed', 'English', 'Urdu Dubbed', 'Multi Audio'].map((lang) => (
                         <div key={lang} className="flex items-center space-x-2">
@@ -350,7 +372,7 @@ export function ContentFormDialog({ children, contentToEdit, onSave, currentUser
                   </div>
 
                   <div>
-                    <Label className="mb-2 block">Quality</Label>
+                    <Label className="mb-2 block font-medium">Quality</Label>
                     <div className="flex flex-wrap gap-4">
                       {['HD', '4K', 'HDCAM', 'HDTS', 'HEVC'].map((q) => (
                         <div key={q} className="flex items-center space-x-2">
@@ -376,19 +398,18 @@ export function ContentFormDialog({ children, contentToEdit, onSave, currentUser
               </div>
             </div>
           )}
-        </div>
 
-        {previewContent && (
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline" onClick={resetForm}>Cancel</Button>
-            </DialogClose>
-            <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEditing ? 'Save Changes' : 'Add to Library'}
-            </Button>
-          </DialogFooter>
-        )}
+          {previewContent && (
+            <DialogFooter className="mt-6">
+              <DialogClose asChild>
+                <Button variant="outline" onClick={resetForm} type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEditing ? 'Save Changes' : 'Add to Library'}
+              </Button>
+            </DialogFooter>
+          )}
       </DialogContent>
     </Dialog>
   );
