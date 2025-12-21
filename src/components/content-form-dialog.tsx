@@ -399,17 +399,19 @@ export function ContentFormDialog({ children, contentToEdit, onSave, currentUser
             </div>
           )}
 
-          {previewContent && (
-            <DialogFooter className="mt-6">
-              <DialogClose asChild>
-                <Button variant="outline" onClick={resetForm} type="button">Cancel</Button>
-              </DialogClose>
-              <Button onClick={handleSave} disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? 'Save Changes' : 'Add to Library'}
-              </Button>
-            </DialogFooter>
-          )}
+        </div>
+
+        {previewContent && (
+          <DialogFooter className="mt-6">
+            <DialogClose asChild>
+              <Button variant="outline" onClick={resetForm} type="button">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isEditing ? 'Save Changes' : 'Add to Library'}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );
