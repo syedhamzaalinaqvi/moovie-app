@@ -66,7 +66,11 @@ export async function getSecureDownloadSettings(): Promise<{
   };
 }
 
-export async function updateSecureDownloadSettings(enabled: boolean, delay: number, globalEnabled: boolean): Promise<{ success: boolean; error?: string }> {
+export async function updateSecureDownloadSettings(
+  enabled: boolean,
+  delay: number,
+  globalEnabled: boolean
+): Promise<{ success: boolean; error?: string }> {
   if (typeof delay !== 'number' || delay < 0) {
     return { success: false, error: 'Delay must be a positive number.' };
   }
@@ -84,106 +88,163 @@ export async function updateSecureDownloadSettings(enabled: boolean, delay: numb
   }
 }
 
+export async function getManuallyAddedContent() {
+  return await getContentFromFirestore();
+}
 
+export async function addContent(tmdbId: string, contentType: 'movie' | 'tv') {
+  try {
+    const content = await getContentById(tmdbId, contentType);
+    if (!content) {
+      return { success: false, error: 'Content not found with the provided TMDB ID.' };
+    }
 
-export async function syncContentMetadata(): Promise<{ success: boolean; updatedCount: number; error?: string }> {
+    const result = await addContentToFirestore(content);
+    return result;
+  } catch (error) {
+    console.error('Failed to add content:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to add content.' };
+  }
+}
+
+export async function deleteContent(ids: string[]) {
+  try {
+    const { deleteContentFromFirestore } = await import('@/lib/firestore');
+    const result = await deleteContentFromFirestore(ids);
+    return result;
+  } catch (error) {
+    console.error('Failed to delete content:', error);
+    return { success: false };
+  }
+}
+
+export async function syncContentMetadata() {
   try {
     const allContent = await getContentFromFirestore();
     let updatedCount = 0;
 
     for (const item of allContent) {
-      // Re-fetch from TMDB to get latest data including lastAirDate
-      const freshData = await getContentById(item.id, item.type);
+      try {
+        const freshData = await getContentById(item.id, item.type);
+        if (freshData) {
+          await addContentToFirestore({
+            ...freshData,
+            downloadLink: item.downloadLink,
+            downloadLinks: item.downloadLinks,
+            trailerUrl: item.trailerUrl,
+            isHindiDubbed: item.isHindiDubbed,
+            customTags: item.customTags,
+            languages: item.languages,
+            quality: item.quality,
+            uploadedBy: item.uploadedBy,
+            isFeatured: item.isFeatured
+          });
+          updatedCount++;
+        }
+      } catch (err) {
+        console.error(`Failed to sync ${item.id}:`, err);
+      }
+    }
 
-      if (freshData) {
-        // Save fresh data back to Firestore.
-        await addContentToFirestore(freshData);
+    return { success: true, updatedCount };
+  } catch (error) {
+    console.error('Sync failed:', error);
+    return { success: false, error: 'Failed to sync metadata.' };
+  }
+}
+
+export async function submitPartnerRequest(data: Omit<PartnerRequest, 'id' | 'status' | 'createdAt'>) {
+  try {
+    await createPartnerRequest(data);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to create partner request:', error);
+    return { success: false, error: 'Failed to submit request.' };
+  }
+}
+
+export async function getPartnerRequests(): Promise<PartnerRequest[]> {
+  try {
+    const { getPartnerRequestsFromFirestore } = await import('@/lib/firestore');
+    return await getPartnerRequestsFromFirestore();
+  } catch (error) {
+    console.error('Failed to fetch partner requests:', error);
+    return [];
+  }
+}
+
+export async function getUserByUsername(username: string): Promise<SystemUser | null> {
+  return await getSystemUser(username);
+}
+
+/**
+ * Domain Migration Tool
+ * Batch updates download links from one domain to another
+ */
+export async function migrateDownloadDomains(
+  oldDomain: string,
+  newDomain: string
+): Promise<{ success: boolean; updatedCount: number; error?: string }> {
+  // Validation
+  if (!oldDomain || !newDomain || oldDomain.trim() === '' || newDomain.trim() === '') {
+    return { success: false, updatedCount: 0, error: 'Both domains must be provided.' };
+  }
+
+  const oldDomainClean = oldDomain.trim();
+  const newDomainClean = newDomain.trim();
+
+  if (oldDomainClean === newDomainClean) {
+    return { success: false, updatedCount: 0, error: 'Old and new domains are the same.' };
+  }
+
+  try {
+    const allContent = await getContentFromFirestore();
+    let updatedCount = 0;
+
+    for (const item of allContent) {
+      let hasChanges = false;
+      const updatedItem = { ...item };
+
+      // Check legacy downloadLink
+      if (updatedItem.downloadLink && updatedItem.downloadLink.includes(oldDomainClean)) {
+        updatedItem.downloadLink = updatedItem.downloadLink.replace(
+          new RegExp(oldDomainClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+          newDomainClean
+        );
+        hasChanges = true;
+      }
+
+      // Check downloadLinks array
+      if (updatedItem.downloadLinks && Array.isArray(updatedItem.downloadLinks)) {
+        updatedItem.downloadLinks = updatedItem.downloadLinks.map(link => {
+          if (link.url && link.url.includes(oldDomainClean)) {
+            hasChanges = true;
+            return {
+              ...link,
+              url: link.url.replace(
+                new RegExp(oldDomainClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+                newDomainClean
+              )
+            };
+          }
+          return link;
+        });
+      }
+
+      // Update if changes were made
+      if (hasChanges) {
+        await addContentToFirestore(updatedItem);
         updatedCount++;
       }
     }
 
     return { success: true, updatedCount };
   } catch (error) {
-    console.error("Failed to sync metadata:", error);
-    return { success: false, updatedCount: 0, error: "Failed to sync metadata." };
-  }
-}
-
-
-
-export async function getDownloadUrl(contentId: number | string, linkIndex?: number): Promise<{ url: string; title: string } | null> {
-  try {
-    const content = await getContentById(String(contentId));
-    if (!content) return null;
-
-    let url = '';
-    if (content.downloadLinks && content.downloadLinks.length > 0) {
-      const index = linkIndex !== undefined ? linkIndex : 0;
-      url = content.downloadLinks[index]?.url || '';
-    } else if (content.downloadLink) {
-      url = content.downloadLink;
-    }
-
+    console.error('Domain migration failed:', error);
     return {
-      url,
-      title: content.title
+      success: false,
+      updatedCount: 0,
+      error: error instanceof Error ? error.message : 'Migration failed.'
     };
-  } catch (error) {
-    console.error('Failed to get download URL:', error);
-    return null;
-  }
-}
-
-
-
-export async function submitPartnerRequest(data: { fullname: string; email: string; message: string }): Promise<{ success: boolean }> {
-  try {
-    const request: PartnerRequest = {
-      fullname: data.fullname,
-      email: data.email,
-      message: data.message,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    };
-    return await createPartnerRequest(request);
-  } catch (error) {
-    console.error('Failed to submit partner request:', error);
-    return { success: false };
-  }
-}
-
-// USER LOGIN VERIFICATION
-export async function verifyUserLogin(username: string, password: string): Promise<{ success: boolean; user?: SystemUser; error?: string }> {
-  try {
-    console.log('🔐 Login attempt for username:', username);
-
-    const user = await getSystemUser(username);
-
-    console.log('👤 User found:', user ? 'YES' : 'NO');
-
-    if (!user) {
-      console.log('❌ User not found in database');
-      return { success: false, error: 'Invalid username or password' };
-    }
-
-    console.log('🔑 Checking password...');
-    // Check password (in production, you should use proper password hashing)
-    if (user.password !== password) {
-      console.log('❌ Password mismatch');
-      return { success: false, error: 'Invalid username or password' };
-    }
-
-    console.log('✅ Login successful for user:', user.username);
-
-    // Don't return password in the response
-    const { password: _, ...userWithoutPassword } = user;
-
-    return {
-      success: true,
-      user: userWithoutPassword as SystemUser
-    };
-  } catch (error) {
-    console.error('❌ Login error:', error);
-    return { success: false, error: 'An error occurred during login' };
   }
 }

@@ -115,6 +115,11 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
   const [featuredLayout, setFeaturedLayout] = useState<'slider' | 'grid' | 'list'>('slider');
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
+  // Domain Migration Tool
+  const [oldDomain, setOldDomain] = useState('');
+  const [newDomain, setNewDomain] = useState('');
+  const [isMigrating, setIsMigrating] = useState(false);
+
   const filteredContent = recentlyAdded.filter(item =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -431,6 +436,37 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
     }
   };
 
+  const handleMigrateDomains = async () => {
+    if (!oldDomain.trim() || !newDomain.trim()) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Both domains are required.' });
+      return;
+    }
+
+    setIsMigrating(true);
+    try {
+      const result = await migrateDownloadDomains(oldDomain.trim(), newDomain.trim());
+      if (result.success) {
+        toast({
+          title: 'Migration Complete',
+          description: `Successfully updated ${result.updatedCount} items. Refreshing...`
+        });
+        setOldDomain('');
+        setNewDomain('');
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        throw new Error(result.error || 'Migration failed');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Migration Failed',
+        description: error instanceof Error ? error.message : 'Could not migrate domains.'
+      });
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
   const handleSelectionChange = (id: string, isSelected: boolean) => {
     setSelectedIds(prev => isSelected ? [...prev, id] : prev.filter(selectedId => selectedId !== id));
   }
@@ -693,6 +729,103 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
                       {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
                       Sync Now
                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Domain Migration Tool */}
+              <Card className="mb-8 border-orange-200 bg-orange-50/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-orange-900">
+                    <RefreshCw className="mr-2 h-6 w-6" />
+                    Domain Migration Tool
+                  </CardTitle>
+                  <CardDescription className="text-orange-700">
+                    Batch update download link domains across all content. Use this when your file host changes domains.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Alert variant="default" className="border-orange-300 bg-orange-100/50">
+                      <AlertTitle className="text-orange-900">⚠️ Powerful Tool - Use Carefully</AlertTitle>
+                      <AlertDescription className="text-orange-800">
+                        This will scan your entire database and replace domain strings in download links.
+                        Make sure to double-check your inputs before confirming.
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="oldDomain" className="text-orange-900">Old Domain (to find)</Label>
+                        <Input
+                          id="oldDomain"
+                          value={oldDomain}
+                          onChange={(e) => setOldDomain(e.target.value)}
+                          placeholder="e.g., https://filmyzilla28.com"
+                          disabled={isMigrating}
+                          className="border-orange-200"
+                        />
+                        <p className="text-xs text-orange-600">Include https:// or http://</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="newDomain" className="text-orange-900">New Domain (to replace)</Label>
+                        <Input
+                          id="newDomain"
+                          value={newDomain}
+                          onChange={(e) => setNewDomain(e.target.value)}
+                          placeholder="e.g., https://filmyzilla29.com"
+                          disabled={isMigrating}
+                          className="border-orange-200"
+                        />
+                        <p className="text-xs text-orange-600">Must match protocol (http/https)</p>
+                      </div>
+                    </div>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="default"
+                          disabled={isMigrating || !oldDomain.trim() || !newDomain.trim()}
+                          className="bg-orange-600 hover:bg-orange-700"
+                        >
+                          {isMigrating ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Migrating Links...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="mr-2 h-4 w-4" />
+                              Migrate Download Links
+                            </>
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirm Domain Migration</AlertDialogTitle>
+                          <AlertDialogDescription className="space-y-2">
+                            <p>You are about to update all download links that contain:</p>
+                            <div className="bg-muted p-3 rounded-md space-y-1 font-mono text-sm">
+                              <p><strong>From:</strong> {oldDomain || '(not set)'}</p>
+                              <p><strong>To:</strong> {newDomain || '(not set)'}</p>
+                            </div>
+                            <p className="text-destructive font-medium">
+                              This action will modify your database. Make sure the domains are correct!
+                            </p>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleMigrateDomains}
+                            className="bg-orange-600 hover:bg-orange-700"
+                          >
+                            Yes, Migrate Now
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardContent>
               </Card>
