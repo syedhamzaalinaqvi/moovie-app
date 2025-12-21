@@ -30,6 +30,7 @@ export type Content = {
   updatedAt?: string;
   lastAirDate?: string;
   uploadedBy?: string; // ID of the user who uploaded this content
+  country?: string;
 };
 
 export type SystemUser = {

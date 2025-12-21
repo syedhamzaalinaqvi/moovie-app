@@ -11,10 +11,12 @@ import { getSiteConfigFromFirestore } from '@/lib/firestore';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
+const SITE_TITLE = "Watch and Download Hindi Dubbed Movies - Series Dual Audio - 480p 720p 1080p - at Moovie | Allmovieshub One CLick Download";
+
 export async function generateMetadata(): Promise<Metadata> {
-  const config = await getSiteConfigFromFirestore();
+  // Using hardcoded title as requested by user
   return {
-    title: config.siteTitle || 'Moovie: Streaming Hub',
+    title: SITE_TITLE,
     description: 'A modern video streaming platform.',
   };
 }

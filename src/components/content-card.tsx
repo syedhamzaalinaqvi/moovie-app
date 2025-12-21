@@ -29,9 +29,10 @@ interface ContentCardProps {
   onEditSuccess?: () => void;
   onDeleteSuccess?: () => void;
   currentUser?: { username: string; role: string };
+  priority?: boolean;
 }
 
-export function ContentCard({ content, view = 'grid', showAdminControls = false, onEditSuccess, onDeleteSuccess, currentUser }: ContentCardProps) {
+export function ContentCard({ content, view = 'grid', showAdminControls = false, onEditSuccess, onDeleteSuccess, currentUser, priority = false }: ContentCardProps) {
   const watchUrl = `/watch/${content.id}-${slugify(content.title)}`;
 
   /* Helper to optimize TMDB images manually by requesting smaller size */
@@ -89,6 +90,7 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
                 className="object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
                 sizes="100px"
                 unoptimized
+                priority={priority}
               />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-lg">
                 <PlayCircle className="w-8 h-8 text-primary" />
@@ -150,6 +152,7 @@ export function ContentCard({ content, view = 'grid', showAdminControls = false,
                 className="object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
                 sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 12.5vw" // Keep responsive sizes
                 unoptimized
+                priority={priority}
               />
               <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
                 {content.quality?.map(q => (
