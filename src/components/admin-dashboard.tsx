@@ -111,6 +111,8 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
   const [showLiveTvCarousel, setShowLiveTvCarousel] = useState(true);
   const [siteTitle, setSiteTitle] = useState('Moovie: Streaming Hub');
   const [titleSuffix, setTitleSuffix] = useState('Hindi Dubbed');
+  const [showFeaturedSection, setShowFeaturedSection] = useState(true);
+  const [featuredLayout, setFeaturedLayout] = useState<'slider' | 'grid' | 'list'>('slider');
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const filteredContent = recentlyAdded.filter(item =>
@@ -135,8 +137,10 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
       // Fetch Site Config for other settings
       const siteConfig = await getSiteConfigFromFirestore();
       setShowLiveTvCarousel(siteConfig.showLiveTvCarousel !== undefined ? siteConfig.showLiveTvCarousel : true);
-      if (siteConfig.siteTitle) setSiteTitle(siteConfig.siteTitle);
-      if (siteConfig.titleSuffix) setTitleSuffix(siteConfig.titleSuffix);
+      setSiteTitle(siteConfig.siteTitle || 'Moovie: Streaming Hub');
+      setTitleSuffix(siteConfig.titleSuffix || 'Hindi Dubbed');
+      setShowFeaturedSection(siteConfig.showFeaturedSection !== undefined ? siteConfig.showFeaturedSection : true);
+      setFeaturedLayout(siteConfig.featuredLayout || 'slider');
 
 
       let myContent = localContent;
@@ -393,7 +397,9 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
         logoText,
         paginationLimit,
         siteTitle,
-        titleSuffix
+        titleSuffix,
+        showFeaturedSection,
+        featuredLayout
       });
 
       if (logoResult.success && limitResult.success && secureResult.success) {
@@ -582,6 +588,65 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
                         onCheckedChange={setShowLiveTvCarousel}
                         disabled={isSavingSettings}
                       />
+                    </div>
+
+                    <div className="space-y-4 border p-4 rounded-lg bg-purple-50/50">
+                      <div className="flex items-center justify-between space-x-2">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="featured-section" className="text-base font-medium text-purple-900">Show Featured Movies Section</Label>
+                          <p className="text-sm text-purple-700">Display the curated list of movies above the main grid.</p>
+                        </div>
+                        <Switch
+                          id="featured-section"
+                          checked={showFeaturedSection}
+                          onCheckedChange={setShowFeaturedSection}
+                          disabled={isSavingSettings}
+                        />
+                      </div>
+
+                      {showFeaturedSection && (
+                        <div className="pt-2 animate-in fade-in slide-in-from-top-2">
+                          <Label className="mb-2 block text-purple-900">Featured Layout Style</Label>
+                          <div className="flex gap-4">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id="layout-slider"
+                                name="featuredLayout"
+                                value="slider"
+                                checked={featuredLayout === 'slider'}
+                                onChange={() => setFeaturedLayout('slider')}
+                                className="accent-purple-600 h-4 w-4"
+                              />
+                              <Label htmlFor="layout-slider" className="cursor-pointer">Slider (Carousel)</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id="layout-grid"
+                                name="featuredLayout"
+                                value="grid"
+                                checked={featuredLayout === 'grid'}
+                                onChange={() => setFeaturedLayout('grid')}
+                                className="accent-purple-600 h-4 w-4"
+                              />
+                              <Label htmlFor="layout-grid" className="cursor-pointer">Grid</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id="layout-list"
+                                name="featuredLayout"
+                                value="list"
+                                checked={featuredLayout === 'list'}
+                                onChange={() => setFeaturedLayout('list')}
+                                className="accent-purple-600 h-4 w-4"
+                              />
+                              <Label htmlFor="layout-list" className="cursor-pointer">List</Label>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between space-x-2">

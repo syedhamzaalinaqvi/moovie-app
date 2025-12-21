@@ -27,8 +27,11 @@ export default async function BrowsePage() {
     liveChannels = await getLiveChannels(10);
   }
 
-  // Filter for featured content
-  const featuredContent = localContent.filter(item => item.isFeatured === true);
+  // Filter for featured content (only if enabled)
+  let featuredContent: Content[] = [];
+  if (secureSettings.showFeaturedSection !== false) { // Default to true if undefined
+    featuredContent = localContent.filter(item => item.isFeatured === true);
+  }
 
   return (
     <BrowseClient
@@ -37,6 +40,7 @@ export default async function BrowsePage() {
       initialHero={trending.slice(0, 5)}
       initialLiveChannels={liveChannels}
       initialPaginationLimit={paginationLimit}
+      featuredLayout={secureSettings.featuredLayout || 'slider'}
     />
   );
 }

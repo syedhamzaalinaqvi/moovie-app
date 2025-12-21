@@ -1,5 +1,7 @@
 
 
+'use client';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Content } from '@/lib/definitions';
@@ -24,27 +26,39 @@ import {
 
 interface ContentCardProps {
   content: Content;
-  view?: 'grid' | 'list';
+  priority?: boolean;
   showAdminControls?: boolean;
   onEditSuccess?: () => void;
   onDeleteSuccess?: () => void;
   currentUser?: { username: string; role: string };
-  priority?: boolean;
+  className?: string;
 }
 
-export function ContentCard({ content, view = 'grid', showAdminControls = false, onEditSuccess, onDeleteSuccess, currentUser, priority = false }: ContentCardProps) {
-  const watchUrl = `/watch/${content.id}-${slugify(content.title)}`;
+export function ContentCard({
+  content,
+  priority = false,
+  showAdminControls,
+  onEditSuccess,
+  onDeleteSuccess,
+  currentUser,
+  className
+}: ContentCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isMouseMoving, setIsMouseMoving] = useState(false);
+  const mouseMoveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /* Helper to optimize TMDB images manually by requesting smaller size */
-  const getOptimizedPoster = (url: string) => {
+  const getOptimizedPoster = (url: string, size: string = 'w342') => {
     if (url.includes('image.tmdb.org')) {
-      // Replace typical sizes (original, w500) with w342 for grid cards
-      return url.replace(/\/w\d+\//, '/w342/').replace('/original/', '/w342/');
+      // Replace typical sizes (original, w500) with the specified size
+      return url.replace(/\/w\d+\//, `/${size}/`).replace('/original/', `/${size}/`);
     }
     return url;
   };
 
   const optimizedPoster = getOptimizedPoster(content.posterPath);
+
+  const watchUrl = `/watch/${content.id}-${slugify(content.title)}`;
 
   const adminControls = showAdminControls && (
     <div className="absolute top-2 right-2 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -97,6 +97,8 @@ export type SiteConfig = {
     showLiveTvCarousel?: boolean;
     siteTitle?: string;
     titleSuffix?: string;
+    showFeaturedSection?: boolean;
+    featuredLayout?: 'slider' | 'grid' | 'list';
 }
 
 export async function getSiteConfigFromFirestore(): Promise<SiteConfig> {

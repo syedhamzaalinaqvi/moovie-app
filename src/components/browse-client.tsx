@@ -23,6 +23,7 @@ interface BrowseClientProps {
     initialHero: Content[];
     initialLiveChannels: LiveChannel[];
     initialPaginationLimit: number;
+    featuredLayout?: 'slider' | 'grid' | 'list';
 }
 
 export default function BrowseClient({
@@ -30,7 +31,8 @@ export default function BrowseClient({
     initialFeaturedContent,
     initialHero,
     initialLiveChannels,
-    initialPaginationLimit
+    initialPaginationLimit,
+    featuredLayout = 'slider'
 }: BrowseClientProps) {
     const searchParams = useSearchParams();
     const q = searchParams.get('q');
@@ -139,10 +141,42 @@ export default function BrowseClient({
                 </section>
             )}
 
-            {/* Featured Content Carousel */}
+            {/* Featured Content Section */}
             {(!isFilteredView && initialFeaturedContent.length > 0) && (
-                <section className="animate-in fade-in slide-in-from-bottom-5 duration-700 delay-150">
-                    <ContentCarousel title="Featured Movies & TV" content={initialFeaturedContent} />
+                <section className="animate-in fade-in slide-in-from-bottom-5 duration-700 delay-150 mb-8">
+                    {featuredLayout === 'slider' ? (
+                        <ContentCarousel title="Featured Movies & TV" content={initialFeaturedContent} />
+                    ) : (
+                        <div className="space-y-4">
+                            <h2 className="text-2xl font-bold">Featured Movies & TV</h2>
+                            {featuredLayout === 'grid' ? (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                                    {initialFeaturedContent.map((item) => (
+                                        <ContentCard key={item.id} content={item} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col space-y-4">
+                                    {initialFeaturedContent.map((item) => (
+                                        <div key={item.id} className="flex gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                                            <div className="w-[100px] flex-shrink-0">
+                                                <ContentCard content={item} className="h-full aspect-[2/3]" />
+                                            </div>
+                                            <div className="flex-1 py-2">
+                                                <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                                                <p className="text-muted-foreground line-clamp-3 mb-4">{item.description}</p>
+                                                <div className="flex gap-2">
+                                                    {item.genres.slice(0, 3).map(g => (
+                                                        <span key={g} className="text-xs px-2 py-1 bg-secondary rounded-full">{g}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </section>
             )}
 

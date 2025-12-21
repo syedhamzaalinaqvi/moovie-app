@@ -47,13 +47,22 @@ export async function updatePaginationLimit(newLimit: number): Promise<{ success
 
 
 
-export async function getSecureDownloadSettings(): Promise<{ enabled: boolean; delay: number; globalEnabled: boolean; showLiveTvCarousel: boolean }> {
+export async function getSecureDownloadSettings(): Promise<{
+  enabled: boolean;
+  delay: number;
+  globalEnabled: boolean;
+  showLiveTvCarousel: boolean;
+  showFeaturedSection?: boolean;
+  featuredLayout?: 'slider' | 'grid' | 'list';
+}> {
   const config = await getSiteConfigFromFirestore();
   return {
-    enabled: config.secureDownloadsEnabled || false,
+    enabled: !!config.secureDownloadsEnabled,
     delay: typeof config.downloadButtonDelay === 'number' ? config.downloadButtonDelay : 5,
     globalEnabled: config.globalDownloadsEnabled !== undefined ? config.globalDownloadsEnabled : true,
-    showLiveTvCarousel: config.showLiveTvCarousel !== undefined ? config.showLiveTvCarousel : true
+    showLiveTvCarousel: config.showLiveTvCarousel !== undefined ? config.showLiveTvCarousel : true,
+    showFeaturedSection: config.showFeaturedSection,
+    featuredLayout: config.featuredLayout
   };
 }
 
