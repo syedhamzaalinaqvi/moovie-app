@@ -91,68 +91,6 @@ export function ContentCard({
     </div>
   );
 
-  if (view === 'list') {
-    return (
-      <div className="group relative">
-        <Card className="overflow-hidden border-0 bg-transparent flex gap-4 p-0 min-w-0">
-          <Link href={watchUrl} className="block flex-shrink-0">
-            <div className="relative w-24 aspect-[2/3]">
-              <Image
-                src={optimizedPoster}
-                alt={content.title}
-                fill
-                className="object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
-                sizes="100px"
-                unoptimized
-                priority={priority}
-              />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-lg">
-                <PlayCircle className="w-8 h-8 text-primary" />
-              </div>
-            </div>
-          </Link>
-          <div className="flex-1 py-2 pr-2 min-w-0">
-            <Link href={watchUrl}>
-              <h3 className="font-semibold text-lg truncate group-hover:text-primary">{content.title}</h3>
-            </Link>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-              <span>{content.releaseDate.split('-')[0]}</span>
-              {content.runtime && content.type === 'movie' && (
-                <span>{Math.floor(content.runtime / 60)}h {content.runtime % 60}m</span>
-              )}
-              {content.numberOfSeasons && content.type === 'tv' && (
-                <span>{content.numberOfSeasons} {content.numberOfSeasons === 1 ? 'Season' : 'Seasons'}</span>
-              )}
-              <div className="flex items-center gap-1">
-                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                <span>{content.rating.toFixed(1)}</span>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {content.genres?.slice(0, 3).map(genre => (
-                <Badge key={genre} variant="secondary">{genre}</Badge>
-              ))}
-              {content.isHindiDubbed && !content.languages?.includes('Hindi Dubbed') && (
-                <Badge variant="secondary">Hindi Dubbed</Badge>
-              )}
-              {content.languages?.map(lang => (
-                <Badge key={lang} variant="secondary">{lang}</Badge>
-              ))}
-              {content.quality?.map(q => (
-                <Badge key={q} variant="outline">{q}</Badge>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-              {content.description}
-            </p>
-          </div>
-        </Card>
-        {adminControls}
-      </div>
-    );
-  }
-
-  // Grid view (default)
   return (
     <div className="group relative">
       <Link href={watchUrl} className="block">
