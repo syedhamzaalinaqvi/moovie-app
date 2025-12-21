@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { getBrowseContent, getManuallyAddedContent } from '@/lib/tmdb';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2, RefreshCw, Search, Edit } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentCard } from './content-card';
