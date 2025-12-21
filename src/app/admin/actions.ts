@@ -248,3 +248,48 @@ export async function migrateDownloadDomains(
     };
   }
 }
+
+/**
+ * Get download URL for a content item
+ * Used by the download interstitial page
+ */
+export async function getDownloadUrl(
+  contentId: number,
+  linkIndex?: number
+): Promise<{ title: string; url: string } | null> {
+  try {
+    const allContent = await getContentFromFirestore();
+    const content = allContent.find(c => c.id === String(contentId));
+
+    if (!content) {
+      return null;
+    }
+
+    let url = '';
+
+    // If linkIndex is provided, get specific link from downloadLinks array
+    if (linkIndex !== undefined && content.downloadLinks && content.downloadLinks[linkIndex]) {
+      url = content.downloadLinks[linkIndex].url;
+    }
+    // Otherwise, fall back to legacy downloadLink
+    else if (content.downloadLink) {
+      url = content.downloadLink;
+    }
+    // Or first item in downloadLinks if available
+    else if (content.downloadLinks && content.downloadLinks.length > 0) {
+      url = content.downloadLinks[0].url;
+    }
+
+    if (!url) {
+      return null;
+    }
+
+    return {
+      title: content.title,
+      url
+    };
+  } catch (error) {
+    console.error('Failed to get download URL:', error);
+    return null;
+  }
+}
