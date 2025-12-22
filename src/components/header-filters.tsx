@@ -127,14 +127,6 @@ export function HeaderFilters() {
   return (
     <div className="flex items-center gap-1">
       <FilterDropdown
-        label="Language"
-        icon={Globe}
-        options={languageOptions}
-        value={currentLanguageValue}
-        onValueChange={(value) => handleFilterChange('region', value)}
-        extraOptions={[{ value: 'hindi_dubbed', label: 'Hindi Dubbed' }]}
-      />
-      <FilterDropdown
         label="Category"
         icon={Film}
         options={genreOptions}

@@ -9,8 +9,8 @@
  * Usage: npx ts-node scripts/add-slugs.ts
  */
 
-import { getContentFromFirestore, addContentToFirestore } from '../src/lib/firestore';
-import { slugify } from '../src/lib/utils';
+import { getContentFromFirestore, addContentToFirestore } from '../src/lib/firestore.js';
+import { slugify } from '../src/lib/utils.js';
 
 async function addSlugs() {
     console.log('🚀 Starting slug migration...');
