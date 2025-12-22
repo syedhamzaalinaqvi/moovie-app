@@ -351,7 +351,7 @@ export function ContentFormDialog({ children, contentToEdit, onSave, currentUser
                   <div>
                     <Label className="mb-2 block font-medium">Languages</Label>
                     <div className="flex flex-wrap gap-4">
-                      {['Hindi Dubbed', 'English', 'Urdu Dubbed', 'Multi Audio'].map((lang) => (
+                      {['Hindi Dubbed', 'English', 'Urdu Dubbed', 'Multi Audio', 'Punjabi', 'Korean', 'Chinese', 'Malayalam', 'Turkish', 'Thai', 'Japanese', 'Spanish', 'French', 'German', 'Italian'].map((lang) => (
                         <div key={lang} className="flex items-center space-x-2">
                           <Checkbox
                             id={`lang-${lang}`}
