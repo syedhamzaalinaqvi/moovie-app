@@ -1,5 +1,5 @@
 import { getContentById } from '@/lib/tmdb';
-import { getSiteConfigFromFirestore } from '@/lib/firestore';
+import { getSiteConfigFromFirestore, getContentBySlug } from '@/lib/firestore';
 import { getSecureDownloadSettings } from '@/app/admin/actions';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -27,18 +27,23 @@ import type { Metadata } from 'next';
 
 type WatchPageProps = {
   params: Promise<{
-    id: string;
+    slug: string;
   }>;
 };
 
 export async function generateMetadata({ params }: WatchPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const contentId = id.split('-')[0];
+  const { slug } = await params;
 
-  const [content, siteConfig] = await Promise.all([
-    getContentById(contentId),
-    getSiteConfigFromFirestore()
-  ]);
+  // Try to get content by slug first, fallback to old ID-based lookup for compatibility
+  let content = await getContentBySlug(slug);
+
+  // Fallback: if slug starts with a number, try old ID format
+  if (!content && /^\d+/.test(slug)) {
+    const contentId = slug.split('-')[0];
+    content = await getContentById(contentId);
+  }
+
+  const siteConfig = await getSiteConfigFromFirestore();
 
   if (!content) {
     return {
@@ -46,25 +51,10 @@ export async function generateMetadata({ params }: WatchPageProps): Promise<Meta
     };
   }
 
-  /* User requested format: "Watch or Download {Title} Hindi Dubbed Dual Audio - 480p 720p 1080p - {Site Title}" */
-
-  // Use config suffix if provided, otherwise default to "Hindi Dubbed Dual Audio - 480p 720p 1080p" if suffix is "Hindi Dubbed" or similar, 
-  // actually user asked for "Hindi Dubbed Dual Audio - 480p 720p 1080p".
-  // If the user configures "Hindi Dubbed" in settings, we should probably append the rest.
-  // But strictly following the "Watch or Download ... " request pattern is safer.
-
   const siteTitle = siteConfig.siteTitle || 'Moovie';
-  // If suffix is set, we use it, but user wants specific keyword stuffing. 
-  // Let's assume titleSuffix from admin is used for the "Hindi Dubbed" part, and we hardcode the rest for max SEO as requested, 
-  // OR we just use the requested string structure.
-
   const keywords = siteConfig.titleSuffix || "Hindi Dubbed Dual Audio - 480p 720p 1080p";
-  // If user only has "Hindi Dubbed" in admin, we might want to append the quality tags too?
-  // User request: "Watch or Download Zootopia Hindi Dubbed Dual Audio - 480p 720p 1080p - Moovie"
-  // So: `Watch or Download ${content.title} ${keywords} - ${siteTitle}`
-
   const seoTitle = `Watch or Download ${content.title} ${keywords} - ${siteTitle}`;
-  const suffix = ` ${keywords}`; // Define suffix for OG title consistency
+  const suffix = ` ${keywords}`;
 
   return {
     title: seoTitle,
@@ -98,10 +88,16 @@ export async function generateMetadata({ params }: WatchPageProps): Promise<Meta
 }
 
 export default async function WatchPage({ params }: WatchPageProps) {
-  const { id } = await params;
-  // Extract the ID from the slug (e.g., "123456-movie-title" -> "123456")
-  const contentId = id.split('-')[0];
-  const content = await getContentById(contentId);
+  const { slug } = await params;
+
+  // Try to get content by slug first
+  let content = await getContentBySlug(slug);
+
+  // Fallback: if slug starts with a number, try old ID format for backward compatibility
+  if (!content && /^\d+/.test(slug)) {
+    const contentId = slug.split('-')[0];
+    content = await getContentById(contentId);
+  }
 
   if (!content) {
     notFound();
@@ -218,7 +214,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
                     )
                   ))
               }
-              <ShareButton title={content.title} url={`/watch/${id}`} />
+              <ShareButton title={content.title} url={`/watch/${slug}`} />
             </div>
 
             {/* Disclaimer Note */}

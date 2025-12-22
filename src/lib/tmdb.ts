@@ -123,9 +123,13 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
             profilePath: c.profile_path ? `${TMDB_PROFILE_BASE_URL}${c.profile_path}` : `https://picsum.photos/seed/${c.id}/185/278`,
         })) || [];
 
+        const title = data.title || data.name || 'No Title';
+        const { slugify } = await import('./utils');
+        const slug = `download-${slugify(title)}`;
+
         return {
             id: String(data.id),
-            title: data.title || data.name || 'No Title',
+            title,
             description: data.overview,
             posterPath: data.poster_path ? `${TMDB_IMAGE_BASE_URL}${data.poster_path}` : 'https://picsum.photos/seed/poster-placeholder/500/750',
             backdropPath: data.backdrop_path ? `${TMDB_BACKDROP_BASE_URL}${data.backdrop_path}` : 'https://picsum.photos/seed/backdrop-placeholder/1280/720',
@@ -138,6 +142,7 @@ async function fetchAndTransformSingleContent(url: string, type: 'movie' | 'tv')
             runtime: data.runtime,
             numberOfSeasons: data.number_of_seasons,
             lastAirDate: data.next_episode_to_air?.air_date || data.last_air_date,
+            slug,
         };
     } catch (error) {
         console.error(`Failed to fetch from ${url}:`, error);

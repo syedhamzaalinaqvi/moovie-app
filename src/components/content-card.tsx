@@ -58,7 +58,7 @@ export function ContentCard({
 
   const optimizedPoster = getOptimizedPoster(content.posterPath);
 
-  const watchUrl = `/watch/${content.id}-${slugify(content.title)}`;
+  const watchUrl = content.slug ? `/watch/${content.slug}` : `/watch/${content.id}-${slugify(content.title)}`;
 
   const adminControls = showAdminControls && (
     <div className="absolute top-2 right-2 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

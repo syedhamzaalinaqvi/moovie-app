@@ -317,16 +317,6 @@ export async function getLiveChannelById(id: string): Promise<LiveChannel | null
     }
 }
 
-export async function deleteLiveChannel(id: string): Promise<{ success: boolean }> {
-    try {
-        await deleteDoc(doc(db, LIVE_TV_COLLECTION, id));
-        return { success: true };
-    } catch (error) {
-        console.error('Error deleting live channel:', error);
-        return { success: false };
-    }
-}
-
 export async function updateLiveChannel(id: string, data: Partial<LiveChannel>): Promise<{ success: boolean }> {
     try {
         const docRef = doc(db, LIVE_TV_COLLECTION, id);
@@ -339,5 +329,64 @@ export async function updateLiveChannel(id: string, data: Partial<LiveChannel>):
     } catch (error) {
         console.error('Error updating live channel:', error);
         return { success: false };
+    }
+}
+
+export async function deleteLiveChannel(id: string): Promise<{ success: boolean }> {
+    try {
+        await deleteDoc(doc(db, LIVE_TV_COLLECTION, id));
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting live channel:', error);
+        return { success: false };
+    }
+}
+
+/**
+ * Get content by slug (for SEO-friendly URLs)
+ */
+export async function getContentBySlug(slug: string): Promise<Content | null> {
+    try {
+        const contentCollectionRef = collection(db, CONTENT_COLLECTION);
+        const q = query(contentCollectionRef, where('slug', '==', slug));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return null;
+        }
+
+        const docData = querySnapshot.docs[0].data();
+        return {
+            id: docData.id,
+            title: docData.title,
+            description: docData.description,
+            posterPath: docData.posterPath,
+            backdropPath: docData.backdropPath,
+            genres: docData.genres || [],
+            releaseDate: docData.releaseDate,
+            rating: docData.rating,
+            type: docData.type,
+            trailerUrl: docData.trailerUrl,
+            youtubeTrailerUrl: docData.youtubeTrailerUrl,
+            downloadLink: docData.downloadLink,
+            downloadLinks: docData.downloadLinks,
+            isHindiDubbed: docData.isHindiDubbed,
+            customTags: docData.customTags,
+            cast: docData.cast,
+            runtime: docData.runtime,
+            numberOfSeasons: docData.numberOfSeasons,
+            languages: docData.languages,
+            quality: docData.quality,
+            createdAt: docData.createdAt,
+            updatedAt: docData.updatedAt,
+            lastAirDate: docData.lastAirDate,
+            uploadedBy: docData.uploadedBy,
+            country: docData.country,
+            isFeatured: docData.isFeatured,
+            slug: docData.slug,
+        } as Content;
+    } catch (error) {
+        console.error('Error getting content by slug:', error);
+        return null;
     }
 }

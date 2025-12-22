@@ -32,6 +32,7 @@ export type Content = {
   uploadedBy?: string; // ID of the user who uploaded this content
   country?: string;
   isFeatured?: boolean;
+  slug?: string; // SEO-friendly URL slug (e.g., "download-avatar-fire-and-ash")
 };
 
 export type SystemUser = {
