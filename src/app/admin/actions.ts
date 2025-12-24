@@ -155,7 +155,13 @@ export async function syncContentMetadata() {
 
 export async function submitPartnerRequest(data: Omit<PartnerRequest, 'id' | 'status' | 'createdAt'>) {
   try {
-    await createPartnerRequest(data);
+    const requestData: PartnerRequest = {
+      ...data,
+      id: '', // Will be set by Firestore
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    await createPartnerRequest(requestData);
     return { success: true };
   } catch (error) {
     console.error('Failed to create partner request:', error);
@@ -165,7 +171,7 @@ export async function submitPartnerRequest(data: Omit<PartnerRequest, 'id' | 'st
 
 export async function getPartnerRequests(): Promise<PartnerRequest[]> {
   try {
-    const { getPartnerRequestsFromFirestore } = await import('@/lib/firestore');
+    const { getPartnerRequests: getPartnerRequestsFromFirestore } = await import('@/lib/firestore');
     return await getPartnerRequestsFromFirestore();
   } catch (error) {
     console.error('Failed to fetch partner requests:', error);
@@ -322,7 +328,31 @@ export async function verifyUserLogin(
       user: userWithoutPassword as SystemUser
     };
   } catch (error) {
-    console.error('Login verification failed:', error);
-    return { success: false, error: 'An unexpected error occurred' };
+    console.error('Error verifying login:', error);
+    return {
+      success: false,
+      error: 'An error occurred during login'
+    };
   }
+}
+
+// Player Configuration Management
+export async function createPlayerConfig(data: { name: string; type: 'single' | 'playlist'; content: any[] }) {
+  const { createCustomPlayer } = await import('@/lib/firestore');
+  return createCustomPlayer(data);
+}
+
+export async function getPlayerConfigs() {
+  const { getCustomPlayers } = await import('@/lib/firestore');
+  return getCustomPlayers();
+}
+
+export async function updatePlayerConfig(id: string, data: any) {
+  const { updateCustomPlayer } = await import('@/lib/firestore');
+  return updateCustomPlayer(id, data);
+}
+
+export async function deletePlayerConfig(id: string) {
+  const { deleteCustomPlayer } = await import('@/lib/firestore');
+  return deleteCustomPlayer(id);
 }

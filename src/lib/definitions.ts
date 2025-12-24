@@ -100,3 +100,18 @@ export type LiveChannel = {
   createdAt: string;
   userAgent?: string;
 };
+
+export type PlayerContent = {
+  title?: string;
+  file: string; // Video URL
+  poster?: string; // Poster image URL
+};
+
+export type CustomPlayer = {
+  id: string;
+  name: string; // Internal name for admin reference
+  type: 'single' | 'playlist';
+  content: PlayerContent[];
+  createdAt: string;
+  updatedAt?: string;
+};

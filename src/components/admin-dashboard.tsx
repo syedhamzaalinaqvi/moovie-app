@@ -6,7 +6,7 @@ import { getBrowseContent, getManuallyAddedContent } from '@/lib/tmdb';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2, RefreshCw, Search, Edit } from 'lucide-react';
+import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2, RefreshCw, Search, Edit, Video } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentCard } from './content-card';
 import { Separator } from './ui/separator';
@@ -56,6 +56,7 @@ import type { Content, SystemUser, PartnerRequest, LiveChannel } from '@/lib/def
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import PlayerBuilder from './player-builder';
 
 
 function StatCard({ title, value, icon: Icon, isLoading }: { title: string; value: number; icon: React.ElementType; isLoading: boolean }) {
@@ -533,6 +534,9 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
           {user?.role === 'admin' && <TabsTrigger value="requests">Partner Applications</TabsTrigger>}
           <TabsTrigger value="livetv" className="flex items-center gap-2">
             <Tv className="h-4 w-4" /> Live TV
+          </TabsTrigger>
+          <TabsTrigger value="player" className="flex items-center gap-2">
+            <Video className="h-4 w-4" /> Player Builder
           </TabsTrigger>
         </TabsList>
 
@@ -1203,6 +1207,23 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="player">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Video className="mr-2 h-6 w-6" />
+                Player Builder
+              </CardTitle>
+              <CardDescription>
+                Create and manage custom video players with playlists. Generate iframe codes for embedding.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PlayerBuilder onPlayerCreated={fetchDashboardData} />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

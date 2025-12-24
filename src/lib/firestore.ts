@@ -390,3 +390,76 @@ export async function getContentBySlug(slug: string): Promise<Content | null> {
         return null;
     }
 }
+
+// --- CUSTOM PLAYER SYSTEM ---
+import type { CustomPlayer } from './definitions';
+
+const CUSTOM_PLAYERS_COLLECTION = 'custom_players';
+
+export async function createCustomPlayer(player: Omit<CustomPlayer, 'id' | 'createdAt'>): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+        const docRef = doc(collection(db, CUSTOM_PLAYERS_COLLECTION));
+        const finalPlayer: CustomPlayer = {
+            ...player,
+            id: docRef.id,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+        await setDoc(docRef, finalPlayer);
+        return { success: true, id: docRef.id };
+    } catch (error) {
+        console.error('Error creating custom player:', error);
+        return { success: false, error: 'Failed to create player' };
+    }
+}
+
+export async function getCustomPlayers(): Promise<CustomPlayer[]> {
+    try {
+        const q = query(collection(db, CUSTOM_PLAYERS_COLLECTION), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => doc.data() as CustomPlayer);
+    } catch (error) {
+        console.error('Error fetching custom players:', error);
+        return [];
+    }
+}
+
+export async function getCustomPlayerById(id: string): Promise<CustomPlayer | null> {
+    try {
+        const docRef = doc(db, CUSTOM_PLAYERS_COLLECTION, id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return docSnap.data() as CustomPlayer;
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching custom player:', error);
+        return null;
+    }
+}
+
+export async function updateCustomPlayer(id: string, data: Partial<CustomPlayer>): Promise<{ success: boolean }> {
+    try {
+        const docRef = doc(db, CUSTOM_PLAYERS_COLLECTION, id);
+        const updateData = {
+            ...data,
+            updatedAt: new Date().toISOString(),
+        };
+        await updateDoc(docRef, updateData);
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating custom player:', error);
+        return { success: false };
+    }
+}
+
+export async function deleteCustomPlayer(id: string): Promise<{ success: boolean }> {
+    try {
+        await deleteDoc(doc(db, CUSTOM_PLAYERS_COLLECTION, id));
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting custom player:', error);
+        return { success: false };
+    }
+}
+
