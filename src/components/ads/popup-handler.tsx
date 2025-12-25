@@ -1,15 +1,34 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { shouldShowAd, getAdSettings, getAdScriptsByType, selectRandomScript, incrementAdCount } from '@/lib/ad-utils';
+import { shouldShowAd, getAdSettings, getAdScriptsByType, selectRandomScript, incrementAdCount, getZoneConfig } from '@/lib/ad-utils';
 
 interface PopupHandlerProps {
     trigger?: 'load' | 'time' | 'exit_intent';
     delay?: number; // seconds
+    position?: string;
 }
 
-export default function PopupHandler({ trigger = 'time', delay = 30 }: PopupHandlerProps) {
+export default function PopupHandler({ trigger = 'time', delay = 30, position }: PopupHandlerProps) {
     const [hasShown, setHasShown] = useState(false);
+    const [config, setConfig] = useState<{ trigger: string; delay: number; maxPerDay?: number }>({ trigger, delay });
+
+    // Fetch zone config
+    useEffect(() => {
+        if (!position) return;
+
+        const loadConfig = async () => {
+            const zone = await getZoneConfig(position);
+            if (zone && zone.isEnabled) {
+                setConfig({
+                    trigger: zone.trigger || trigger,
+                    delay: zone.delay ?? delay,
+                    maxPerDay: zone.frequency
+                });
+            }
+        };
+        loadConfig();
+    }, [position, trigger, delay]);
 
     useEffect(() => {
         if (hasShown) return;
@@ -22,7 +41,7 @@ export default function PopupHandler({ trigger = 'time', delay = 30 }: PopupHand
                 // Check if popup can be shown
                 const canShow = await shouldShowAd(
                     'popup',
-                    settings.popupFrequencyCap,
+                    config.maxPerDay || settings.popupFrequencyCap,
                     settings.testMode,
                     settings.masterEnabled
                 );
@@ -30,6 +49,11 @@ export default function PopupHandler({ trigger = 'time', delay = 30 }: PopupHand
                 if (!canShow) return;
 
                 // Get popup scripts
+                // If zone exists, maybe we should filter scripts by zone?
+                // But ad_zones collection doesn't really link to specific scripts unless strictly defined?
+                // AdWrapper uses adType. 
+                // PopupHandler is specifically "popup".
+                // We'll stick to 'popup' type unless zone specifies otherwise (unlikely for popup handler which is generic).
                 const scripts = await getAdScriptsByType('popup');
                 if (scripts.length === 0) return;
 
@@ -50,14 +74,14 @@ export default function PopupHandler({ trigger = 'time', delay = 30 }: PopupHand
             }
         };
 
-        if (trigger === 'load') {
+        if (config.trigger === 'load') {
             // Show immediately on page load
             showPopup();
-        } else if (trigger === 'time') {
+        } else if (config.trigger === 'time') {
             // Show after delay
-            const timer = setTimeout(showPopup, delay * 1000);
+            const timer = setTimeout(showPopup, (config.delay || 0) * 1000);
             return () => clearTimeout(timer);
-        } else if (trigger === 'exit_intent') {
+        } else if (config.trigger === 'exit_intent') {
             // Show on exit intent
             const handleMouseLeave = (e: MouseEvent) => {
                 if (e.clientY <= 0) {
@@ -68,7 +92,7 @@ export default function PopupHandler({ trigger = 'time', delay = 30 }: PopupHand
             document.addEventListener('mouseleave', handleMouseLeave);
             return () => document.removeEventListener('mouseleave', handleMouseLeave);
         }
-    }, [trigger, delay, hasShown]);
+    }, [config.trigger, config.delay, hasShown, config.maxPerDay]);
 
     return null; // This component doesn't render anything
 }

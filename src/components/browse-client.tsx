@@ -279,7 +279,7 @@ export default function BrowseClient({
             )}
 
             {/* Popup Handler - Shows after 30 seconds */}
-            {!isFilteredView && <PopupHandler trigger="time" delay={30} />}
+            {!isFilteredView && <PopupHandler trigger="time" delay={30} position="homepage_popup" />}
         </div>
     );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { shouldShowAd, getAdSettings, getAdScriptsByType, selectRandomScript } from '@/lib/ad-utils';
+import { shouldShowAd, getAdSettings, getAdScriptsByType, selectRandomScript, getZoneConfig } from '@/lib/ad-utils';
 
 interface AdWrapperProps {
     adType: string;
@@ -46,9 +46,32 @@ export default function AdWrapper({ adType, position, className = '', lazyLoad =
                 // Get global settings
                 const settings = await getAdSettings();
 
-                // Check if ad should be shown
+                let effectiveAdType = adType;
+                let specificScriptId = null;
+
+                // Check zone configuration if position is provided
+                if (position) {
+                    const zone = await getZoneConfig(position);
+                    if (zone) {
+                        // If zone exists but is disabled, don't show
+                        if (!zone.isEnabled) {
+                            setShouldDisplay(false);
+                            return;
+                        }
+
+                        // Override ad type and handle script assignment
+                        effectiveAdType = zone.adType;
+
+                        // If specific script assigned and rotation disabled (or specific script selected)
+                        if (zone.scriptId && zone.scriptId !== 'none' && !zone.rotation) {
+                            specificScriptId = zone.scriptId;
+                        }
+                    }
+                }
+
+                // Check if ad should be shown (global master switch, etc)
                 const canShow = await shouldShowAd(
-                    adType,
+                    effectiveAdType,
                     settings.popupFrequencyCap,
                     settings.testMode,
                     settings.masterEnabled
@@ -59,16 +82,25 @@ export default function AdWrapper({ adType, position, className = '', lazyLoad =
                     return;
                 }
 
-                // Get ad scripts for this type
-                const scripts = await getAdScriptsByType(adType);
+                // Get ad scripts
+                const scripts = await getAdScriptsByType(effectiveAdType);
 
                 if (scripts.length === 0) {
                     setShouldDisplay(false);
                     return;
                 }
 
-                // Select random script (for rotation)
-                const selectedScript = selectRandomScript(scripts);
+                let selectedScript = null;
+
+                // Use specific script if configured in zone
+                if (specificScriptId) {
+                    selectedScript = scripts.find((s: any) => s.id === specificScriptId);
+                }
+
+                // Fallback to random selection if specific script not found or not set
+                if (!selectedScript) {
+                    selectedScript = selectRandomScript(scripts);
+                }
 
                 if (selectedScript) {
                     setAdScript(selectedScript.script);
@@ -81,7 +113,7 @@ export default function AdWrapper({ adType, position, className = '', lazyLoad =
         };
 
         loadAd();
-    }, [isVisible, adType]);
+    }, [isVisible, adType, position]);
 
     if (!shouldDisplay || !adScript) {
         return null;

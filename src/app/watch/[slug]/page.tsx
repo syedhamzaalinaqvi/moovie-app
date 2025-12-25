@@ -268,7 +268,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
       </div>
 
       {/* Popup Handler - Shows after 30 seconds */}
-      <PopupHandler trigger="time" delay={30} />
+      <PopupHandler trigger="time" delay={30} position="watch_popup" />
     </div >
   );
 }

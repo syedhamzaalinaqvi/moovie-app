@@ -176,3 +176,41 @@ export function selectRandomScript(scripts: any[]): any | null {
     const randomIndex = Math.floor(Math.random() * scripts.length);
     return scripts[randomIndex];
 }
+
+// Simple in-memory cache for zones to prevent multiple requests
+let zonesCache: any[] | null = null;
+let zonesPromise: Promise<any> | null = null;
+
+/**
+ * Get configuration for a specific ad zone
+ */
+export async function getZoneConfig(positionId: string) {
+    try {
+        if (zonesCache) {
+            return zonesCache.find((z: any) => z.position === positionId && z.isEnabled) || null;
+        }
+
+        if (!zonesPromise) {
+            zonesPromise = fetch('/api/admin/ads/zones')
+                .then(r => {
+                    if (!r.ok) throw new Error('Failed');
+                    return r.json();
+                })
+                .then(data => {
+                    zonesCache = data;
+                    return data;
+                })
+                .catch(err => {
+                    console.error('Error loading zones:', err);
+                    zonesPromise = null; // Reset on error
+                    return [];
+                });
+        }
+
+        const zones = await zonesPromise;
+        return zones.find((z: any) => z.position === positionId && z.isEnabled) || null;
+    } catch (error) {
+        console.error('Error fetching zone config:', error);
+        return null;
+    }
+}

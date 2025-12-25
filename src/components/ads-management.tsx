@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Plus, Trash2, Edit, Power, PowerOff, Code, DollarSign, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit, Power, PowerOff, Code, DollarSign, Loader2, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { AdNetwork, AdScript, AdZone, AdSettings, AdType } from '@/lib/definitions';
 
@@ -51,6 +51,46 @@ export default function AdsManagement() {
         frequency: 2
     });
     const [editingId, setEditingId] = useState<string | null>(null);
+
+    // Pre-seed zones if empty (run once)
+    const seedZones = async () => {
+        if (zones.length > 0) return;
+
+        setIsLoading(true);
+        try {
+            const defaultZones = [
+                // Homepage
+                { name: 'Homepage Hero Banner', page: 'home', position: 'homepage_hero', adType: 'banner_728x90' },
+                { name: 'Homepage In-Feed 1', page: 'home', position: 'homepage_feed_0', adType: 'native' },
+                { name: 'Homepage In-Feed 2', page: 'home', position: 'homepage_feed_1', adType: 'native' },
+                { name: 'Homepage Popup', page: 'home', position: 'homepage_popup', adType: 'popup', trigger: 'time', delay: 30 },
+
+                // Watch Page
+                { name: 'Watch Page Top Banner', page: 'watch', position: 'watch_above_player', adType: 'banner_728x90' },
+                { name: 'Watch Page Native', page: 'watch', position: 'watch_below_content', adType: 'native' },
+                { name: 'Watch Page Popup', page: 'watch', position: 'watch_popup', adType: 'popup', trigger: 'time', delay: 30 },
+            ];
+
+            for (const zone of defaultZones) {
+                await fetch('/api/admin/ads/zones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...zone,
+                        isEnabled: true,
+                        rotation: false,
+                        lazyLoad: true
+                    })
+                });
+            }
+            fetchAllData();
+            toast({ title: 'Success', description: 'Default zones seeded' });
+        } catch (error) {
+            toast({ title: 'Error', description: 'Failed to seed zones', variant: 'destructive' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         fetchAllData();
@@ -141,6 +181,46 @@ export default function AdsManagement() {
             toast({ title: 'Error', description: 'Failed to save script', variant: 'destructive' });
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // Zone CRUD
+    const handleSaveZone = async () => {
+        setIsLoading(true);
+        try {
+            const url = editingId ? `/api/admin/ads/zones?id=${editingId}` : '/api/admin/ads/zones';
+            const method = editingId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(zoneForm)
+            });
+
+            if (response.ok) {
+                toast({ title: 'Success', description: editingId ? 'Zone updated' : 'Zone created' });
+                setShowZoneDialog(false);
+                setEditingId(null);
+                fetchAllData();
+            }
+        } catch (error) {
+            toast({ title: 'Error', description: 'Failed to save zone', variant: 'destructive' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDeleteZone = async (id: string) => {
+        setIsLoading(true);
+        try {
+            await fetch(`/api/admin/ads/zones?id=${id}`, { method: 'DELETE' });
+            toast({ title: 'Success', description: 'Zone deleted' });
+            fetchAllData();
+        } catch (error) {
+            toast({ title: 'Error', description: 'Failed to delete zone', variant: 'destructive' });
+        } finally {
+            setIsLoading(false);
+            setShowDeleteDialog(false);
         }
     };
 
@@ -327,14 +407,86 @@ export default function AdsManagement() {
                 <TabsContent value="zones">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Ad Zones</CardTitle>
-                            <CardDescription>Configure where ads appear on your site (Coming in next update)</CardDescription>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle>Ad Zones</CardTitle>
+                                    <CardDescription>Configure placements. {zones.length === 0 && 'Click "Seed Defaults" to start.'}</CardDescription>
+                                </div>
+                                <div className="space-x-2">
+                                    {zones.length === 0 && (
+                                        <Button variant="secondary" onClick={seedZones} disabled={isLoading}>
+                                            <RefreshCw className="h-4 w-4 mr-2" /> Seed Defaults
+                                        </Button>
+                                    )}
+                                    <Button onClick={() => {
+                                        setZoneForm({
+                                            name: '', page: 'home', position: '', adType: 'banner_728x90',
+                                            scriptId: '', isEnabled: true, rotation: false, lazyLoad: true,
+                                            trigger: 'load', delay: 0, frequency: 2
+                                        });
+                                        setEditingId(null);
+                                        setShowZoneDialog(true);
+                                    }}>
+                                        <Plus className="h-4 w-4 mr-2" /> Add Zone
+                                    </Button>
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-center py-8 text-muted-foreground">
-                                <Code className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                <p>Ad zones configuration will be available soon</p>
-                            </div>
+                            {isLoading ? (
+                                <div className="text-center py-8"><Loader2 className="h-8 w-8 animate-spin mx-auto" /></div>
+                            ) : zones.length === 0 ? (
+                                <div className="text-center py-8 text-muted-foreground">No zones configured.</div>
+                            ) : (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Zone Name</TableHead>
+                                            <TableHead>Page</TableHead>
+                                            <TableHead>Position ID</TableHead>
+                                            <TableHead>Ad Type</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {zones.map((zone) => (
+                                            <TableRow key={zone.id}>
+                                                <TableCell className="font-medium">{zone.name}</TableCell>
+                                                <TableCell><Badge variant="outline">{zone.page}</Badge></TableCell>
+                                                <TableCell className="font-mono text-xs">{zone.position}</TableCell>
+                                                <TableCell>{adTypes.find(t => t.value === zone.adType)?.label || zone.adType}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant={zone.isEnabled ? 'default' : 'secondary'}>
+                                                        {zone.isEnabled ? 'Active' : 'Disabled'}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right space-x-2">
+                                                    <Button size="sm" variant="outline" onClick={() => {
+                                                        setZoneForm({
+                                                            name: zone.name, page: zone.page as any, position: zone.position,
+                                                            adType: zone.adType as any, scriptId: zone.scriptId || '',
+                                                            isEnabled: zone.isEnabled, rotation: zone.rotation,
+                                                            lazyLoad: zone.lazyLoad, trigger: zone.trigger as any,
+                                                            delay: zone.delay || 0, frequency: zone.frequency || 2
+                                                        });
+                                                        setEditingId(zone.id);
+                                                        setShowZoneDialog(true);
+                                                    }}>
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button size="sm" variant="destructive" onClick={() => {
+                                                        setDeleteTarget({ type: 'zone', id: zone.id });
+                                                        setShowDeleteDialog(true);
+                                                    }}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -490,6 +642,103 @@ export default function AdsManagement() {
                 </DialogContent>
             </Dialog>
 
+            {/* Zone Dialog */}
+            <Dialog open={showZoneDialog} onOpenChange={setShowZoneDialog}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>{editingId ? 'Edit' : 'Add'} Ad Zone</DialogTitle>
+                        <DialogDescription>Configure ad placement</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid grid-cols-2 gap-4 py-4">
+                        <div className="space-y-2 col-span-2">
+                            <Label>Zone Name *</Label>
+                            <Input value={zoneForm.name} onChange={(e) => setZoneForm({ ...zoneForm, name: e.target.value })} />
+                            <p className="text-xs text-muted-foreground">Descriptive name for admin use</p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Page *</Label>
+                            <Select value={zoneForm.page} onValueChange={(v: any) => setZoneForm({ ...zoneForm, page: v })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="home">Homepage</SelectItem>
+                                    <SelectItem value="watch">Watch Page</SelectItem>
+                                    <SelectItem value="download">Download Page</SelectItem>
+                                    <SelectItem value="live-tv">Live TV</SelectItem>
+                                    <SelectItem value="browse">Browse/Search</SelectItem>
+                                    <SelectItem value="all">All Pages</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Position ID *</Label>
+                            <Input value={zoneForm.position} onChange={(e) => setZoneForm({ ...zoneForm, position: e.target.value })} />
+                            <p className="text-xs text-muted-foreground">Internal ID used in code (e.g., 'homepage_hero')</p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Ad Type *</Label>
+                            <Select value={zoneForm.adType} onValueChange={(v: any) => setZoneForm({ ...zoneForm, adType: v })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    {adTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Specific Script (Optional)</Label>
+                            <Select value={zoneForm.scriptId} onValueChange={(v) => setZoneForm({ ...zoneForm, scriptId: v })}>
+                                <SelectTrigger><SelectValue placeholder="Auto-rotate (Recommended)" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Auto-rotate (Recommended)</SelectItem>
+                                    {scripts.filter(s => s.adType === zoneForm.adType).map(s => (
+                                        <SelectItem key={s.id} value={s.id}>{s.id.substring(0, 8)}... ({networks.find(n => n.id === s.networkId)?.name})</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                            <Switch checked={zoneForm.isEnabled} onCheckedChange={(c) => setZoneForm({ ...zoneForm, isEnabled: c })} />
+                            <Label>Enabled</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Switch checked={zoneForm.lazyLoad} onCheckedChange={(c) => setZoneForm({ ...zoneForm, lazyLoad: c })} />
+                            <Label>Lazy Load</Label>
+                        </div>
+
+                        {/* Additional options for Popups */}
+                        {zoneForm.adType === 'popup' && (
+                            <div className="col-span-2 space-y-4 border-t pt-4 mt-2">
+                                <Label className="font-semibold">Popup Settings</Label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Trigger</Label>
+                                        <Select value={zoneForm.trigger} onValueChange={(v: any) => setZoneForm({ ...zoneForm, trigger: v })}>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="load">Page Load</SelectItem>
+                                                <SelectItem value="time">Time Delay</SelectItem>
+                                                <SelectItem value="exit_intent">Exit Intent</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Delay (Seconds)</Label>
+                                        <Input type="number" value={zoneForm.delay} onChange={(e) => setZoneForm({ ...zoneForm, delay: parseInt(e.target.value) })} />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowZoneDialog(false)}>Cancel</Button>
+                        <Button onClick={handleSaveZone} disabled={!zoneForm.name || !zoneForm.position || isLoading}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {editingId ? 'Update' : 'Create'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* Delete Dialog */}
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <AlertDialogContent>
@@ -501,7 +750,10 @@ export default function AdsManagement() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteTarget && handleDeleteNetwork(deleteTarget.id)} className="bg-destructive text-destructive-foreground">
+                        <AlertDialogAction onClick={() => {
+                            if (deleteTarget?.type === 'network') handleDeleteNetwork(deleteTarget.id);
+                            if (deleteTarget?.type === 'zone') handleDeleteZone(deleteTarget.id);
+                        }} className="bg-destructive text-destructive-foreground">
                             Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>
