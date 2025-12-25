@@ -115,3 +115,52 @@ export type CustomPlayer = {
   createdAt: string;
   updatedAt?: string;
 };
+
+// --- ADS MANAGEMENT SYSTEM ---
+
+export type AdType = 'popup' | 'banner_728x90' | 'banner_468x60' | 'banner_300x250' |
+  'native' | 'social_bar' | 'direct_link' | 'video' | 'in_page_push';
+
+export type AdNetwork = {
+  id: string;
+  name: string; // "Adsterra", "PropellerAds", etc.
+  isEnabled: boolean;
+  createdAt: string;
+  updatedAt?: string;
+};
+
+export type AdScript = {
+  id: string;
+  networkId: string; // Reference to ad_networks
+  adType: AdType;
+  script: string; // The actual ad code/script
+  isEnabled: boolean;
+  createdAt: string;
+  updatedAt?: string;
+};
+
+export type AdZone = {
+  id: string;
+  name: string; // "Homepage Hero Banner", "Watch Page Pre-Video", etc.
+  page: 'home' | 'watch' | 'download' | 'live-tv' | 'browse' | 'all';
+  position: string; // "above_player", "below_hero", "in_feed", etc.
+  adType: AdType;
+  scriptId?: string; // Reference to ad_scripts (if specific script assigned)
+  networkId?: string; // Reference to ad_networks (if rotation disabled)
+  isEnabled: boolean;
+  rotation: boolean; // If true, rotate between all enabled scripts of this type
+  lazyLoad: boolean;
+  frequency?: number; // For pop-ups: max per user per day
+  delay?: number; // Time delay in seconds before showing
+  trigger?: 'load' | 'scroll' | 'click' | 'time' | 'exit_intent';
+  createdAt: string;
+  updatedAt?: string;
+};
+
+export type AdSettings = {
+  id: 'global'; // Single document
+  masterEnabled: boolean; // Master kill switch
+  testMode: boolean; // Show ads only to admins
+  popupFrequencyCap: number; // Max pop-ups per user per 24h
+  updatedAt: string;
+};

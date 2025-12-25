@@ -21,6 +21,9 @@ import {
 import { ChevronDown } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { slugify } from "@/lib/utils";
+import BannerAd from "@/components/ads/banner-ad";
+import NativeAd from "@/components/ads/native-ad";
+import PopupHandler from "@/components/ads/popup-handler";
 
 
 import type { Metadata } from 'next';
@@ -117,6 +120,9 @@ export default async function WatchPage({ params }: WatchPageProps) {
 
   return (
     <div className="flex flex-col">
+      {/* Banner Ad Above Player */}
+      <BannerAd size="728x90" position="watch_above_player" className="mb-4" />
+
       <div id="player" className="relative w-full bg-black aspect-video">
         {primaryVideoSrc ? (
           <VideoPlayer src={primaryVideoSrc} />
@@ -256,6 +262,13 @@ export default async function WatchPage({ params }: WatchPageProps) {
       <Separator />
       <CommentSection contentId={String(content.id)} />
 
+      {/* Native Ad Below Content */}
+      <div className="p-4 md:p-6 lg:p-8">
+        <NativeAd position="watch_below_content" />
+      </div>
+
+      {/* Popup Handler - Shows after 30 seconds */}
+      <PopupHandler trigger="time" delay={30} />
     </div >
   );
 }

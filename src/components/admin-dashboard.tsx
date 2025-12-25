@@ -6,7 +6,7 @@ import { getBrowseContent, getManuallyAddedContent } from '@/lib/tmdb';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2, RefreshCw, Search, Edit, Video } from 'lucide-react';
+import { Film, Tv, History, PlusCircle, Loader2, Settings, Trash2, RefreshCw, Search, Edit, Video, DollarSign } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentCard } from './content-card';
 import { Separator } from './ui/separator';
@@ -57,6 +57,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import PlayerBuilder from './player-builder';
+import AdsManagement from './ads-management';
 
 
 function StatCard({ title, value, icon: Icon, isLoading }: { title: string; value: number; icon: React.ElementType; isLoading: boolean }) {
@@ -537,6 +538,9 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
           </TabsTrigger>
           <TabsTrigger value="player" className="flex items-center gap-2">
             <Video className="h-4 w-4" /> Player Builder
+          </TabsTrigger>
+          <TabsTrigger value="ads" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" /> Ads Management
           </TabsTrigger>
         </TabsList>
 
@@ -1222,6 +1226,23 @@ export default function AdminDashboard({ user }: { user?: SystemUser }) {
             </CardHeader>
             <CardContent>
               <PlayerBuilder onPlayerCreated={fetchDashboardData} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ads">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <DollarSign className="mr-2 h-6 w-6" />
+                Ads Management
+              </CardTitle>
+              <CardDescription>
+                Manage ad networks, scripts, and placements. Control ads site-wide.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AdsManagement />
             </CardContent>
           </Card>
         </TabsContent>

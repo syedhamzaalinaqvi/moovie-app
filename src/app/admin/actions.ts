@@ -356,3 +356,75 @@ export async function deletePlayerConfig(id: string) {
   const { deleteCustomPlayer } = await import('@/lib/firestore');
   return deleteCustomPlayer(id);
 }
+
+// Ads Management
+export async function createAdNetworkAction(data: { name: string; isEnabled: boolean }) {
+  const { createAdNetwork } = await import('@/lib/firestore');
+  return createAdNetwork(data);
+}
+
+export async function getAdNetworksAction() {
+  const { getAdNetworks } = await import('@/lib/firestore');
+  return getAdNetworks();
+}
+
+export async function updateAdNetworkAction(id: string, data: any) {
+  const { updateAdNetwork } = await import('@/lib/firestore');
+  return updateAdNetwork(id, data);
+}
+
+export async function deleteAdNetworkAction(id: string) {
+  const { deleteAdNetwork } = await import('@/lib/firestore');
+  return deleteAdNetwork(id);
+}
+
+export async function createAdScriptAction(data: any) {
+  const { createAdScript } = await import('@/lib/firestore');
+  return createAdScript(data);
+}
+
+export async function getAdScriptsAction(networkId?: string) {
+  const { getAdScripts } = await import('@/lib/firestore');
+  return getAdScripts(networkId);
+}
+
+export async function updateAdScriptAction(id: string, data: any) {
+  const { updateAdScript } = await import('@/lib/firestore');
+  return updateAdScript(id, data);
+}
+
+export async function deleteAdScriptAction(id: string) {
+  const { deleteAdScript } = await import('@/lib/firestore');
+  return deleteAdScript(id);
+}
+
+export async function createAdZoneAction(data: any) {
+  const { createAdZone } = await import('@/lib/firestore');
+  return createAdZone(data);
+}
+
+export async function getAdZonesAction(page?: string) {
+  const { getAdZones } = await import('@/lib/firestore');
+  return getAdZones(page);
+}
+
+export async function updateAdZoneAction(id: string, data: any) {
+  const { updateAdZone } = await import('@/lib/firestore');
+  return updateAdZone(id, data);
+}
+
+export async function deleteAdZoneAction(id: string) {
+  const { deleteAdZone } = await import('@/lib/firestore');
+  return deleteAdZone(id);
+}
+
+export async function getAdSettingsAction() {
+  const { getAdSettings } = await import('@/lib/firestore');
+  return getAdSettings();
+}
+
+export async function updateAdSettingsAction(settings: any) {
+  const { updateAdSettings } = await import('@/lib/firestore');
+  return updateAdSettings(settings);
+}
+

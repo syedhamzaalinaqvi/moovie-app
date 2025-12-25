@@ -16,6 +16,9 @@ import { LiveTvCarousel } from "@/components/live-tv-carousel";
 import { getLiveChannels } from "@/lib/firestore";
 import type { Content, LiveChannel } from "@/lib/definitions";
 import { getManuallyAddedContent, getTrending } from "@/lib/tmdb";
+import BannerAd from "@/components/ads/banner-ad";
+import NativeAd from "@/components/ads/native-ad";
+import PopupHandler from "@/components/ads/popup-handler";
 
 interface BrowseClientProps {
     initialContent: Content[];
@@ -134,6 +137,13 @@ export default function BrowseClient({
                 </section>
             )}
 
+            {/* Hero Banner Ad - Below Hero Carousel */}
+            {!isFilteredView && (
+                <section className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-75">
+                    <BannerAd size="728x90" position="homepage_hero" />
+                </section>
+            )}
+
             {/* Live TV Carousel */}
             {(!isFilteredView && liveChannels.length > 0) && (
                 <section className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
@@ -229,12 +239,21 @@ export default function BrowseClient({
                             : "grid-cols-1"
                     )}>
                         {content.slice(0, visibleCount).map((item, index) => (
-                            <ContentCard
-                                key={item.id}
-                                content={item}
-                                view={view}
-                                priority={index < 8} // Prioritize first 8 images
-                            />
+                            <>
+                                <ContentCard
+                                    key={item.id}
+                                    content={item}
+                                    priority={index < 8} // Prioritize first 8 images
+                                />
+                                {/* In-Feed Native Ad every 12 items */}
+                                {!isFilteredView && (index + 1) % 12 === 0 && (
+                                    <NativeAd
+                                        key={`ad-${index}`}
+                                        position={`homepage_feed_${Math.floor(index / 12)}`}
+                                        className="col-span-full my-4"
+                                    />
+                                )}
+                            </>
                         ))}
                     </div>
                 )}
@@ -258,6 +277,9 @@ export default function BrowseClient({
             {!isFilteredView && (
                 <RecommendedContent />
             )}
+
+            {/* Popup Handler - Shows after 30 seconds */}
+            {!isFilteredView && <PopupHandler trigger="time" delay={30} />}
         </div>
     );
 }

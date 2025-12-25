@@ -463,3 +463,243 @@ export async function deleteCustomPlayer(id: string): Promise<{ success: boolean
     }
 }
 
+// --- ADS MANAGEMENT SYSTEM ---
+import type { AdNetwork, AdScript, AdZone, AdSettings } from './definitions';
+
+const AD_NETWORKS_COLLECTION = 'ad_networks';
+const AD_SCRIPTS_COLLECTION = 'ad_scripts';
+const AD_ZONES_COLLECTION = 'ad_zones';
+const AD_SETTINGS_COLLECTION = 'ad_settings';
+const AD_SETTINGS_DOC = 'global';
+
+// AD NETWORKS
+export async function createAdNetwork(network: Omit<AdNetwork, 'id' | 'createdAt'>): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+        const docRef = doc(collection(db, AD_NETWORKS_COLLECTION));
+        const finalNetwork: AdNetwork = {
+            ...network,
+            id: docRef.id,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+        await setDoc(docRef, finalNetwork);
+        return { success: true, id: docRef.id };
+    } catch (error) {
+        console.error('Error creating ad network:', error);
+        return { success: false, error: 'Failed to create ad network' };
+    }
+}
+
+export async function getAdNetworks(): Promise<AdNetwork[]> {
+    try {
+        const q = query(collection(db, AD_NETWORKS_COLLECTION), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => doc.data() as AdNetwork);
+    } catch (error) {
+        console.error('Error fetching ad networks:', error);
+        return [];
+    }
+}
+
+export async function updateAdNetwork(id: string, data: Partial<AdNetwork>): Promise<{ success: boolean }> {
+    try {
+        const docRef = doc(db, AD_NETWORKS_COLLECTION, id);
+        const updateData = {
+            ...data,
+            updatedAt: new Date().toISOString(),
+        };
+        await updateDoc(docRef, updateData);
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating ad network:', error);
+        return { success: false };
+    }
+}
+
+export async function deleteAdNetwork(id: string): Promise<{ success: boolean }> {
+    try {
+        await deleteDoc(doc(db, AD_NETWORKS_COLLECTION, id));
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting ad network:', error);
+        return { success: false };
+    }
+}
+
+// AD SCRIPTS
+export async function createAdScript(script: Omit<AdScript, 'id' | 'createdAt'>): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+        const docRef = doc(collection(db, AD_SCRIPTS_COLLECTION));
+        const finalScript: AdScript = {
+            ...script,
+            id: docRef.id,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+        await setDoc(docRef, finalScript);
+        return { success: true, id: docRef.id };
+    } catch (error) {
+        console.error('Error creating ad script:', error);
+        return { success: false, error: 'Failed to create ad script' };
+    }
+}
+
+export async function getAdScripts(networkId?: string): Promise<AdScript[]> {
+    try {
+        let q;
+        if (networkId) {
+            q = query(
+                collection(db, AD_SCRIPTS_COLLECTION),
+                where('networkId', '==', networkId),
+                orderBy('createdAt', 'desc')
+            );
+        } else {
+            q = query(collection(db, AD_SCRIPTS_COLLECTION), orderBy('createdAt', 'desc'));
+        }
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => doc.data() as AdScript);
+    } catch (error) {
+        console.error('Error fetching ad scripts:', error);
+        return [];
+    }
+}
+
+export async function updateAdScript(id: string, data: Partial<AdScript>): Promise<{ success: boolean }> {
+    try {
+        const docRef = doc(db, AD_SCRIPTS_COLLECTION, id);
+        const updateData = {
+            ...data,
+            updatedAt: new Date().toISOString(),
+        };
+        await updateDoc(docRef, updateData);
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating ad script:', error);
+        return { success: false };
+    }
+}
+
+export async function deleteAdScript(id: string): Promise<{ success: boolean }> {
+    try {
+        await deleteDoc(doc(db, AD_SCRIPTS_COLLECTION, id));
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting ad script:', error);
+        return { success: false };
+    }
+}
+
+// AD ZONES
+export async function createAdZone(zone: Omit<AdZone, 'id' | 'createdAt'>): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+        const docRef = doc(collection(db, AD_ZONES_COLLECTION));
+        const finalZone: AdZone = {
+            ...zone,
+            id: docRef.id,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+        await setDoc(docRef, finalZone);
+        return { success: true, id: docRef.id };
+    } catch (error) {
+        console.error('Error creating ad zone:', error);
+        return { success: false, error: 'Failed to create ad zone' };
+    }
+}
+
+export async function getAdZones(page?: string): Promise<AdZone[]> {
+    try {
+        let q;
+        if (page) {
+            q = query(
+                collection(db, AD_ZONES_COLLECTION),
+                where('page', 'in', [page, 'all']),
+                orderBy('createdAt', 'desc')
+            );
+        } else {
+            q = query(collection(db, AD_ZONES_COLLECTION), orderBy('createdAt', 'desc'));
+        }
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => doc.data() as AdZone);
+    } catch (error) {
+        console.error('Error fetching ad zones:', error);
+        return [];
+    }
+}
+
+export async function updateAdZone(id: string, data: Partial<AdZone>): Promise<{ success: boolean }> {
+    try {
+        const docRef = doc(db, AD_ZONES_COLLECTION, id);
+        const updateData = {
+            ...data,
+            updatedAt: new Date().toISOString(),
+        };
+        await updateDoc(docRef, updateData);
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating ad zone:', error);
+        return { success: false };
+    }
+}
+
+export async function deleteAdZone(id: string): Promise<{ success: boolean }> {
+    try {
+        await deleteDoc(doc(db, AD_ZONES_COLLECTION, id));
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting ad zone:', error);
+        return { success: false };
+    }
+}
+
+// AD SETTINGS
+export async function getAdSettings(): Promise<AdSettings> {
+    try {
+        const docRef = doc(db, AD_SETTINGS_COLLECTION, AD_SETTINGS_DOC);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            return docSnap.data() as AdSettings;
+        }
+
+        // Return default settings if not found
+        const defaultSettings: AdSettings = {
+            id: 'global',
+            masterEnabled: true,
+            testMode: false,
+            popupFrequencyCap: 2,
+            updatedAt: new Date().toISOString(),
+        };
+
+        // Create default settings
+        await setDoc(docRef, defaultSettings);
+        return defaultSettings;
+    } catch (error) {
+        console.error('Error fetching ad settings:', error);
+        return {
+            id: 'global',
+            masterEnabled: true,
+            testMode: false,
+            popupFrequencyCap: 2,
+            updatedAt: new Date().toISOString(),
+        };
+    }
+}
+
+export async function updateAdSettings(settings: Partial<AdSettings>): Promise<{ success: boolean }> {
+    try {
+        const docRef = doc(db, AD_SETTINGS_COLLECTION, AD_SETTINGS_DOC);
+        const updateData = {
+            ...settings,
+            id: 'global',
+            updatedAt: new Date().toISOString(),
+        };
+        await setDoc(docRef, updateData, { merge: true });
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating ad settings:', error);
+        return { success: false };
+    }
+}
+
+
