@@ -535,6 +535,17 @@ export default function AdsManagement() {
                                         <p className="text-sm text-muted-foreground">Maximum pop-ups a user can see per day</p>
                                     </div>
 
+                                    <div className="space-y-2">
+                                        <Label>Header Scripts</Label>
+                                        <Textarea
+                                            placeholder="<meta name='...'> or <script>...</script>"
+                                            className="font-mono text-xs h-32"
+                                            value={settings.headerScripts || ''}
+                                            onChange={(e) => setSettings({ ...settings, headerScripts: e.target.value })}
+                                        />
+                                        <p className="text-sm text-muted-foreground">Add verification meta tags or global ad scripts here (injected into &lt;head&gt;)</p>
+                                    </div>
+
                                     <Button onClick={handleSaveSettings} disabled={isLoading}>
                                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         Save Settings

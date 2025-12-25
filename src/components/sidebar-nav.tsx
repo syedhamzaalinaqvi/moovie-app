@@ -110,32 +110,51 @@ export function SidebarNav() {
         </SidebarMenuItem>
       ))}
 
-      {/* Language Dropdown */}
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+      {/* Language Collapsible */}
+      <Collapsible asChild className="group/collapsible">
+        <SidebarMenuItem>
+          <CollapsibleTrigger asChild>
             <SidebarMenuButton tooltip="Language">
               <Globe />
               <span>Language</span>
-              <ChevronDown className="ml-auto h-4 w-4" />
+              <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
             </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" className="w-56">
-            <DropdownMenuLabel>Select Language</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup value={currentLanguageValue} onValueChange={handleLanguageChange}>
-              <DropdownMenuRadioItem value="">All Languages</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="hindi_dubbed">Hindi Dubbed</DropdownMenuRadioItem>
-              <DropdownMenuSeparator />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton
+                  isActive={currentLanguageValue === ""}
+                  onClick={() => handleLanguageChange("")}
+                  className="cursor-pointer"
+                >
+                  <span>All Languages</span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton
+                  isActive={currentLanguageValue === "hindi_dubbed"}
+                  onClick={() => handleLanguageChange("hindi_dubbed")}
+                  className="cursor-pointer"
+                >
+                  <span>Hindi Dubbed</span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
               {languages.map((lang) => (
-                <DropdownMenuRadioItem key={lang.value} value={lang.value}>
-                  {lang.label}
-                </DropdownMenuRadioItem>
+                <SidebarMenuSubItem key={lang.value}>
+                  <SidebarMenuSubButton
+                    isActive={currentLanguageValue === lang.value}
+                    onClick={() => handleLanguageChange(lang.value)}
+                    className="cursor-pointer"
+                  >
+                    <span>{lang.label}</span>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
               ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </SidebarMenuItem>
+      </Collapsible>
 
       {/* Remaining nav items (Disclaimer, Contact) */}
       {navItems.slice(-2).map((item) => (

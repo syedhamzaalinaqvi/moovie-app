@@ -7,7 +7,7 @@ import { AuthProvider } from '@/providers/auth-provider';
 import MainLayout from '@/components/main-layout';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { ScrollToTop } from '@/components/scroll-to-top';
-import { getSiteConfigFromFirestore } from '@/lib/firestore';
+import { getSiteConfigFromFirestore, getAdSettings } from '@/lib/firestore';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -21,19 +21,49 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getAdSettings();
+
   return (
     <html lang="en" suppressHydrationWarning>
-      <Script
-        async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8130991342525434"
-        crossOrigin="anonymous"
-        strategy="afterInteractive"
-      />
+      <head>
+        {/* Inject Global Header Scripts */}
+        {settings.headerScripts && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                try {
+                  var tempDiv = document.createElement('div');
+                  tempDiv.innerHTML = \`${settings.headerScripts.replace(/`/g, '\\`').replace(/\\/g, '\\\\')}\`;
+                  Array.from(tempDiv.childNodes).forEach(node => {
+                    if (node.tagName === 'SCRIPT') {
+                      var script = document.createElement('script');
+                      Array.from(node.attributes).forEach(attr => script.setAttribute(attr.name, attr.value));
+                      script.appendChild(document.createTextNode(node.innerHTML));
+                      document.head.appendChild(script);
+                    } else if (node.nodeType === 1) {
+                        // Append other elements like meta, link, etc.
+                        document.head.appendChild(node.cloneNode(true));
+                    }
+                  });
+                } catch(e) {}
+              `
+            }}
+          />
+        )}
+        {/*
+           Directly injecting raw HTML string into head in Next.js App Router is tricky.
+           We'll use a hidden div for meta tags if possible, or assume user puts scripts.
+           If we put raw HTML in head tag:
+        */}
+        {settings.headerScripts && (
+          <div dangerouslySetInnerHTML={{ __html: settings.headerScripts }} style={{ display: 'none' }} />
+        )}
+      </head>
       <body className={`${inter.variable} font-body antialiased`} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
