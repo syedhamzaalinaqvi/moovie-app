@@ -546,6 +546,16 @@ export default function AdsManagement() {
                                         <p className="text-sm text-muted-foreground">Add verification meta tags or global ad scripts here (injected into &lt;head&gt;)</p>
                                     </div>
 
+                                    <div className="space-y-2">
+                                        <Label>Download Smart Link (Direct Link)</Label>
+                                        <Input
+                                            placeholder="https://example.com/smart-link"
+                                            value={settings.downloadSmartLink || ''}
+                                            onChange={(e) => setSettings({ ...settings, downloadSmartLink: e.target.value })}
+                                        />
+                                        <p className="text-sm text-muted-foreground">Redirect user to this link when download starts (triggers alongside download)</p>
+                                    </div>
+
                                     <Button onClick={handleSaveSettings} disabled={isLoading}>
                                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         Save Settings

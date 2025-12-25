@@ -163,5 +163,6 @@ export type AdSettings = {
   testMode: boolean; // Show ads only to admins
   popupFrequencyCap: number; // Max pop-ups per user per 24h
   headerScripts?: string; // Scripts to inject in <head>
+  downloadSmartLink?: string; // Direct/Smart link for download redirect
   updatedAt: string;
 };

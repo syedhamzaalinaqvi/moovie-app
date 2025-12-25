@@ -54,15 +54,21 @@ export async function getSecureDownloadSettings(): Promise<{
   showLiveTvCarousel: boolean;
   showFeaturedSection?: boolean;
   featuredLayout?: 'slider' | 'grid' | 'list';
+  downloadSmartLink?: string;
 }> {
-  const config = await getSiteConfigFromFirestore();
+  const [config, adSettings] = await Promise.all([
+    getSiteConfigFromFirestore(),
+    import('@/lib/firestore').then(mod => mod.getAdSettings())
+  ]);
+
   return {
     enabled: !!config.secureDownloadsEnabled,
     delay: typeof config.downloadButtonDelay === 'number' ? config.downloadButtonDelay : 5,
     globalEnabled: config.globalDownloadsEnabled !== undefined ? config.globalDownloadsEnabled : true,
     showLiveTvCarousel: config.showLiveTvCarousel !== undefined ? config.showLiveTvCarousel : true,
     showFeaturedSection: config.showFeaturedSection,
-    featuredLayout: config.featuredLayout
+    featuredLayout: config.featuredLayout,
+    downloadSmartLink: adSettings.downloadSmartLink
   };
 }
 

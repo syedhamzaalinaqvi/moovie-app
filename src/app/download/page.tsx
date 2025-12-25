@@ -8,6 +8,8 @@ import { Loader2 } from 'lucide-react';
 import Script from 'next/script';
 import { getSecureDownloadSettings, getDownloadUrl } from '@/app/admin/actions';
 
+import AdWrapper from '@/components/ads/ad-wrapper';
+
 export default function DownloadPage() {
     const searchParams = useSearchParams();
     const id = searchParams.get('id');
@@ -17,6 +19,7 @@ export default function DownloadPage() {
     const [maxTime, setMaxTime] = useState(5);
     const [isReady, setIsReady] = useState(false);
     const [contentTitle, setContentTitle] = useState('');
+    const [smartLink, setSmartLink] = useState<string | null>(null);
 
     useEffect(() => {
         async function init() {
@@ -31,6 +34,9 @@ export default function DownloadPage() {
 
                 setTimeLeft(settings.delay);
                 setMaxTime(settings.delay);
+                if (settings.downloadSmartLink) {
+                    setSmartLink(settings.downloadSmartLink);
+                }
 
                 if (downloadData) {
                     setContentTitle(downloadData.title);
@@ -51,28 +57,34 @@ export default function DownloadPage() {
             return () => clearTimeout(timer);
         } else {
             setIsReady(true);
-            // Auto redirect
-            window.location.href = downloadUrl;
+
+            // Handle Download & Smart Link Redirect
+            if (smartLink) {
+                // 1. Start Download via invisible iframe (continues in background)
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = downloadUrl;
+                document.body.appendChild(iframe);
+
+                // 2. Redirect User to Smart Link after short delay
+                setTimeout(() => {
+                    window.location.href = smartLink;
+                }, 1500);
+            } else {
+                // Standard Direct Download
+                window.location.href = downloadUrl;
+            }
         }
-    }, [timeLeft, downloadUrl]);
+    }, [timeLeft, downloadUrl, smartLink]);
 
     const progress = maxTime > 0 ? ((maxTime - timeLeft) / maxTime) * 100 : 100;
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-hidden">
 
-            {/* Top Ad */}
-            <div className="w-full max-w-[970px] h-[90px] bg-muted/20 mb-8 flex items-center justify-center border border-dashed text-muted-foreground text-xs overflow-hidden">
-                <ins className="adsbygoogle"
-                    style={{ display: 'block' }}
-                    data-ad-client="ca-pub-8130991342525434"
-                    data-ad-slot="4008318379"
-                    data-ad-format="fluid"
-                    data-ad-layout-key="-7h+f1-18-54+ds"
-                ></ins>
-                <Script id="adsense-init">
-                    {`(adsbygoogle = window.adsbygoogle || []).push({});`}
-                </Script>
+            {/* Top Ad Zone */}
+            <div className="w-full max-w-[970px] mb-8 flex items-center justify-center">
+                <AdWrapper position="download_top" adType="banner_728x90" />
             </div>
 
             <div className="text-center space-y-8 z-10 max-w-md w-full">
@@ -123,21 +135,10 @@ export default function DownloadPage() {
                 )}
             </div>
 
-            {/* Bottom Ad */}
-            <div className="w-full max-w-[970px] h-[90px] bg-muted/20 mt-12 flex items-center justify-center border border-dashed text-muted-foreground text-xs overflow-hidden">
-                <ins className="adsbygoogle"
-                    style={{ display: 'block' }}
-                    data-ad-client="ca-pub-8130991342525434"
-                    data-ad-slot="4008318379"
-                    data-ad-format="fluid"
-                    data-ad-layout-key="-7h+f1-18-54+ds"
-                ></ins>
-                <Script id="adsense-init-2">
-                    {`(adsbygoogle = window.adsbygoogle || []).push({});`}
-                </Script>
+            {/* Bottom Ad Zone */}
+            <div className="w-full max-w-[970px] mt-12 flex items-center justify-center">
+                <AdWrapper position="download_bottom" adType="banner_728x90" />
             </div>
-
-            <Script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8130991342525434" crossOrigin="anonymous" strategy="afterInteractive" />
 
         </div>
     );
